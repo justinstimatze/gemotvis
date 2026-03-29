@@ -27,7 +27,8 @@ type Server struct {
 	sseClients    atomic.Int64
 	snapshot      *poller.Snapshot // static snapshot for demo/replay modes
 	cycleInterval time.Duration   // auto-cycle interval for demo mode (0 = disabled)
-	watches       *watchManager   // join code watch sessions (nil if no service key)
+	watches       *watchManager      // join code watch sessions (nil if no service key)
+	dashboards    *dashboardManager  // user dashboard sessions (nil if no gemot URL)
 }
 
 // New creates a server for live monitoring.
@@ -51,6 +52,7 @@ func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string) *Server {
 	}
 	if gemotURL != "" && serviceKey != "" {
 		s.watches = newWatchManager(gemotURL, serviceKey)
+		s.dashboards = newDashboardManager(gemotURL, serviceKey)
 	}
 	s.routes()
 	return s
@@ -79,6 +81,12 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/state", s.handleState)
 	s.mux.HandleFunc("GET /api/events", s.handleEvents)
 	s.mux.HandleFunc("GET /api/config", s.handleConfig)
+
+	// Dashboard routes (API key session auth)
+	s.mux.HandleFunc("POST /api/session", s.handleSessionCreate)
+	s.mux.HandleFunc("DELETE /api/session", s.handleSessionDelete)
+	s.mux.HandleFunc("GET /api/dashboard/state", s.handleDashboardState)
+	s.mux.HandleFunc("GET /api/dashboard/events", s.handleDashboardEvents)
 
 	// Watch routes (join code live viewing)
 	s.mux.HandleFunc("GET /api/watch/", func(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +146,8 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{ //nolint:errcheck
 		"mode":           mode,
 		"cycle_interval": s.cycleInterval.Milliseconds(),
-		"watch_enabled":  s.watches != nil,
+		"watch_enabled":     s.watches != nil,
+		"dashboard_enabled": s.dashboards != nil,
 	})
 }
 

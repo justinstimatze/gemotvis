@@ -666,6 +666,98 @@ function getWatchCodes() {
     return codes;
 }
 
+// ===== Dashboard Mode =====
+
+function isDashboard() {
+    return window.location.pathname.startsWith('/dashboard');
+}
+
+function showLoginForm() {
+    const main = document.getElementById('main');
+    clearChildren(main);
+
+    const form = el('div', { className: 'login-form' },
+        el('div', { className: 'login-title' }, 'AGENT DASHBOARD'),
+        el('div', { className: 'login-subtitle' }, 'ENTER YOUR GEMOT.DEV API KEY TO MONITOR YOUR DELIBERATIONS'),
+        el('input', {
+            className: 'login-input',
+            type: 'password',
+            placeholder: 'gmt_...',
+            id: 'api-key-input',
+        }),
+        el('button', {
+            className: 'login-button',
+            id: 'login-btn',
+        }, 'CONNECT'),
+        el('div', { className: 'login-error', id: 'login-error' }),
+    );
+
+    main.appendChild(form);
+
+    const input = document.getElementById('api-key-input');
+    const btn = document.getElementById('login-btn');
+    const errDiv = document.getElementById('login-error');
+
+    async function doLogin() {
+        const key = input.value.trim();
+        if (!key) return;
+        btn.textContent = 'CONNECTING...';
+        errDiv.textContent = '';
+        try {
+            const resp = await fetch('/api/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: key }),
+            });
+            if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(text || 'Authentication failed');
+            }
+            // Session cookie is set by server. Connect to dashboard SSE.
+            connectDashboard();
+        } catch (e) {
+            errDiv.textContent = e.message.toUpperCase();
+            btn.textContent = 'CONNECT';
+        }
+    }
+
+    btn.onclick = doLogin;
+    input.onkeydown = (e) => { if (e.key === 'Enter') doLogin(); };
+    input.focus();
+}
+
+function connectDashboard() {
+    if (eventSource) eventSource.close();
+
+    const sysLabel = document.querySelector('.system-label');
+    if (sysLabel) sysLabel.textContent = 'DASHBOARD';
+
+    eventSource = new EventSource('/api/dashboard/events');
+
+    eventSource.onopen = () => {
+        state.connected = true;
+        updateConnectionStatus();
+    };
+
+    eventSource.onmessage = (e) => {
+        try {
+            const msg = JSON.parse(e.data);
+            handleEvent(msg);
+        } catch (err) {
+            console.error('SSE parse error:', err);
+        }
+    };
+
+    eventSource.onerror = () => {
+        state.connected = false;
+        updateConnectionStatus();
+        // If we get a 401, show login form again
+        if (eventSource.readyState === EventSource.CLOSED) {
+            showLoginForm();
+        }
+    };
+}
+
 // ===== Init =====
 
 // Remove boot overlay after its CSS animation completes
@@ -679,6 +771,15 @@ const watchCodes = getWatchCodes();
 loadConfig().then(() => {
     if (watchCodes.length > 0) {
         connectWatch(watchCodes);
+    } else if (isDashboard()) {
+        // Try connecting with existing session cookie first
+        fetch('/api/dashboard/state').then(r => {
+            if (r.ok) {
+                connectDashboard();
+            } else {
+                showLoginForm();
+            }
+        }).catch(() => showLoginForm());
     } else {
         connect();
     }
