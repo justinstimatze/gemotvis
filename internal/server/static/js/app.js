@@ -649,11 +649,21 @@ function updateConnectionStatus() {
     }
 }
 
-// ===== Watch Mode (join code) =====
+// ===== Watch Mode (join codes) =====
 
-function getWatchCode() {
+function getWatchCodes() {
     const match = window.location.pathname.match(/^\/watch\/([a-z0-9-]+)\/?$/);
-    return match ? match[1] : null;
+    if (!match) return [];
+    const codes = [match[1]];
+    // Additional codes via ?also= param
+    const also = new URLSearchParams(window.location.search).get('also');
+    if (also) {
+        also.split(',').forEach(c => {
+            const trimmed = c.trim();
+            if (/^[a-z0-9-]{5,100}$/.test(trimmed)) codes.push(trimmed);
+        });
+    }
+    return codes;
 }
 
 // ===== Init =====
@@ -664,21 +674,22 @@ setTimeout(() => {
     if (boot) boot.classList.add('done');
 }, 3200);
 
-const watchCode = getWatchCode();
+const watchCodes = getWatchCodes();
 
 loadConfig().then(() => {
-    if (watchCode) {
-        // Watch mode: connect to join-code-specific endpoints
-        connectWatch(watchCode);
+    if (watchCodes.length > 0) {
+        connectWatch(watchCodes);
     } else {
         connect();
     }
 });
 
-function connectWatch(code) {
+function connectWatch(codes) {
+    // Connect SSE for the primary code
+    const primary = codes[0];
     if (eventSource) eventSource.close();
 
-    eventSource = new EventSource(`/api/watch/${code}/events`);
+    eventSource = new EventSource(`/api/watch/${primary}/events`);
 
     eventSource.onopen = () => {
         state.connected = true;
@@ -702,6 +713,39 @@ function connectWatch(code) {
     // Update header to show watch mode
     const sysLabel = document.querySelector('.system-label');
     if (sysLabel) sysLabel.textContent = `WATCHING`;
+
+    // For multi-code: fetch additional codes' state and start their SSE streams
+    if (codes.length > 1) {
+        codes.slice(1).forEach(code => {
+            // Fetch initial state
+            fetch(`/api/watch/${code}/state`)
+                .then(r => r.json())
+                .then(snap => {
+                    if (snap.deliberations) {
+                        Object.assign(state.deliberations, snap.deliberations);
+                        render();
+                    }
+                })
+                .catch(err => console.error(`Watch ${code}:`, err));
+
+            // Open SSE for updates
+            const extra = new EventSource(`/api/watch/${code}/events`);
+            extra.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'state' && msg.data?.deliberation) {
+                        state.deliberations[msg.data.deliberation.deliberation_id] = msg.data;
+                        render();
+                    } else if (msg.type === 'snapshot' && msg.data?.deliberations) {
+                        Object.assign(state.deliberations, msg.data.deliberations);
+                        render();
+                    }
+                } catch (err) {
+                    // ignore parse errors on secondary streams
+                }
+            };
+        });
+    }
 }
 
 let resizeTimer;
