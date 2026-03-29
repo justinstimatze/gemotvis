@@ -26,10 +26,12 @@ type DelibState struct {
 
 // AgentInfo is derived from positions/votes for the frontend.
 type AgentInfo struct {
-	ID          string  `json:"id"`
-	ModelFamily string  `json:"model_family"`
-	Conviction  float64 `json:"conviction"`
-	ClusterID   *int    `json:"cluster_id,omitempty"`
+	ID          string   `json:"id"`
+	ModelFamily string   `json:"model_family"`
+	Conviction  float64  `json:"conviction"`
+	ClusterID   *int     `json:"cluster_id,omitempty"`
+	X           *float64 `json:"x,omitempty"` // 0-100, optional positioned layout
+	Y           *float64 `json:"y,omitempty"` // 0-100, optional positioned layout
 }
 
 // Snapshot is the full state of all watched deliberations.

@@ -272,9 +272,14 @@ function renderAgents(ds) {
     const main = document.getElementById('main');
     main.className = '';
 
+    // Check if agents have explicit positions (map/geo layout)
+    const hasPositions = agents.some(a => a.x != null && a.y != null);
+
     if (n <= 0) {
         clearChildren(container);
         return;
+    } else if (hasPositions) {
+        main.classList.add('layout-positioned');
     } else if (n === 2) {
         main.classList.add('layout-bilateral');
     } else if (n === 3) {
@@ -317,7 +322,9 @@ function renderAgents(ds) {
         const warningClass = hasWarning ? 'integrity-warning' : '';
 
         let style = '';
-        if (n > 3 && n <= 7) {
+        if (hasPositions && agent.x != null && agent.y != null) {
+            style = `left: ${agent.x}%; top: ${agent.y}%;`;
+        } else if (n > 3 && n <= 7) {
             const pos = polygonPosition(i, n);
             style = `left: ${pos.x}%; top: ${pos.y}%;`;
         }
@@ -383,14 +390,19 @@ function renderConnections(ds) {
     // Clear existing lines
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-    if (n < 2 || n > 7) return;
+    const hasPositions = agents.some(a => a.x != null && a.y != null);
+    if (n < 2 || (!hasPositions && n > 7)) return;
 
     const main = document.getElementById('main');
     const rect = main.getBoundingClientRect();
     svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
 
     const positions = [];
-    if (n === 2) {
+    if (hasPositions) {
+        agents.forEach(a => {
+            positions.push({ x: (a.x || 50) / 100, y: (a.y || 50) / 100 });
+        });
+    } else if (n === 2) {
         positions.push({ x: 0.30, y: 0.45 }, { x: 0.70, y: 0.45 });
     } else if (n === 3) {
         positions.push({ x: 0.50, y: 0.26 }, { x: 0.25, y: 0.68 }, { x: 0.75, y: 0.68 });

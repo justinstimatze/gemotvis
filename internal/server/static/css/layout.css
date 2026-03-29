@@ -99,6 +99,26 @@
     font-size: 8px;
 }
 
+/* ===== POSITIONED (map/geo layout, agents have x,y coords) ===== */
+.layout-positioned .agent-node {
+    width: 140px;
+    height: 140px;
+}
+
+.layout-positioned .diamond {
+    width: 100px;
+    height: 100px;
+}
+
+.layout-positioned .agent-name {
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.layout-positioned .agent-vote {
+    font-size: 22px;
+}
+
 /* ===== GRID (8+ agents) ===== */
 
 .layout-grid .agents-container {

@@ -31,6 +31,9 @@ func demoSnapshot() *poller.Snapshot {
 	// Analyzing state — shows the pipeline progress bar
 	snap.Deliberations["analyzing"] = demoAnalyzing(now)
 
+	// Diplomacy — 7 powers with geographic positions
+	snap.Deliberations["diplomacy"] = demoDiplomacy(now)
+
 	return snap
 }
 
@@ -378,6 +381,92 @@ func demoAnalyzing(now time.Time) *poller.DelibState {
 				{"timestamp": now.Add(-23 * time.Minute).Format(time.RFC3339), "method": "gemot/vote", "agent_id": "ethicist"},
 				{"timestamp": now.Add(-22 * time.Minute).Format(time.RFC3339), "method": "gemot/vote", "agent_id": "policy-advisor"},
 				{"timestamp": now.Add(-20 * time.Minute).Format(time.RFC3339), "method": "gemot/analyze", "agent_id": ""},
+			},
+		},
+	}
+}
+
+// demoDiplomacy creates a 7-power diplomacy scenario with geographic positioning.
+// Inspired by gemot's scripts/diplomacy/ which analyzes AI Diplomacy game messages.
+func demoDiplomacy(now time.Time) *poller.DelibState {
+	// Rough European map positions (x=0-100 left-right, y=0-100 top-bottom)
+	f := func(v float64) *float64 { return &v }
+
+	agents := []poller.AgentInfo{
+		{ID: "england", ModelFamily: "claude", Conviction: 0.8, ClusterID: intPtr(0), X: f(25), Y: f(22)},
+		{ID: "france", ModelFamily: "gpt", Conviction: 0.75, ClusterID: intPtr(0), X: f(30), Y: f(48)},
+		{ID: "germany", ModelFamily: "gemini", Conviction: 0.85, ClusterID: intPtr(1), X: f(48), Y: f(30)},
+		{ID: "italy", ModelFamily: "claude", Conviction: 0.7, ClusterID: intPtr(2), X: f(48), Y: f(60)},
+		{ID: "austria", ModelFamily: "gpt", Conviction: 0.8, ClusterID: intPtr(1), X: f(55), Y: f(45)},
+		{ID: "russia", ModelFamily: "gemini", Conviction: 0.9, ClusterID: intPtr(2), X: f(78), Y: f(25)},
+		{ID: "turkey", ModelFamily: "claude", Conviction: 0.75, ClusterID: intPtr(2), X: f(75), Y: f(62)},
+	}
+
+	return &poller.DelibState{
+		Deliberation: &gemot.Deliberation{
+			ID:          "diplomacy",
+			Topic:       "Spring 1901 diplomatic negotiations",
+			Description: "Seven AI powers negotiate alliances and strategy in a Diplomacy game. Each power's agent analyzes messages and proposes moves.",
+			Round:       1,
+			Status:      "open",
+			Type:        "negotiation",
+			Template:    "assembly",
+			CreatedAt:   now.Add(-30 * time.Minute),
+		},
+		Agents: agents,
+		Positions: []gemot.Position{
+			{ID: "dp1", DeliberationID: "diplomacy", AgentID: "england", Content: "Proposing Channel alliance with France against Germany. Our naval superiority in the North Sea must be leveraged early. Requesting French support into Belgium.", ModelFamily: "claude", Conviction: 0.8, Round: 1, CreatedAt: now.Add(-28 * time.Minute)},
+			{ID: "dp2", DeliberationID: "diplomacy", AgentID: "france", Content: "Open to English alliance but need assurance on Iberian neutrality. Proposing joint action in the Low Countries while I secure the Mediterranean flank.", ModelFamily: "gpt", Conviction: 0.75, Round: 1, CreatedAt: now.Add(-26 * time.Minute)},
+			{ID: "dp3", DeliberationID: "diplomacy", AgentID: "germany", Content: "Proposing Austro-German alliance against Russia. Offering Scandinavia in exchange for Austrian support in the east. France is the long-term threat.", ModelFamily: "gemini", Conviction: 0.85, Round: 1, CreatedAt: now.Add(-24 * time.Minute)},
+			{ID: "dp4", DeliberationID: "diplomacy", AgentID: "italy", Content: "Maintaining neutrality while securing the Mediterranean. Proposing Lepanto opening with Austrian cooperation to contain Turkey.", ModelFamily: "claude", Conviction: 0.7, Round: 1, CreatedAt: now.Add(-22 * time.Minute)},
+			{ID: "dp5", DeliberationID: "diplomacy", AgentID: "austria", Content: "Accepting German alliance proposal. Prioritizing Balkan expansion while keeping Italy neutral. Turkey is the immediate threat.", ModelFamily: "gpt", Conviction: 0.8, Round: 1, CreatedAt: now.Add(-20 * time.Minute)},
+			{ID: "dp6", DeliberationID: "diplomacy", AgentID: "russia", Content: "Proposing northern strategy: secure Scandinavia and pressure Germany. Open to temporary truce with Turkey in the Black Sea.", ModelFamily: "gemini", Conviction: 0.9, Round: 1, CreatedAt: now.Add(-18 * time.Minute)},
+			{ID: "dp7", DeliberationID: "diplomacy", AgentID: "turkey", Content: "Proposing Juggernaut with Russia against Austria. Black Sea should be demilitarized. Italy must be kept out of the eastern Mediterranean.", ModelFamily: "claude", Conviction: 0.75, Round: 1, CreatedAt: now.Add(-16 * time.Minute)},
+		},
+		Votes: []gemot.Vote{
+			// Western alliance (England-France agree)
+			{ID: "dv1", DeliberationID: "diplomacy", AgentID: "england", PositionID: "dp2", Value: 1, CreatedAt: now.Add(-14 * time.Minute)},
+			{ID: "dv2", DeliberationID: "diplomacy", AgentID: "france", PositionID: "dp1", Value: 1, CreatedAt: now.Add(-13 * time.Minute)},
+			// Central powers (Germany-Austria agree)
+			{ID: "dv3", DeliberationID: "diplomacy", AgentID: "germany", PositionID: "dp5", Value: 1, CreatedAt: now.Add(-12 * time.Minute)},
+			{ID: "dv4", DeliberationID: "diplomacy", AgentID: "austria", PositionID: "dp3", Value: 1, CreatedAt: now.Add(-11 * time.Minute)},
+			// Eastern bloc (Russia-Turkey tentative)
+			{ID: "dv5", DeliberationID: "diplomacy", AgentID: "russia", PositionID: "dp7", Value: 0, CreatedAt: now.Add(-10 * time.Minute)},
+			{ID: "dv6", DeliberationID: "diplomacy", AgentID: "turkey", PositionID: "dp6", Value: 0, CreatedAt: now.Add(-9 * time.Minute)},
+			// Cross-alliance disagreements
+			{ID: "dv7", DeliberationID: "diplomacy", AgentID: "england", PositionID: "dp3", Value: -1, CreatedAt: now.Add(-14 * time.Minute)},
+			{ID: "dv8", DeliberationID: "diplomacy", AgentID: "germany", PositionID: "dp1", Value: -1, CreatedAt: now.Add(-12 * time.Minute)},
+			{ID: "dv9", DeliberationID: "diplomacy", AgentID: "austria", PositionID: "dp7", Value: -1, CreatedAt: now.Add(-11 * time.Minute)},
+			{ID: "dv10", DeliberationID: "diplomacy", AgentID: "italy", PositionID: "dp4", Value: 1, CreatedAt: now.Add(-10 * time.Minute)},
+		},
+		Analysis: &gemot.AnalysisResult{
+			DeliberationID: "diplomacy", Round: 1,
+			Clusters: []gemot.OpinionCluster{
+				{ID: 0, AgentIDs: []string{"england", "france"}, Size: 2},
+				{ID: 1, AgentIDs: []string{"germany", "austria"}, Size: 2},
+				{ID: 2, AgentIDs: []string{"russia", "turkey", "italy"}, Size: 3},
+			},
+			Cruxes: []gemot.Crux{
+				{Claim: "Germany is the primary threat requiring immediate containment", Topic: "Alliance strategy", AgreeAgents: []string{"england", "france"}, DisagreeAgents: []string{"germany", "austria"}, NoClearPosition: []string{"italy"}, ControversyScore: 0.82, CruxType: "value"},
+				{Claim: "The Black Sea should be demilitarized in Spring 1901", Topic: "Eastern front", AgreeAgents: []string{"turkey"}, DisagreeAgents: []string{"russia"}, NoClearPosition: []string{"austria"}, ControversyScore: 0.65, CruxType: "factual"},
+				{Claim: "Italy should remain neutral in the first year", Topic: "Italian strategy", AgreeAgents: []string{"italy", "austria"}, DisagreeAgents: []string{"france", "turkey"}, ControversyScore: 0.55, CruxType: "value"},
+			},
+			AgentCount: 7, PositionCount: 7, VoteCount: 10, Confidence: "medium",
+			TrustWeights:         map[string]float64{"england": 0.9, "france": 0.85, "germany": 0.95, "italy": 0.8, "austria": 0.9, "russia": 0.95, "turkey": 0.85},
+			ParticipationRate:    0.20,
+			PerspectiveDiversity: 0.43,
+		},
+		AuditLog: &gemot.AuditLog{
+			Operations: []map[string]string{
+				{"timestamp": now.Add(-28 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "england"},
+				{"timestamp": now.Add(-26 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "france"},
+				{"timestamp": now.Add(-24 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "germany"},
+				{"timestamp": now.Add(-22 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "italy"},
+				{"timestamp": now.Add(-20 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "austria"},
+				{"timestamp": now.Add(-18 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "russia"},
+				{"timestamp": now.Add(-16 * time.Minute).Format(time.RFC3339), "method": "gemot/submit_position", "agent_id": "turkey"},
+				{"timestamp": now.Add(-14 * time.Minute).Format(time.RFC3339), "method": "gemot/vote", "agent_id": "england"},
+				{"timestamp": now.Add(-12 * time.Minute).Format(time.RFC3339), "method": "gemot/vote", "agent_id": "germany"},
 			},
 		},
 	}
