@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -20,12 +21,13 @@ var staticFS embed.FS
 const maxSSEClients = 50
 
 type Server struct {
-	poller       *poller.Poller
-	hub          *hub.Hub
-	mux          *http.ServeMux
-	sseClients   atomic.Int64
-	snapshot     *poller.Snapshot // static snapshot for demo/replay modes
-	cycleInterval time.Duration  // auto-cycle interval for demo mode (0 = disabled)
+	poller        *poller.Poller
+	hub           *hub.Hub
+	mux           *http.ServeMux
+	sseClients    atomic.Int64
+	snapshot      *poller.Snapshot // static snapshot for demo/replay modes
+	cycleInterval time.Duration   // auto-cycle interval for demo mode (0 = disabled)
+	watches       *watchManager   // join code watch sessions (nil if no service key)
 }
 
 // New creates a server for live monitoring.
@@ -40,11 +42,15 @@ func New(p *poller.Poller, h *hub.Hub) *Server {
 }
 
 // NewDemo creates a server with built-in sample data and optional auto-cycling.
-func NewDemo(cycleInterval time.Duration) *Server {
+// If gemotURL and serviceKey are provided, live watching via join codes is also enabled.
+func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string) *Server {
 	s := &Server{
 		mux:           http.NewServeMux(),
 		snapshot:      demoSnapshot(),
 		cycleInterval: cycleInterval,
+	}
+	if gemotURL != "" && serviceKey != "" {
+		s.watches = newWatchManager(gemotURL, serviceKey)
 	}
 	s.routes()
 	return s
@@ -73,6 +79,17 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/state", s.handleState)
 	s.mux.HandleFunc("GET /api/events", s.handleEvents)
 	s.mux.HandleFunc("GET /api/config", s.handleConfig)
+
+	// Watch routes (join code live viewing)
+	s.mux.HandleFunc("GET /api/watch/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/state") {
+			s.handleWatchState(w, r)
+		} else if strings.HasSuffix(r.URL.Path, "/events") {
+			s.handleWatchEvents(w, r)
+		} else {
+			http.Error(w, "not found", http.StatusNotFound)
+		}
+	})
 
 	staticSub, err := fs.Sub(staticFS, "static")
 	if err != nil {
@@ -121,6 +138,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{ //nolint:errcheck
 		"mode":           mode,
 		"cycle_interval": s.cycleInterval.Milliseconds(),
+		"watch_enabled":  s.watches != nil,
 	})
 }
 

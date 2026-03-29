@@ -649,6 +649,13 @@ function updateConnectionStatus() {
     }
 }
 
+// ===== Watch Mode (join code) =====
+
+function getWatchCode() {
+    const match = window.location.pathname.match(/^\/watch\/([a-z0-9-]+)\/?$/);
+    return match ? match[1] : null;
+}
+
 // ===== Init =====
 
 // Remove boot overlay after its CSS animation completes
@@ -657,7 +664,45 @@ setTimeout(() => {
     if (boot) boot.classList.add('done');
 }, 3200);
 
-loadConfig().then(() => connect());
+const watchCode = getWatchCode();
+
+loadConfig().then(() => {
+    if (watchCode) {
+        // Watch mode: connect to join-code-specific endpoints
+        connectWatch(watchCode);
+    } else {
+        connect();
+    }
+});
+
+function connectWatch(code) {
+    if (eventSource) eventSource.close();
+
+    eventSource = new EventSource(`/api/watch/${code}/events`);
+
+    eventSource.onopen = () => {
+        state.connected = true;
+        updateConnectionStatus();
+    };
+
+    eventSource.onmessage = (e) => {
+        try {
+            const msg = JSON.parse(e.data);
+            handleEvent(msg);
+        } catch (err) {
+            console.error('SSE parse error:', err);
+        }
+    };
+
+    eventSource.onerror = () => {
+        state.connected = false;
+        updateConnectionStatus();
+    };
+
+    // Update header to show watch mode
+    const sysLabel = document.querySelector('.system-label');
+    if (sysLabel) sysLabel.textContent = `WATCHING`;
+}
 
 let resizeTimer;
 window.addEventListener('resize', () => {

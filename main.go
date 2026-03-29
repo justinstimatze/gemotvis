@@ -68,11 +68,13 @@ func cmdDemo() {
 	fs := flag.NewFlagSet("demo", flag.ExitOnError)
 	addr := fs.String("addr", envOr("GEMOTVIS_ADDR", ":9090"), "listen address")
 	cycle := fs.Duration("cycle", 20*time.Second, "auto-cycle interval (0 to disable)")
+	gemotURL := fs.String("gemot-url", envOr("GEMOTVIS_GEMOT_URL", ""), "gemot URL for live watching via join codes")
+	serviceKey := fs.String("service-key", envOr("GEMOTVIS_SERVICE_KEY", ""), "gemot API key for live watching")
 	fs.Parse(os.Args[1:])
 
 	srv := &http.Server{
 		Addr:         *addr,
-		Handler:      server.NewDemo(*cycle),
+		Handler:      server.NewDemo(*cycle, *gemotURL, *serviceKey),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Minute,
 		IdleTimeout:  2 * time.Minute,
