@@ -101,7 +101,8 @@ function handleEvent(msg) {
     switch (msg.type) {
         case 'snapshot':
             state.deliberations = msg.data.deliberations || {};
-            if (!state.activeDelibID) {
+            // Validate activeDelibID still exists in new snapshot
+            if (!state.activeDelibID || !state.deliberations[state.activeDelibID]) {
                 const ids = Object.keys(state.deliberations);
                 if (ids.length > 0) state.activeDelibID = ids[0];
             }
