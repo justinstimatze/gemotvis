@@ -1156,12 +1156,19 @@ function focusOnDelib(delibID) {
 function zoomToOverview() {
     state.focusedDelibID = null;
     updateCamera();
-    // Update header to show count instead of last-focused topic
+    // Clear focused highlight from all regions
+    document.querySelectorAll('.multi-region.focused').forEach(r => r.classList.remove('focused'));
+    // Update header
     const topicEl = document.querySelector('.topic-label');
     if (topicEl) {
         const count = Object.keys(state.deliberations).length;
         topicEl.textContent = `${count} Deliberations`;
     }
+    // Hide round display in overview
+    const roundEl = document.getElementById('round-display');
+    if (roundEl) roundEl.textContent = '';
+    const templateEl = document.getElementById('template-display');
+    if (templateEl) templateEl.textContent = '';
 }
 
 function updateCamera() {
