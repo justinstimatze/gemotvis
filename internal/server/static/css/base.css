@@ -993,8 +993,8 @@ footer {
 }
 
 .multi-region-connections .connection-line {
-    stroke-width: 1;
-    opacity: 0.5;
+    stroke-width: 1.5;
+    opacity: 0.6;
 }
 
 .multi-agent {

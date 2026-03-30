@@ -354,6 +354,9 @@ function render() {
     if (state.multiView && ids.length > 1) {
         document.getElementById('delib-nav')?.classList.add('hidden');
         document.getElementById('empty-state')?.classList.add('hidden');
+        document.getElementById('footer')?.classList.add('hidden');
+        document.getElementById('analysis-bar')?.classList.add('hidden');
+        document.getElementById('scrubber-bar')?.classList.add('hidden');
 
         // Update header for multi-view
         const focused = state.focusedDelibID && delibs[state.focusedDelibID];
@@ -376,6 +379,8 @@ function render() {
     const multiCanvas = document.getElementById('multi-canvas');
     if (multiCanvas) multiCanvas.remove();
     document.getElementById('main').className = '';
+    document.getElementById('footer')?.classList.remove('hidden');
+    document.getElementById('analysis-bar')?.classList.remove('hidden');
 
     renderDelibNav(ids, delibs);
 
@@ -1151,6 +1156,12 @@ function focusOnDelib(delibID) {
 function zoomToOverview() {
     state.focusedDelibID = null;
     updateCamera();
+    // Update header to show count instead of last-focused topic
+    const topicEl = document.querySelector('.topic-label');
+    if (topicEl) {
+        const count = Object.keys(state.deliberations).length;
+        topicEl.textContent = `${count} Deliberations`;
+    }
 }
 
 function updateCamera() {
