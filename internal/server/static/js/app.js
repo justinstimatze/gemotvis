@@ -2,8 +2,9 @@
 // Main application controller
 
 const VOTE_LABELS_MAGI = { 1: '承認', '-1': '否定', 0: '保留' };
-const VOTE_LABELS_EN = { 1: 'YEA', '-1': 'NAY', 0: '—' };
-let VOTE_LABELS = VOTE_LABELS_MAGI; // set by applyTheme()
+const VOTE_LABELS_CLASSIC = { 1: 'YEA', '-1': 'NAY', 0: '—' };
+const VOTE_LABELS_MINIMAL = { 1: 'YES', '-1': 'NO', 0: '—' };
+let VOTE_LABELS = VOTE_LABELS_CLASSIC; // set by applyTheme()
 const VOTE_CLASSES = { 1: 'vote-approve', '-1': 'vote-deny', 0: 'vote-pass' };
 
 const PIPELINE_STAGES = ['taxonomy', 'extracting', 'deduplicating', 'crux_detection', 'summarizing', 'complete'];
@@ -1099,7 +1100,9 @@ function applyTheme() {
         screen.classList.add('theme-classic');
     }
 
-    VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI : VOTE_LABELS_EN;
+    VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI
+                : active === 'minimal' ? VOTE_LABELS_MINIMAL
+                : VOTE_LABELS_CLASSIC;
 
     // Load web fonts for classic theme (base defaults reference these)
     if (active === 'classic' || !theme) {
