@@ -150,6 +150,7 @@ func (gm *groupManager) getOrCreate(groupID string) (*groupSession, error) {
 		ids = append(ids, d.ID)
 	}
 	p := poller.NewMulti(client, h, groupPollInterval, ids)
+	p.EnableSSE() // push events from gemot for near-instant updates
 	go p.Run(ctx)
 
 	sess := &groupSession{

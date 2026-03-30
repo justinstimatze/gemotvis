@@ -140,6 +140,7 @@ func (wm *watchManager) getOrCreate(code string) (*watchSession, error) {
 	h := hub.New()
 	ctx, cancel := context.WithCancel(context.Background())
 	p := poller.New(client, h, watchPollInterval, info.DeliberationID)
+	p.EnableSSE() // push events from gemot for near-instant updates
 
 	go p.Run(ctx)
 

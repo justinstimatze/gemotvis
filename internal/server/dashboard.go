@@ -168,6 +168,7 @@ func (dm *dashboardManager) createSession(apiKey string) (string, error) {
 	// Start a poller for this user's deliberations
 	h := hub.New()
 	p := poller.New(client, h, dashboardPollInterval, "")
+	p.EnableSSE() // push events from gemot for near-instant updates
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go p.Run(ctx)

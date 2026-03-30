@@ -19,6 +19,9 @@ type Client struct {
 	nextID atomic.Int64
 }
 
+func (c *Client) BaseURL() string     { return c.baseURL }
+func (c *Client) BearerToken() string { return c.bearerToken }
+
 func NewClient(baseURL, bearerToken string) *Client {
 	return &Client{
 		baseURL:     baseURL,

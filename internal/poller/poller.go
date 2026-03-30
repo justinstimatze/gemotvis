@@ -5,8 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,6 +49,7 @@ type Poller struct {
 	interval  time.Duration
 	delibID   string   // if set, watch only this deliberation
 	delibIDs  []string // if set, watch these specific deliberations
+	sseEvents bool     // if true, connect to gemot SSE /events for push notifications
 
 	mu       sync.RWMutex
 	current  *Snapshot
@@ -71,6 +75,11 @@ func (p *Poller) GetSnapshot() *Snapshot {
 	return p.current
 }
 
+// EnableSSE opts the poller into listening for gemot SSE push events.
+// When enabled, the poller connects to gemot's /events endpoint and
+// re-fetches state immediately on each event, with the timer as fallback.
+func (p *Poller) EnableSSE() { p.sseEvents = true }
+
 func (p *Poller) Run(ctx context.Context) {
 	// Initial fetch
 	p.poll(ctx)
@@ -78,12 +87,101 @@ func (p *Poller) Run(ctx context.Context) {
 	ticker := time.NewTicker(p.interval)
 	defer ticker.Stop()
 
+	// SSE push: trigger immediate re-fetch on gemot events
+	notify := make(chan struct{}, 1)
+	if p.sseEvents {
+		go p.listenSSE(ctx, notify)
+	}
+
 	for {
 		select {
 		case <-ticker.C:
 			p.poll(ctx)
+		case <-notify:
+			p.poll(ctx)
 		case <-ctx.Done():
 			return
+		}
+	}
+}
+
+// listenSSE connects to gemot's /events SSE endpoint and sends on notify
+// whenever a relevant event arrives. Reconnects automatically on failure.
+func (p *Poller) listenSSE(ctx context.Context, notify chan<- struct{}) {
+	baseURL := p.client.BaseURL()
+	token := p.client.BearerToken()
+
+	// Build the events URL with optional deliberation filter
+	eventsURL := baseURL + "/events?token=" + token
+	if p.delibID != "" {
+		eventsURL += "&deliberation_id=" + p.delibID
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		if err := p.readSSEStream(ctx, eventsURL, notify); err != nil {
+			log.Printf("sse: connection lost: %v (reconnecting in 5s)", err)
+		}
+
+		// Backoff before reconnecting
+		select {
+		case <-time.After(5 * time.Second):
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+// readSSEStream opens a single SSE connection and reads events until error or context cancellation.
+func (p *Poller) readSSEStream(ctx context.Context, url string, notify chan<- struct{}) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Cache-Control", "no-cache")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 256))
+		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, body)
+	}
+
+	log.Printf("sse: connected to %s", p.client.BaseURL()+"/events")
+
+	// Read SSE lines — we only need to detect "data:" lines to trigger re-fetch.
+	// We don't need to parse the JSON; the poll() will fetch full state.
+	buf := make([]byte, 4096)
+	for {
+		n, err := resp.Body.Read(buf)
+		if n > 0 {
+			chunk := string(buf[:n])
+			// Any data line that isn't a ping or connected event triggers a re-fetch
+			if strings.Contains(chunk, "\"position_submitted\"") ||
+				strings.Contains(chunk, "\"vote_cast\"") ||
+				strings.Contains(chunk, "\"analysis_started\"") ||
+				strings.Contains(chunk, "\"analysis_progress\"") ||
+				strings.Contains(chunk, "\"analysis_complete\"") ||
+				strings.Contains(chunk, "\"deliberation_created\"") {
+				// Non-blocking send — if a re-fetch is already pending, skip
+				select {
+				case notify <- struct{}{}:
+				default:
+				}
+			}
+		}
+		if err != nil {
+			return err
 		}
 	}
 }
