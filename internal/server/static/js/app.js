@@ -1163,6 +1163,36 @@ function applyTheme() {
         document.head.appendChild(link);
     }
 
+    // Populate boot overlay per theme
+    const boot = document.getElementById('boot');
+    if (boot) {
+        const BOOT_CONTENT = {
+            magi: [
+                'NERV SYSTEMS INTERFACE v3.1',
+                'LOADING MAGI CORE...',
+                'MELCHIOR-1 / BALTHASAR-2 / CASPER-3',
+                'DELIBERATION ENGINE: ONLINE',
+                'SSE LINK: ESTABLISHED',
+                'GEMOTVIS READY',
+            ],
+            classic: [
+                '\u2726',
+                'Gemot',
+                'Deliberation Monitor',
+            ],
+            minimal: [
+                'Gemot',
+            ],
+        };
+        const lines = BOOT_CONTENT[active] || BOOT_CONTENT.classic;
+        lines.forEach(text => {
+            const div = document.createElement('div');
+            div.className = 'boot-text';
+            div.textContent = text;
+            boot.appendChild(div);
+        });
+    }
+
     return active;
 }
 
@@ -1184,8 +1214,8 @@ if (activeTheme === 'magi') {
 
 // ===== Init =====
 
-// Remove boot overlay — skip instantly for non-MAGI themes
-const bootDelay = activeTheme === 'magi' ? 3200 : 0;
+// Remove boot overlay after animation completes
+const bootDelay = activeTheme === 'magi' ? 3200 : activeTheme === 'classic' ? 2200 : 1200;
 setTimeout(() => {
     const boot = document.getElementById('boot');
     if (boot) boot.classList.add('done');
