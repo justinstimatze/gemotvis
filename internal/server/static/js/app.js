@@ -269,6 +269,7 @@ function renderScrubber(ds) {
 function scrubTo(index) {
     scrubber.enabled = true;
     scrubber.eventIndex = index;
+    state.cyclePaused = true; // pause demo cycling while scrubbing
     render();
 }
 
@@ -317,6 +318,17 @@ function render() {
     // Multi-view: render all deliberations spatially when in multi-watch mode
     if (state.multiView && ids.length > 1) {
         document.getElementById('delib-nav')?.classList.add('hidden');
+        document.getElementById('empty-state')?.classList.add('hidden');
+
+        // Update header for multi-view
+        const focused = state.focusedDelibID && delibs[state.focusedDelibID];
+        const topicEl = document.querySelector('.topic-label');
+        if (focused) {
+            topicEl.textContent = focused.deliberation?.topic || 'UNTITLED';
+        } else {
+            topicEl.textContent = `${ids.length} Deliberations`;
+        }
+
         renderMultiView();
         // Start demo loop if not already running and cycle is enabled
         if (!demoLoopTimer && state.cycleInterval > 0) {
@@ -324,6 +336,11 @@ function render() {
         }
         return;
     }
+
+    // Leaving multi-view: restore single-view DOM
+    const multiCanvas = document.getElementById('multi-canvas');
+    if (multiCanvas) multiCanvas.remove();
+    document.getElementById('main').className = '';
 
     renderDelibNav(ids, delibs);
 
@@ -750,7 +767,7 @@ function shortAgentID(id) {
     if (!id) return '?';
     const parts = id.split(':');
     const name = parts[parts.length - 1];
-    return name.length > 12 ? name.slice(0, 12) + '..' : name;
+    return name.length > 18 ? name.slice(0, 16) + '..' : name;
 }
 
 function truncate(s, n) {
@@ -871,21 +888,16 @@ function renderMultiView() {
     const main = document.getElementById('main');
     main.className = 'multi-view';
 
-    // Create or get the canvas wrapper
+    // Hide single-view elements, show multi-view canvas
+    document.getElementById('agents')?.classList.add('hidden');
+    document.getElementById('connections')?.classList.add('hidden');
+    document.getElementById('center-panel')?.classList.add('hidden');
+    document.getElementById('scrubber-bar')?.classList.add('hidden');
+
     let canvas = document.getElementById('multi-canvas');
     if (!canvas) {
-        clearChildren(main);
         canvas = el('div', { className: 'multi-canvas', id: 'multi-canvas' });
         main.appendChild(canvas);
-
-        // Re-add HUD corners to main (they were cleared)
-        const hud = el('div', { className: 'hud-corners' },
-            el('div', { className: 'hud-corner tl' }),
-            el('div', { className: 'hud-corner tr' }),
-            el('div', { className: 'hud-corner bl' }),
-            el('div', { className: 'hud-corner br' }),
-        );
-        main.appendChild(hud);
     }
 
     const regions = computeCanvasLayout(ids);
