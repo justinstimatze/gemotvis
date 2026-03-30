@@ -371,10 +371,8 @@
 /* --- MAGI: tooltip --- */
 
 #screen.theme-magi .agent-tooltip {
-    background: rgba(12, 12, 12, 0.95);
-    box-shadow: var(--glow-lg), 0 4px 20px rgba(0, 0, 0, 0.8);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
+    background: #0c0c0c;
+    box-shadow: var(--glow-lg), 0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
 #screen.theme-magi .tooltip-header {
@@ -393,10 +391,8 @@
 /* --- MAGI: center panel --- */
 
 #screen.theme-magi .center-panel {
-    background: rgba(12, 12, 12, 0.92);
+    background: #0c0c0c;
     box-shadow: var(--glow-lg), 0 0 40px rgba(255, 140, 0, 0.08);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
     color: #ddd;
 }
 
