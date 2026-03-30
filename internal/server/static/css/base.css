@@ -596,6 +596,93 @@ header {
     color: var(--vis-green);
 }
 
+/* ===== TIMELINE SCRUBBER ===== */
+
+.scrubber-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 16px;
+    background: var(--vis-panel);
+    border-top: 1px solid var(--vis-panel-border);
+    flex-shrink: 0;
+    height: 28px;
+}
+
+.scrubber-btn {
+    background: transparent;
+    border: 1px solid var(--vis-panel-border);
+    color: var(--vis-amber);
+    font-family: var(--vis-font);
+    font-size: 10px;
+    padding: 2px 8px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    transition: border-color 0.15s;
+}
+
+.scrubber-btn:hover {
+    border-color: var(--vis-amber);
+}
+
+.scrubber-track {
+    flex: 1;
+    height: 12px;
+    position: relative;
+    cursor: pointer;
+    border-bottom: 1px solid var(--vis-panel-border);
+}
+
+.scrubber-dots {
+    position: absolute;
+    inset: 0;
+}
+
+.scrubber-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1.5px solid var(--vis-amber-dim);
+    background: var(--vis-panel);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.scrubber-dot:hover {
+    transform: translate(-50%, -50%) scale(1.5);
+    border-color: var(--vis-amber);
+}
+
+.scrubber-dot.active {
+    background: var(--vis-amber);
+    border-color: var(--vis-amber);
+}
+
+.scrubber-dot-position { border-color: var(--vis-cyan); }
+.scrubber-dot-position.active { background: var(--vis-cyan); border-color: var(--vis-cyan); }
+.scrubber-dot-vote { border-color: var(--vis-green); }
+.scrubber-dot-vote.active { background: var(--vis-green); border-color: var(--vis-green); }
+.scrubber-dot-analysis { border-color: var(--vis-yellow); }
+.scrubber-dot-analysis.active { background: var(--vis-yellow); border-color: var(--vis-yellow); }
+
+.scrubber-label {
+    font-size: 9px;
+    color: var(--vis-text-dim);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    min-width: 160px;
+    text-align: right;
+}
+
+.scrubber-live {
+    color: var(--vis-green);
+    border-color: var(--vis-green);
+}
+
 /* ===== FOOTER ===== */
 
 footer {

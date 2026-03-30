@@ -37,6 +37,15 @@ let previousVotes = {}; // agentID -> vote value, for detecting changes
 let knownAgents = new Set(); // for detecting new agents
 let focusTimer = null; // timer to return to overview after idle
 
+// Scrubber state
+const scrubber = {
+    enabled: false,
+    playing: false,
+    eventIndex: null, // null = live/latest
+    events: [],
+    playTimer: null,
+};
+
 // ===== Safe DOM Helpers =====
 
 function el(tag, attrs, ...children) {
@@ -174,6 +183,130 @@ async function loadConfig() {
     }
 }
 
+// ===== Timeline Scrubber =====
+
+function filterToTime(ds, cutoffTime) {
+    const cutoff = new Date(cutoffTime).getTime();
+    const positions = (ds.positions || []).filter(p => new Date(p.created_at).getTime() <= cutoff);
+    const votes = (ds.votes || []).filter(v => new Date(v.created_at).getTime() <= cutoff);
+    const visibleAgentIDs = new Set(positions.map(p => p.agent_id));
+    const agents = (ds.agents || []).filter(a => visibleAgentIDs.has(a.id));
+    const ops = ds.audit_log?.operations || [];
+    const hasAnalysis = ops.some(op =>
+        (op.method === 'gemot/analyze' || op.method === 'gemot/get_analysis_result') &&
+        new Date(op.timestamp).getTime() <= cutoff
+    );
+    const analysis = hasAnalysis ? ds.analysis : null;
+    const filteredAgents = analysis ? agents : agents.map(a => ({ ...a, cluster_id: undefined }));
+    const filteredOps = ops.filter(op => new Date(op.timestamp).getTime() <= cutoff);
+    return {
+        deliberation: ds.deliberation,
+        positions,
+        votes,
+        analysis,
+        audit_log: ds.audit_log ? { ...ds.audit_log, operations: filteredOps } : null,
+        agents: filteredAgents,
+    };
+}
+
+function buildTimelineEvents(ds) {
+    const ops = ds.audit_log?.operations || [];
+    return ops.map((op, i) => {
+        const method = op.method || '';
+        let type = 'other';
+        let label = method.replace('gemot/', '');
+        if (method.includes('submit_position')) {
+            type = 'position';
+            label = `${shortAgentID(op.agent_id || '')} submits position`;
+        } else if (method.includes('vote')) {
+            type = 'vote';
+            label = `${shortAgentID(op.agent_id || '')} votes`;
+        } else if (method.includes('analy')) {
+            type = 'analysis';
+            label = method.includes('complete') || method.includes('result') ? 'Analysis complete' : 'Analysis started';
+        }
+        return { time: op.timestamp, label, type, index: i };
+    }).sort((a, b) => new Date(a.time) - new Date(b.time));
+}
+
+function renderScrubber(ds) {
+    const bar = document.getElementById('scrubber-bar');
+    if (!bar || state.multiView) { bar?.classList.add('hidden'); return; }
+
+    const events = buildTimelineEvents(ds);
+    scrubber.events = events;
+
+    if (events.length < 2) { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+
+    const dots = document.getElementById('scrubber-dots');
+    const label = document.getElementById('scrubber-label');
+    clearChildren(dots);
+
+    events.forEach((evt, i) => {
+        const pct = (i / (events.length - 1)) * 100;
+        const dot = el('div', {
+            className: `scrubber-dot scrubber-dot-${evt.type} ${i === scrubber.eventIndex ? 'active' : ''}`,
+        });
+        dot.style.cssText = `left: ${pct}%`;
+        dot.title = evt.label;
+        dot.onclick = (e) => { e.stopPropagation(); scrubTo(i); };
+        dots.appendChild(dot);
+    });
+
+    const idx = scrubber.eventIndex;
+    if (idx != null && events[idx]) {
+        const t = new Date(events[idx].time);
+        const ts = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        label.textContent = `${ts} \u2014 ${events[idx].label}`;
+    } else {
+        label.textContent = 'LIVE';
+    }
+    updatePlayButton();
+}
+
+function scrubTo(index) {
+    scrubber.enabled = true;
+    scrubber.eventIndex = index;
+    render();
+}
+
+function scrubToLive() {
+    scrubber.enabled = false;
+    scrubber.eventIndex = null;
+    stopScrubberPlay();
+    render();
+}
+
+function toggleScrubberPlay() {
+    scrubber.playing ? stopScrubberPlay() : startScrubberPlay();
+}
+
+function startScrubberPlay() {
+    scrubber.playing = true;
+    scrubber.enabled = true;
+    if (scrubber.eventIndex == null) scrubber.eventIndex = 0;
+    scrubber.playTimer = setInterval(() => {
+        const next = (scrubber.eventIndex || 0) + 1;
+        if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
+        scrubber.eventIndex = next;
+        render();
+    }, 1200);
+    updatePlayButton();
+}
+
+function stopScrubberPlay() {
+    scrubber.playing = false;
+    clearInterval(scrubber.playTimer);
+    scrubber.playTimer = null;
+    updatePlayButton();
+}
+
+function updatePlayButton() {
+    const btn = document.getElementById('scrubber-play');
+    if (btn) btn.textContent = scrubber.playing ? '\u23F8' : '\u25B6';
+}
+
 // ===== Rendering =====
 
 function render() {
@@ -201,14 +334,22 @@ function render() {
         return;
     }
 
-    renderHeader(active);
-    renderAnalysisBar(active);
-    renderAgents(active);
-    renderConnections(active);
-    renderCenterPanel(active);
-    renderCruxPanel(active);
-    renderMetrics(active);
-    renderAuditLog(active);
+    // Apply scrubber time filter if active
+    let display = active;
+    if (scrubber.enabled && scrubber.eventIndex != null) {
+        const cutoff = scrubber.events[scrubber.eventIndex]?.time;
+        if (cutoff) display = filterToTime(active, cutoff);
+    }
+
+    renderHeader(display);
+    renderAnalysisBar(display);
+    renderAgents(display);
+    renderConnections(display);
+    renderCenterPanel(display);
+    renderCruxPanel(display);
+    renderMetrics(display);
+    renderAuditLog(display);
+    renderScrubber(active); // always pass full state for timeline dots
 }
 
 function renderDelibNav(ids, delibs) {
@@ -1178,7 +1319,7 @@ function applyTheme() {
                 'MELCHIOR-1 / BALTHASAR-2 / CASPER-3',
                 'DELIBERATION ENGINE: ONLINE',
                 'SSE LINK: ESTABLISHED',
-                'GEMOTVIS READY',
+                'GEMOT READY',
             ],
             classic: [
                 '\u2726',
@@ -1205,7 +1346,7 @@ const activeTheme = applyTheme();
 
 // Update page title per theme
 if (activeTheme === 'magi') {
-    document.title = 'GEMOTVIS // MAGI';
+    document.title = 'GEMOT // MAGI';
     // MAGI center panel header stays as "MAGI" (set in HTML)
 } else {
     if (activeTheme === 'minimal') {
@@ -1333,6 +1474,25 @@ let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(render, 150);
+});
+
+// Scrubber controls
+document.getElementById('scrubber-play')?.addEventListener('click', toggleScrubberPlay);
+document.getElementById('scrubber-live')?.addEventListener('click', scrubToLive);
+
+document.addEventListener('keydown', (e) => {
+    if (!scrubber.events.length) return;
+    if (e.target.tagName === 'INPUT') return; // don't hijack form input
+    if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        scrubTo(Math.min((scrubber.eventIndex ?? -1) + 1, scrubber.events.length - 1));
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        scrubTo(Math.max((scrubber.eventIndex ?? 1) - 1, 0));
+    } else if (e.key === ' ' && scrubber.enabled) {
+        e.preventDefault();
+        toggleScrubberPlay();
+    }
 });
 
 // Delegated click handler for multi-view regions (survives DOM rebuilds)
