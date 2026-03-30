@@ -397,6 +397,11 @@
     box-shadow: var(--glow-lg), 0 0 40px rgba(255, 140, 0, 0.08);
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
+    color: #ddd;
+}
+
+#screen.theme-magi .panel-text {
+    color: #ccc;
 }
 
 /* --- MAGI: boot sequence (only theme that shows it) --- */
