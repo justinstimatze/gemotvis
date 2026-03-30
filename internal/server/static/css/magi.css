@@ -978,6 +978,180 @@ footer {
     text-shadow: var(--glow-sm);
 }
 
+/* ===== MULTI-VIEW SPATIAL CANVAS ===== */
+
+.multi-view {
+    overflow: hidden;
+}
+
+.multi-canvas {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Focus flash: brief brightness spike on camera cut */
+#screen[data-state="focusing"] .multi-canvas {
+    transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+#screen[data-state="focusing"] .scanlines::after {
+    height: 20px;
+    background: linear-gradient(to bottom, transparent, rgba(255, 140, 0, 0.08), rgba(255, 140, 0, 0.15), rgba(255, 140, 0, 0.08), transparent);
+}
+
+/* Individual deliberation region */
+.multi-region {
+    position: absolute;
+    border: 1px solid var(--magi-panel-border);
+    background: rgba(10, 10, 10, 0.6);
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.multi-region:hover {
+    border-color: var(--magi-amber-dim);
+}
+
+.multi-region.focused {
+    border-color: var(--magi-amber);
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
+}
+
+/* Activity pulse — plays when an event arrives */
+@keyframes activityPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.4); }
+    50% { box-shadow: 0 0 20px 4px rgba(255, 140, 0, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
+}
+
+.multi-region.active-pulse {
+    animation: activityPulse 1s ease-out;
+    border-color: var(--magi-amber);
+}
+
+/* Region title bar */
+.multi-region-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--magi-panel-border);
+    background: rgba(255, 140, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.multi-region-topic {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--magi-amber);
+    text-shadow: var(--glow-sm);
+}
+
+.multi-region-meta {
+    font-size: 8px;
+    color: var(--magi-text-dim);
+    letter-spacing: 1px;
+}
+
+/* Mini agent area within a region */
+.multi-region-agents {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+.multi-region-connections {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Ensure child elements don't steal clicks from the region container */
+.multi-region-agents,
+.multi-region-title,
+.multi-region-status,
+.multi-agent {
+    pointer-events: none;
+}
+
+.multi-region-connections .connection-line {
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+/* Mini agent diamond */
+.multi-agent {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 2;
+}
+
+.multi-agent::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: 0 auto;
+    transform: rotate(45deg);
+    border: 1.5px solid var(--magi-amber);
+    background: rgba(255, 140, 0, 0.15);
+}
+
+.multi-agent.cluster-1::before {
+    border-color: var(--magi-cyan);
+    background: rgba(0, 255, 255, 0.12);
+}
+
+.multi-agent.cluster-2::before {
+    border-color: var(--magi-magenta);
+    background: rgba(255, 0, 255, 0.1);
+}
+
+.multi-agent.cluster-3::before {
+    border-color: var(--magi-green);
+    background: rgba(0, 255, 65, 0.1);
+}
+
+.multi-agent-vote {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    margin-top: -2px;
+    letter-spacing: 2px;
+}
+
+.multi-agent-name {
+    display: block;
+    font-size: 7px;
+    color: var(--magi-text-dim);
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+/* Status badges in regions */
+.multi-region-status {
+    padding: 2px 8px;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--magi-text-dim);
+    border-top: 1px solid var(--magi-panel-border);
+    flex-shrink: 0;
+}
+
+.multi-region-status.analyzing {
+    color: var(--magi-cyan);
+    background: rgba(0, 255, 255, 0.05);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
 /* ===== LOGIN FORM (Dashboard) ===== */
 
 .login-form {

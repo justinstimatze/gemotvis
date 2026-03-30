@@ -17,12 +17,16 @@ let state = {
     cyclePaused: false,  // true when user manually clicks a tab
     cycleInterval: 0,    // ms, from server config
     mode: 'live',        // 'demo' | 'replay' | 'live'
+    multiView: false,    // true when watching multiple deliberations spatially
+    focusedDelibID: null, // which deliberation the camera is focused on (null = overview)
+    lastActivity: {},     // delibID -> timestamp of last event
 };
 
 let eventSource = null;
 let cycleProgressTimer = null;
 let previousVotes = {}; // agentID -> vote value, for detecting changes
 let knownAgents = new Set(); // for detecting new agents
+let focusTimer = null; // timer to return to overview after idle
 
 // ===== Safe DOM Helpers =====
 
@@ -89,7 +93,9 @@ function handleEvent(msg) {
         case 'state': {
             const ds = msg.data;
             if (ds && ds.deliberation) {
-                state.deliberations[ds.deliberation.deliberation_id] = ds;
+                const delibID = ds.deliberation.deliberation_id;
+                state.deliberations[delibID] = ds;
+                onActivity(delibID);
                 render();
             }
             break;
@@ -162,6 +168,13 @@ async function loadConfig() {
 function render() {
     const delibs = state.deliberations;
     const ids = Object.keys(delibs);
+
+    // Multi-view: render all deliberations spatially when in multi-watch mode
+    if (state.multiView && ids.length > 1) {
+        document.getElementById('delib-nav')?.classList.add('hidden');
+        renderMultiView();
+        return;
+    }
 
     renderDelibNav(ids, delibs);
 
@@ -638,6 +651,260 @@ function buildPairwiseRelationship(ds) {
     return pairScores;
 }
 
+// ===== Multi-View Spatial Viewport =====
+
+const OVERVIEW_RETURN_DELAY = 8000; // ms before returning to overview
+const FOCUS_TRANSITION_MS = 800;
+
+// Compute layout positions for multiple deliberations on the canvas.
+// Returns { [delibID]: { x, y, w, h } } in percentage coordinates.
+function computeCanvasLayout(delibIDs) {
+    const n = delibIDs.length;
+    if (n <= 1) return {};
+
+    const regions = {};
+
+    // Grid layout: compute rows/cols
+    const cols = Math.ceil(Math.sqrt(n));
+    const rows = Math.ceil(n / cols);
+    const cellW = 100 / cols;
+    const cellH = 100 / rows;
+    const pad = 2; // padding in percent
+
+    delibIDs.forEach((id, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        regions[id] = {
+            x: col * cellW + pad,
+            y: row * cellH + pad,
+            w: cellW - pad * 2,
+            h: cellH - pad * 2,
+        };
+    });
+
+    return regions;
+}
+
+// Render all deliberations simultaneously on a spatial canvas.
+function renderMultiView() {
+    const delibs = state.deliberations;
+    const ids = Object.keys(delibs);
+    if (ids.length <= 1) return;
+
+    const main = document.getElementById('main');
+    main.className = 'multi-view';
+
+    // Create or get the canvas wrapper
+    let canvas = document.getElementById('multi-canvas');
+    if (!canvas) {
+        clearChildren(main);
+        canvas = el('div', { className: 'multi-canvas', id: 'multi-canvas' });
+        main.appendChild(canvas);
+
+        // Re-add HUD corners to main (they were cleared)
+        const hud = el('div', { className: 'hud-corners' },
+            el('div', { className: 'hud-corner tl' }),
+            el('div', { className: 'hud-corner tr' }),
+            el('div', { className: 'hud-corner bl' }),
+            el('div', { className: 'hud-corner br' }),
+        );
+        main.appendChild(hud);
+    }
+
+    const regions = computeCanvasLayout(ids);
+    clearChildren(canvas);
+
+    ids.forEach(id => {
+        const ds = delibs[id];
+        const region = regions[id];
+        if (!ds || !region) return;
+
+        const d = ds.deliberation;
+        const agents = ds.agents || [];
+        const n = agents.length;
+        const voteMap = buildVoteMap(ds);
+        const isActive = state.focusedDelibID === id;
+        const hasRecentActivity = state.lastActivity[id] && (Date.now() - state.lastActivity[id] < 5000);
+
+        // Region container
+        const regionEl = el('div', {
+            className: `multi-region ${isActive ? 'focused' : ''} ${hasRecentActivity ? 'active-pulse' : ''}`,
+            style: `left:${region.x}%; top:${region.y}%; width:${region.w}%; height:${region.h}%;`,
+            dataset: { delibId: id },
+        });
+
+        // Title bar
+        regionEl.appendChild(el('div', { className: 'multi-region-title' },
+            el('span', { className: 'multi-region-topic' }, truncate(d.topic, 40)),
+            el('span', { className: 'multi-region-meta' },
+                `${n} AGENTS · R${d.round_number} · ${(d.template || d.type || '').toUpperCase()}`),
+        ));
+
+        // Mini agent visualization
+        const agentArea = el('div', { className: 'multi-region-agents' });
+
+        // SVG connections
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'multi-region-connections');
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('preserveAspectRatio', 'none');
+
+        // Compute positions for agents within this region
+        const agentPositions = [];
+        const hasGeoPositions = agents.some(a => a.x != null && a.y != null);
+
+        agents.forEach((agent, i) => {
+            let ax, ay;
+            if (hasGeoPositions && agent.x != null && agent.y != null) {
+                ax = agent.x;
+                ay = agent.y;
+            } else if (n === 2) {
+                ax = i === 0 ? 30 : 70;
+                ay = 50;
+            } else if (n === 3) {
+                const positions3 = [{ x: 50, y: 20 }, { x: 25, y: 70 }, { x: 75, y: 70 }];
+                ax = positions3[i].x;
+                ay = positions3[i].y;
+            } else {
+                const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+                ax = 50 + 30 * Math.cos(angle);
+                ay = 50 + 30 * Math.sin(angle);
+            }
+            agentPositions.push({ x: ax, y: ay });
+
+            const vote = voteMap[agent.id];
+            const voteClass = vote !== undefined ? VOTE_CLASSES[vote] : 'vote-pass';
+            const clusterClass = agent.cluster_id != null
+                ? CLUSTER_COLORS[agent.cluster_id % CLUSTER_COLORS.length] : '';
+
+            const node = el('div', {
+                className: `multi-agent ${clusterClass}`,
+                style: `left:${ax}%; top:${ay}%;`,
+                title: agent.id,
+            },
+                el('span', { className: `multi-agent-vote ${voteClass}` },
+                    vote !== undefined ? VOTE_LABELS[vote] : '--'),
+                el('span', { className: 'multi-agent-name' }, shortAgentID(agent.id)),
+            );
+            agentArea.appendChild(node);
+        });
+
+        // Draw connections
+        const pairScores = buildPairwiseRelationship(ds);
+        for (let i = 0; i < agents.length; i++) {
+            for (let j = i + 1; j < agents.length; j++) {
+                const key = `${agents[i].id}|${agents[j].id}`;
+                const rel = pairScores[key] || 'neutral';
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', agentPositions[i].x);
+                line.setAttribute('y1', agentPositions[i].y);
+                line.setAttribute('x2', agentPositions[j].x);
+                line.setAttribute('y2', agentPositions[j].y);
+                line.setAttribute('class', `connection-line connection-${rel}`);
+                svg.appendChild(line);
+            }
+        }
+
+        agentArea.appendChild(svg);
+        regionEl.appendChild(agentArea);
+
+        // Status indicator
+        if (d.status === 'analyzing') {
+            regionEl.appendChild(el('div', { className: 'multi-region-status analyzing' }, 'ANALYZING'));
+        }
+
+        // Crux count
+        const cruxCount = (ds.analysis?.cruxes || []).length;
+        if (cruxCount > 0) {
+            regionEl.appendChild(el('div', { className: 'multi-region-status' }, `${cruxCount} CRUXES`));
+        }
+
+        // Click handled via delegation on #main (see below)
+
+        canvas.appendChild(regionEl);
+    });
+
+    // Apply camera after rendering
+    updateCamera();
+}
+
+function applyCameraFocus(canvas, region) {
+    const parent = canvas.parentElement;
+    const pw = parent.clientWidth;
+    const ph = parent.clientHeight;
+
+    // Region in pixel coords
+    const rx = (region.x / 100) * pw;
+    const ry = (region.y / 100) * ph;
+    const rw = (region.w / 100) * pw;
+    const rh = (region.h / 100) * ph;
+
+    // Scale to fill ~85% of viewport
+    const scale = Math.min(pw / rw, ph / rh) * 0.85;
+
+    // Translate so region center aligns with viewport center
+    const rcx = rx + rw / 2;
+    const rcy = ry + rh / 2;
+    const tx = pw / 2 - rcx * scale;
+    const ty = ph / 2 - rcy * scale;
+
+    canvas.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+}
+
+function focusOnDelib(delibID) {
+    state.focusedDelibID = delibID;
+
+    // Flash the scan sweep
+    const screen = document.getElementById('screen');
+    screen.dataset.state = 'focusing';
+    setTimeout(() => {
+        const active = state.deliberations[state.activeDelibID];
+        screen.dataset.state = active?.deliberation?.status === 'analyzing' ? 'analyzing' : 'normal';
+    }, FOCUS_TRANSITION_MS);
+
+    // Apply camera without full re-render
+    updateCamera();
+
+    // Set timer to return to overview
+    clearTimeout(focusTimer);
+    focusTimer = setTimeout(zoomToOverview, OVERVIEW_RETURN_DELAY);
+}
+
+function zoomToOverview() {
+    state.focusedDelibID = null;
+    updateCamera();
+}
+
+function updateCamera() {
+    const canvas = document.getElementById('multi-canvas');
+    if (!canvas) return;
+
+    const ids = Object.keys(state.deliberations);
+    const regions = computeCanvasLayout(ids);
+
+    canvas.querySelectorAll('.multi-region').forEach(r => {
+        const id = r.dataset.delibId;
+        r.classList.toggle('focused', id === state.focusedDelibID);
+    });
+
+    if (state.focusedDelibID && regions[state.focusedDelibID]) {
+        applyCameraFocus(canvas, regions[state.focusedDelibID]);
+    } else {
+        canvas.style.transform = '';
+    }
+}
+
+// Called when an SSE event indicates activity in a deliberation
+function onActivity(delibID) {
+    if (!state.multiView) return;
+    state.lastActivity[delibID] = Date.now();
+
+    // Don't interrupt if user manually focused (click)
+    if (state.cyclePaused) return;
+
+    focusOnDelib(delibID);
+}
+
 function updateConnectionStatus() {
     const status = document.getElementById('connection-status');
     if (state.connected) {
@@ -768,8 +1035,14 @@ setTimeout(() => {
 
 const watchCodes = getWatchCodes();
 
+// Multi-view can also be activated via ?multi=true on any mode (for demo/testing)
+const forceMulti = new URLSearchParams(window.location.search).get('multi') === 'true';
+
 loadConfig().then(() => {
-    if (watchCodes.length > 0) {
+    if (watchCodes.length > 1) {
+        state.multiView = true;
+        connectWatch(watchCodes);
+    } else if (watchCodes.length === 1) {
         connectWatch(watchCodes);
     } else if (isDashboard()) {
         // Try connecting with existing session cookie first
@@ -781,6 +1054,7 @@ loadConfig().then(() => {
             }
         }).catch(() => showLoginForm());
     } else {
+        if (forceMulti) state.multiView = true;
         connect();
     }
 });
@@ -853,4 +1127,13 @@ let resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(render, 150);
+});
+
+// Delegated click handler for multi-view regions (survives DOM rebuilds)
+document.getElementById('main').addEventListener('click', (e) => {
+    const region = e.target.closest('.multi-region');
+    if (region && state.multiView) {
+        const delibId = region.dataset.delibId;
+        if (delibId) focusOnDelib(delibId);
+    }
 });
