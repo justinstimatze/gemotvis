@@ -706,46 +706,27 @@ body.boot-classic .boot-text:nth-child(3) {
 
 /* Classic: settlement-style agent nodes — shield keep with crenellated wall base */
 
-/* Settlement wall base behind the shield */
+/* Remove wall pseudo-element — the castle shape has its own crenellations */
 #screen.theme-classic .agent-node::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -20%);
-    width: 110px;
-    height: 40px;
-    z-index: 1;
-    background: linear-gradient(180deg, #C8B890, #B8A880);
-    border: 1.5px solid rgba(139, 90, 43, 0.25);
-    border-radius: 0 0 2px 2px;
-    opacity: 0.4;
-    /* Crenellation: stepped top border via box-shadow */
-    box-shadow:
-        -40px -6px 0 0 rgba(139, 90, 43, 0.15),
-        -24px -6px 0 0 rgba(139, 90, 43, 0.15),
-        -8px -6px 0 0 rgba(139, 90, 43, 0.15),
-        8px -6px 0 0 rgba(139, 90, 43, 0.15),
-        24px -6px 0 0 rgba(139, 90, 43, 0.15),
-        40px -6px 0 0 rgba(139, 90, 43, 0.15);
+    display: none;
 }
 
-/* Heraldic shield — the keep/citadel (public domain clip-path from Wikimedia Commons) */
+/* Castle tower — fortified settlement silhouette */
 #screen.theme-classic .diamond {
-    clip-path: url(#shield);
+    clip-path: url(#castle);
     border-radius: 0;
     border: none;
-    background: linear-gradient(180deg, #EDE0C4 0%, #E5D5B0 30%, #D8C8A0 100%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(180deg, #C8B080 0%, #B8A070 40%, #A89060 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 2;
 }
 
-/* Gold border ring behind shield */
+/* Stone texture highlight on castle */
 #screen.theme-classic .diamond::after {
-    clip-path: url(#shield);
+    clip-path: url(#castle);
     border: none;
-    inset: -3px;
-    background: linear-gradient(180deg, #CFB53B, #AF803C);
+    inset: -2px;
+    background: linear-gradient(180deg, #8B5A2B, #6B4423);
     z-index: -1;
 }
 
@@ -921,13 +902,15 @@ body.boot-classic .boot-text:nth-child(3) {
     border-right-color: rgba(139, 90, 43, 0.3);
 }
 
-/* Classic: cluster colors (illuminated pigments) */
-#screen.theme-classic .cluster-1 .diamond { background: linear-gradient(180deg, #D8D5F0, #C5C0E8) !important; }
-#screen.theme-classic .cluster-1 .diamond::after { background: linear-gradient(180deg, #120A8F, #2142AB) !important; }
-#screen.theme-classic .cluster-2 .diamond { background: linear-gradient(180deg, #E8D0E0, #D8C0D5) !important; }
-#screen.theme-classic .cluster-2 .diamond::after { background: linear-gradient(180deg, #66023C, #8B2060) !important; }
-#screen.theme-classic .cluster-3 .diamond { background: linear-gradient(180deg, #D0E8D5, #C0D8C5) !important; }
-#screen.theme-classic .cluster-3 .diamond::after { background: linear-gradient(180deg, #2D6B3F, #43B3AE) !important; }
+/* Classic: cluster colors — earthy heraldic tones on stone castles */
+#screen.theme-classic .cluster-1 .diamond { background: linear-gradient(180deg, #B8A880, #9B8B68) !important; }
+#screen.theme-classic .cluster-1 .diamond::after { background: linear-gradient(180deg, #2E5894, #1A3A6B) !important; }
+
+#screen.theme-classic .cluster-2 .diamond { background: linear-gradient(180deg, #C0A898, #A89080) !important; }
+#screen.theme-classic .cluster-2 .diamond::after { background: linear-gradient(180deg, #8B1A1A, #6B1010) !important; }
+
+#screen.theme-classic .cluster-3 .diamond { background: linear-gradient(180deg, #A8B898, #90A880) !important; }
+#screen.theme-classic .cluster-3 .diamond::after { background: linear-gradient(180deg, #2D6B3F, #1A4A2A) !important; }
 
 /* Classic: decorative corner marks + compass rose */
 #screen.theme-classic .hud-corners { display: block; }
@@ -1011,19 +994,59 @@ body.boot-classic .boot-text:nth-child(3) {
 }
 #screen.theme-classic .login-button:hover { color: #8B1A1A; border-color: #8B1A1A; }
 
-/* Classic: multi-view shields */
-#screen.theme-classic .multi-region-topic { font-family: var(--vis-font-display); color: #8B1A1A; }
+/* Classic: multi-view regions as aged parchment cards */
+#screen.theme-classic .multi-region {
+    background: linear-gradient(180deg, #F5E6C8 0%, #EDE0C4 100%);
+    border: 1.5px solid #8B5A2B;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#screen.theme-classic .multi-region.focused {
+    border-color: #6B1520;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+#screen.theme-classic .multi-region-title {
+    background: rgba(139, 90, 43, 0.06);
+    border-bottom: 1px solid rgba(139, 90, 43, 0.15);
+}
+
+/* Classic: multi-view — readable text, not blackletter at small sizes */
+#screen.theme-classic .multi-region-topic {
+    font-family: 'IM Fell English SC', 'Georgia', serif;
+    font-variant: small-caps;
+    color: #6B1520;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+#screen.theme-classic .multi-agent-name {
+    font-family: 'IM Fell English', 'Georgia', serif;
+    font-size: 8px;
+}
+
+#screen.theme-classic .multi-region-meta {
+    font-family: 'IM Fell English', 'Georgia', serif;
+}
+
+#screen.theme-classic .multi-region-status {
+    font-family: 'IM Fell English SC', 'Georgia', serif;
+    font-variant: small-caps;
+}
+/* Mini castle in multi-view */
 #screen.theme-classic .multi-agent::before {
-    clip-path: url(#shield);
+    clip-path: url(#castle);
     border-radius: 0;
     transform: none;
     border: none;
-    background: linear-gradient(180deg, #EDE0C4, #D8C8A0);
-    box-shadow: 0 0 0 1.5px #8B5A2B;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(180deg, #C8B080, #A89060);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
-#screen.theme-classic .multi-agent.cluster-1::before { background: linear-gradient(180deg, #D8D5F0, #C5C0E8); box-shadow: 0 0 0 1.5px #120A8F; }
-#screen.theme-classic .multi-agent.cluster-2::before { background: linear-gradient(180deg, #E8D0E0, #D8C0D5); box-shadow: 0 0 0 1.5px #66023C; }
-#screen.theme-classic .multi-agent.cluster-3::before { background: linear-gradient(180deg, #D0E8D5, #C0D8C5); box-shadow: 0 0 0 1.5px #2D6B3F; }
+#screen.theme-classic .multi-agent.cluster-1::before { background: linear-gradient(180deg, #B8A880, #9B8B68); }
+#screen.theme-classic .multi-agent.cluster-2::before { background: linear-gradient(180deg, #C0A898, #A89080); }
+#screen.theme-classic .multi-agent.cluster-3::before { background: linear-gradient(180deg, #A8B898, #90A880); }
 
 /* Classic: empty state */
 #screen.theme-classic .empty-state { font-style: italic; letter-spacing: 1px; }
