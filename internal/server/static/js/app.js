@@ -262,7 +262,10 @@ function renderScrubber(ds) {
         const ts = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         label.textContent = `${ts} \u2014 ${events[idx].label}`;
     } else {
-        label.textContent = 'LIVE';
+        const liveText = state.mode === 'demo' || state.mode === 'replay' ? 'LATEST' : 'LIVE';
+        label.textContent = liveText;
+        const liveBtn = document.getElementById('scrubber-live');
+        if (liveBtn) liveBtn.textContent = liveText;
     }
     updatePlayButton();
 }

@@ -1080,109 +1080,261 @@ body.boot-minimal .boot-overlay .boot-text {
 }
 
 /* Minimal: clean background */
-#screen.theme-minimal main { background: #ffffff; }
+#screen.theme-minimal main { background: #fafafa; }
 
-/* Minimal: clean header */
+/* Minimal: header — thin border, no shadow (Linear-style) */
 #screen.theme-minimal header {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    box-shadow: none;
 }
 
-/* Minimal: topic */
-#screen.theme-minimal .topic-label { font-weight: 600; letter-spacing: 0.5px; }
-#screen.theme-minimal .system-label { font-weight: 600; letter-spacing: 0.5px; }
+/* Minimal: typography — Inter-like system font, clean weights */
+#screen.theme-minimal .topic-label {
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+}
 
-/* Minimal: pill status indicators */
-#screen.theme-minimal .status-indicator { border-radius: 12px; padding: 2px 10px; }
-#screen.theme-minimal .status-indicator.online { border-color: #bbf7d0; background: #f0fdf4; }
-#screen.theme-minimal .status-indicator.offline { border-color: #fecaca; background: #fef2f2; }
-#screen.theme-minimal .status-indicator.analyzing { border-color: #a5f3fc; background: #ecfeff; }
+#screen.theme-minimal .system-label {
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0;
+    color: #0f172a;
+}
 
-/* Minimal: circle agent nodes — solid white with subtle border */
+/* Minimal: pill badges — soft backgrounds, no hard borders */
+#screen.theme-minimal .status-indicator {
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+}
+
+#screen.theme-minimal .status-indicator.online { background: #dcfce7; color: #15803d; }
+#screen.theme-minimal .status-indicator.offline { background: #fee2e2; color: #b91c1c; }
+#screen.theme-minimal .status-indicator.analyzing { background: #e0f2fe; color: #0369a1; }
+
+/* Minimal: circle agent nodes — white card with subtle shadow */
 #screen.theme-minimal .diamond {
     border-radius: 50%;
+    border: 1.5px solid #e5e7eb;
     background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 #screen.theme-minimal .diamond::after { border: none; }
-#screen.theme-minimal .agent-vote { font-weight: 700; }
-#screen.theme-minimal .vote-pass { color: #94a3b8; }
 
-/* Minimal: conviction */
-#screen.theme-minimal .diamond.conviction-high { background: rgba(37, 99, 235, 0.12); }
-#screen.theme-minimal .diamond.conviction-med { background: rgba(37, 99, 235, 0.06); }
-#screen.theme-minimal .diamond.conviction-low { background: rgba(37, 99, 235, 0.02); border-style: dashed; }
+/* Minimal: vote text — refined, not screaming */
+#screen.theme-minimal .agent-vote {
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+}
 
-/* Minimal: clusters */
+#screen.theme-minimal .vote-approve { color: #059669; }
+#screen.theme-minimal .vote-deny { color: #dc2626; }
+#screen.theme-minimal .vote-pass { color: #cbd5e1; font-size: 18px; }
+
+/* Minimal: agent labels — clean, no uppercase */
+#screen.theme-minimal .agent-name {
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0;
+    color: #374151;
+}
+
+#screen.theme-minimal .agent-model {
+    color: #9ca3af;
+    font-size: 10px;
+}
+
+/* Minimal: conviction — border weight only, no fill change */
+#screen.theme-minimal .diamond.conviction-high { border-color: var(--vis-amber); border-width: 2px; }
+#screen.theme-minimal .diamond.conviction-med { border-color: #d1d5db; }
+#screen.theme-minimal .diamond.conviction-low { border-color: #e5e7eb; border-style: dashed; }
+
+/* Minimal: clusters — soft colors */
+#screen.theme-minimal .cluster-0 { border-color: #2563eb !important; }
 #screen.theme-minimal .cluster-1 { border-color: #0891b2 !important; }
 #screen.theme-minimal .cluster-2 { border-color: #a855f7 !important; }
 #screen.theme-minimal .cluster-3 { border-color: #16a34a !important; }
 
-/* Minimal: panel header */
-#screen.theme-minimal .panel-header { font-weight: 600; letter-spacing: 0.5px; }
+/* Minimal: panel header — uppercase micro label (Vercel-style) */
+#screen.theme-minimal .panel-header {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    text-transform: uppercase;
+    border-bottom: 1px solid #f0f0f0;
+}
 
-/* Minimal: rounded panels */
-#screen.theme-minimal .center-panel { border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-#screen.theme-minimal .pipeline-stage { border-radius: 4px; }
-#screen.theme-minimal .delib-tab { border-radius: 6px; }
+/* Minimal: center panel — floating card */
+#screen.theme-minimal .center-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+}
 
-/* Minimal: tooltip */
-#screen.theme-minimal .agent-tooltip { border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
-#screen.theme-minimal .tooltip-body { color: #475569; }
+/* Minimal: analysis pipeline — pill chips */
+#screen.theme-minimal .analysis-bar {
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
 
-/* Minimal: scrollbar */
-#screen.theme-minimal ::-webkit-scrollbar-thumb { border-radius: 4px; }
+#screen.theme-minimal .analysis-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: #0369a1;
+}
 
-/* Minimal: login form */
-#screen.theme-minimal .login-title { font-weight: 700; }
-#screen.theme-minimal .login-input { border-radius: 8px; }
-#screen.theme-minimal .login-input:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-#screen.theme-minimal .login-button { border-radius: 8px; }
+#screen.theme-minimal .pipeline-stage {
+    border-radius: 999px;
+    font-size: 10px;
+    padding: 3px 8px;
+    border: 1px solid #e5e7eb;
+    color: #9ca3af;
+}
 
-/* Minimal: multi-view */
-#screen.theme-minimal .multi-region { border-radius: 8px; background: #ffffff; }
-#screen.theme-minimal .multi-region.focused { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); }
-#screen.theme-minimal .multi-agent::before { border-radius: 50%; transform: none; }
-
-/* Minimal: analysis pipeline */
 #screen.theme-minimal .pipeline-stage.active {
-    background: rgba(8, 145, 178, 0.06);
-    border-color: var(--vis-cyan);
-    color: var(--vis-cyan);
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+    color: #0369a1;
 }
 
 #screen.theme-minimal .pipeline-stage.done {
-    background: rgba(22, 163, 74, 0.06);
-    border-color: var(--vis-green-dim);
-    color: var(--vis-green);
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
 }
 
-/* Minimal: agent name and model readable on white */
-#screen.theme-minimal .agent-name {
-    font-weight: 600;
-    letter-spacing: 0.5px;
+/* Minimal: nav tabs — pill buttons */
+#screen.theme-minimal .delib-tab {
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 4px 14px;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-weight: 400;
 }
 
-/* Minimal: crux claim readable */
-#screen.theme-minimal .crux-claim {
-    color: var(--vis-text);
+#screen.theme-minimal .delib-tab:hover {
+    background: #f9fafb;
+    color: #374151;
+}
+
+#screen.theme-minimal .delib-tab.active {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
     font-weight: 500;
 }
 
-/* Minimal: metric label readable */
-#screen.theme-minimal .metric-label {
-    color: #64748b;
+#screen.theme-minimal .delib-tab.analyzing {
+    border-color: #7dd3fc;
+    color: #0369a1;
 }
 
-/* Minimal: delib tab active state */
-#screen.theme-minimal .delib-tab.active {
-    background: rgba(37, 99, 235, 0.06);
-    font-weight: 600;
+/* Minimal: tooltip — floating card with soft shadow */
+#screen.theme-minimal .agent-tooltip {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
 }
+
+#screen.theme-minimal .tooltip-header {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6b7280;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+#screen.theme-minimal .tooltip-body { color: #374151; font-size: 13px; }
+#screen.theme-minimal .tooltip-footer { color: #9ca3af; font-size: 10px; }
+
+/* Minimal: footer — clean dividers */
+#screen.theme-minimal footer {
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+}
+
+#screen.theme-minimal .footer-panel {
+    border-right: 1px solid #f0f0f0;
+}
+
+/* Minimal: metrics — clean typography */
+#screen.theme-minimal .metric-value {
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+}
+
+#screen.theme-minimal .metric-label {
+    font-size: 10px;
+    color: #9ca3af;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Minimal: crux items */
+#screen.theme-minimal .crux-claim {
+    color: #1e293b;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+#screen.theme-minimal .crux-meta { font-size: 10px; color: #9ca3af; }
+
+/* Minimal: audit log */
+#screen.theme-minimal .audit-entry { color: #6b7280; border-bottom-color: #f5f5f5; }
+#screen.theme-minimal .audit-entry .timestamp { color: #9ca3af; }
+#screen.theme-minimal .audit-entry .method { color: #2563eb; font-weight: 500; }
+#screen.theme-minimal .audit-entry .agent { color: #0f172a; }
+
+/* Minimal: connections — light, geometric */
+#screen.theme-minimal .connection-agree { stroke: #22c55e; stroke-width: 1.5; }
+#screen.theme-minimal .connection-disagree { stroke: #f87171; stroke-width: 1.5; }
+#screen.theme-minimal .connection-neutral { stroke: #e5e7eb; }
+#screen.theme-minimal .connection-bridging { stroke: #fbbf24; stroke-width: 2; }
+
+/* Minimal: scrollbar */
+#screen.theme-minimal ::-webkit-scrollbar-thumb { border-radius: 999px; background: #e5e7eb; }
+#screen.theme-minimal ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+
+/* Minimal: login form */
+#screen.theme-minimal .login-title { font-weight: 600; letter-spacing: -0.02em; }
+#screen.theme-minimal .login-input { border-radius: 8px; border: 1px solid #d1d5db; }
+#screen.theme-minimal .login-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08); }
+#screen.theme-minimal .login-button { border-radius: 8px; font-weight: 500; }
+#screen.theme-minimal .login-button:hover { background: #eff6ff; }
+
+/* Minimal: multi-view */
+#screen.theme-minimal .multi-region { border-radius: 12px; background: #ffffff; border: 1px solid #e5e7eb; }
+#screen.theme-minimal .multi-region.focused { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08); }
+#screen.theme-minimal .multi-agent::before { border-radius: 50%; transform: none; border: 1.5px solid #d1d5db; background: #ffffff; }
+
+/* Minimal: scrubber — subtle dots */
+#screen.theme-minimal .scrubber-bar { background: #ffffff; border-top: 1px solid #f0f0f0; }
+#screen.theme-minimal .scrubber-btn { border-radius: 4px; font-size: 11px; }
+#screen.theme-minimal .scrubber-label { color: #9ca3af; }
+
+/* Minimal: empty state */
+#screen.theme-minimal .empty-state { color: #d1d5db; font-weight: 400; letter-spacing: 0; font-size: 16px; }
+#screen.theme-minimal .empty-message { color: #d1d5db; }
 
 /* Minimal: integrity warning */
 #screen.theme-minimal .integrity-warning .diamond {
-    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1) !important;
 }
 
 
