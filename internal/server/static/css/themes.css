@@ -1194,9 +1194,9 @@ body.boot-minimal .boot-overlay .boot-text {
    ============================================================================= */
 
 #screen.theme-gastown {
-    --vis-amber: #cd7f32;           /* brass */
-    --vis-amber-dim: #8b7355;       /* warm brown border */
-    --vis-amber-glow: rgba(205, 127, 50, 0.4);
+    --vis-amber: #8b5e3c;           /* warm brown */
+    --vis-amber-dim: #7a6652;       /* muted brown */
+    --vis-amber-glow: rgba(205, 127, 50, 0.2);
     --vis-green: #2e7d32;           /* operational green */
     --vis-green-dim: #4caf50;
     --vis-red: #8b2500;             /* burnt red / rust */
@@ -1204,26 +1204,26 @@ body.boot-minimal .boot-overlay .boot-text {
     --vis-blue: #70798c;            /* steel */
     --vis-cyan: #b87333;            /* copper */
     --vis-magenta: #6a1b9a;         /* purple */
-    --vis-yellow: #cd7f32;          /* brass (same as primary) */
-    --vis-bg: #2c1810;             /* dark espresso */
-    --vis-panel: #3e2723;          /* espresso panel */
-    --vis-panel-border: #5d4037;    /* medium brown border */
-    --vis-text: #f5e6d3;           /* cream text */
-    --vis-text-dim: #d4a574;        /* warm tan */
+    --vis-yellow: #cd7f32;          /* brass accent */
+    --vis-bg: #e8dcc8;             /* warm parchment (from gastown) */
+    --vis-panel: #f5e6d3;          /* light cream surface */
+    --vis-panel-border: #c4a882;    /* warm tan border */
+    --vis-text: #2c1810;           /* dark espresso text */
+    --vis-text-dim: #5d4037;        /* medium brown */
     --vis-font: 'Crimson Text', 'Georgia', serif;
     --vis-font-display: 'Cinzel', 'Georgia', serif;
-    --glow-sm: 0 0 4px rgba(205, 127, 50, 0.3);
-    --glow-md: 0 0 8px rgba(205, 127, 50, 0.4), 0 0 2px rgba(205, 127, 50, 0.2);
-    --glow-lg: 0 0 16px rgba(205, 127, 50, 0.5), 0 0 4px rgba(205, 127, 50, 0.3);
+    --glow-sm: none;
+    --glow-md: none;
+    --glow-lg: none;
 
-    background: #2c1810;
+    background: #e8dcc8;
     text-transform: uppercase;
 }
 
 /* Gastown: boot sequence */
 body.boot-gastown .boot-overlay {
     display: flex;
-    background: #2c1810;
+    background: #e8dcc8;
     animation: bootFade 0.5s ease-out 1.5s forwards;
 }
 
@@ -1244,10 +1244,9 @@ body.boot-gastown .boot-text:nth-child(1) {
 
 body.boot-gastown .boot-text:nth-child(2) {
     font-size: 22px;
-    color: #cd7f32;
+    color: #3e2723;
     letter-spacing: 6px;
     animation-delay: 0.4s;
-    text-shadow: 0 0 12px rgba(205, 127, 50, 0.5);
 }
 
 body.boot-gastown .boot-text:nth-child(3) {
@@ -1261,285 +1260,272 @@ body.boot-gastown .boot-text:nth-child(3) {
     100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Gastown: industrial metal plate header */
+/* Gastown: dark brown header bar with brass accent line */
 #screen.theme-gastown header {
-    background: linear-gradient(180deg, #5d4037, #3e2723);
+    background: #3e2723;
     border-bottom: 3px solid #cd7f32;
-    box-shadow: 0 2px 12px rgba(205, 127, 50, 0.15);
+    color: #f5e6d3;
 }
 
 #screen.theme-gastown .system-label {
     font-family: 'Cinzel', serif;
     letter-spacing: 4px;
-    text-shadow: var(--glow-sm);
+    color: #cd7f32;
 }
+
+/* Em-dash flanking decoration (like Gas Town Hall logo) */
+#screen.theme-gastown .system-label::before { content: '\2014\00a0'; color: #cd7f32; }
+#screen.theme-gastown .system-label::after { content: '\00a0\2014'; color: #cd7f32; }
 
 #screen.theme-gastown .topic-label {
     font-family: 'Cinzel', serif;
-    letter-spacing: 3px;
-    text-shadow: var(--glow-md);
+    letter-spacing: 2px;
+    color: #f5e6d3;
 }
 
-/* Gastown: status badges */
-#screen.theme-gastown .status-indicator.online {
-    color: #2e7d32;
-    border-color: #2e7d32;
-    text-shadow: 0 0 6px rgba(46, 125, 50, 0.5);
-}
-
-#screen.theme-gastown .status-indicator.offline {
-    color: #8b2500;
-    border-color: #8b2500;
-    text-shadow: 0 0 6px rgba(139, 37, 0, 0.4);
-}
-
-#screen.theme-gastown .status-indicator.analyzing {
-    color: #b87333;
-    border-color: #b87333;
-    text-shadow: 0 0 8px rgba(184, 115, 51, 0.5);
-}
-
-/* Gastown: dark industrial background with subtle noise */
-#screen.theme-gastown main {
-    background:
-        /* Subtle metallic grain */
-        radial-gradient(ellipse at 20% 30%, rgba(205, 127, 50, 0.03) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 70%, rgba(205, 127, 50, 0.02) 0%, transparent 40%),
-        #2c1810;
-}
-
-/* Gastown: brass-bordered diamond nodes */
-#screen.theme-gastown .diamond {
-    border-color: #cd7f32;
-    background: linear-gradient(
-        135deg,
-        rgba(205, 127, 50, 0.15) 0%,
-        rgba(62, 39, 35, 0.8) 50%,
-        rgba(205, 127, 50, 0.1) 100%
-    );
-    box-shadow:
-        var(--glow-md),
-        inset 0 0 20px rgba(205, 127, 50, 0.05);
-}
-
-#screen.theme-gastown .diamond::after {
-    border: 1px solid rgba(205, 127, 50, 0.2);
-}
-
-#screen.theme-gastown .agent-name {
-    text-shadow: var(--glow-sm);
+/* Gastown: status badges (on dark header) */
+#screen.theme-gastown .status-indicator {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
     letter-spacing: 2px;
 }
 
-/* Gastown: vote colors */
-#screen.theme-gastown .vote-approve {
-    color: #2e7d32;
-    text-shadow: 0 0 8px rgba(46, 125, 50, 0.6);
+#screen.theme-gastown .status-indicator.online {
+    color: #4caf50;
+    border-color: #4caf50;
 }
 
-#screen.theme-gastown .vote-deny {
-    color: #8b2500;
-    text-shadow: 0 0 8px rgba(139, 37, 0, 0.6);
-}
-
-#screen.theme-gastown .vote-pass {
+#screen.theme-gastown .status-indicator.offline {
     color: #cd7f32;
-    text-shadow: var(--glow-sm);
+    border-color: #cd7f32;
 }
 
-/* Gastown: conviction fills */
-#screen.theme-gastown .diamond.conviction-high {
-    background: linear-gradient(135deg, rgba(205, 127, 50, 0.25), rgba(62, 39, 35, 0.8), rgba(205, 127, 50, 0.2));
+#screen.theme-gastown .status-indicator.analyzing {
+    color: #cd7f32;
+    border-color: #cd7f32;
 }
 
-/* Gastown: cluster colors (metals) */
+/* Gastown: warm parchment background */
+#screen.theme-gastown main {
+    background: #e8dcc8;
+}
+
+/* Gastown: bordered diamond nodes on light background */
+#screen.theme-gastown .diamond {
+    border: 2px solid #8b5e3c;
+    background: linear-gradient(
+        135deg,
+        rgba(245, 230, 211, 0.9) 0%,
+        rgba(232, 220, 200, 0.8) 50%,
+        rgba(212, 196, 170, 0.9) 100%
+    );
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+#screen.theme-gastown .diamond::after {
+    border: 1px solid rgba(139, 94, 60, 0.15);
+}
+
+#screen.theme-gastown .agent-name {
+    letter-spacing: 2px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+}
+
+/* Gastown: vote colors (on light background) */
+#screen.theme-gastown .vote-approve { color: #2e7d32; }
+#screen.theme-gastown .vote-deny { color: #8b2500; }
+#screen.theme-gastown .vote-pass { color: #5d4037; }
+
+/* Gastown: cluster colors (metals on light) */
 #screen.theme-gastown .cluster-1 {
     border-color: #b87333 !important; /* copper */
-    background: linear-gradient(135deg, rgba(184, 115, 51, 0.15), rgba(62, 39, 35, 0.8)) !important;
-    box-shadow: 0 0 8px rgba(184, 115, 51, 0.3) !important;
+}
+#screen.theme-gastown .cluster-1 .diamond {
+    background: linear-gradient(135deg, rgba(184, 115, 51, 0.1), rgba(245, 230, 211, 0.8)) !important;
 }
 
 #screen.theme-gastown .cluster-2 {
     border-color: #70798c !important; /* steel */
-    background: linear-gradient(135deg, rgba(112, 121, 140, 0.15), rgba(62, 39, 35, 0.8)) !important;
 }
 
 #screen.theme-gastown .cluster-3 {
     border-color: #8b4513 !important; /* bronze */
-    background: linear-gradient(135deg, rgba(139, 69, 19, 0.15), rgba(62, 39, 35, 0.8)) !important;
 }
 
-/* Gastown: metal plate footer */
+/* Gastown: dark brown footer bar */
 #screen.theme-gastown footer {
-    background: linear-gradient(180deg, #3e2723, #2c1810);
+    background: #3e2723;
     border-top: 3px solid #cd7f32;
-    box-shadow: 0 -2px 12px rgba(205, 127, 50, 0.1);
-}
-
-/* Gastown: panel headers — brass engraved */
-#screen.theme-gastown .panel-header {
-    font-family: 'Cinzel', serif;
-    letter-spacing: 3px;
-    text-shadow: var(--glow-sm);
-    background: rgba(205, 127, 50, 0.05);
-    border-bottom-color: #5d4037;
-}
-
-/* Gastown: analysis bar */
-#screen.theme-gastown .analysis-bar {
-    background: #3e2723;
-    border-color: #5d4037;
-    box-shadow: 0 2px 8px rgba(205, 127, 50, 0.05);
-}
-
-#screen.theme-gastown .analysis-label {
-    color: #b87333;
-    text-shadow: 0 0 8px rgba(184, 115, 51, 0.5);
-}
-
-#screen.theme-gastown .pipeline-stage.active {
-    background: rgba(184, 115, 51, 0.1);
-    border-color: #b87333;
-    color: #b87333;
-    text-shadow: 0 0 6px rgba(184, 115, 51, 0.4);
-}
-
-#screen.theme-gastown .pipeline-stage.done {
-    background: rgba(46, 125, 50, 0.08);
-    color: #2e7d32;
-}
-
-/* Gastown: center panel — metal dispatch */
-#screen.theme-gastown .center-panel {
-    background: #3e2723;
-    border: 2px solid #cd7f32;
-    box-shadow: var(--glow-lg);
     color: #f5e6d3;
 }
 
-#screen.theme-gastown .panel-text {
-    color: #d9c9b0;
+#screen.theme-gastown .footer-panel {
+    border-right-color: #5d4037;
 }
 
-/* Gastown: tooltip — brass-bordered dispatch */
-#screen.theme-gastown .agent-tooltip {
+/* Gastown: panel headers */
+#screen.theme-gastown .panel-header {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 3px;
+    color: #cd7f32;
+    background: transparent;
+    border-bottom-color: #5d4037;
+}
+
+/* Gastown: footer text on dark background */
+#screen.theme-gastown .crux-claim { color: #f5e6d3; }
+#screen.theme-gastown .crux-meta { color: #d4a574; }
+#screen.theme-gastown .metric-value { color: #cd7f32; font-family: 'Cinzel', serif; }
+#screen.theme-gastown .metric-label { color: #d4a574; }
+#screen.theme-gastown .audit-entry { color: #d4a574; border-bottom-color: #5d4037; }
+#screen.theme-gastown .audit-entry .timestamp { color: #8b7355; }
+#screen.theme-gastown .audit-entry .method { color: #cd7f32; }
+#screen.theme-gastown .audit-entry .agent { color: #f5e6d3; }
+
+/* Gastown: analysis bar — dark plate */
+#screen.theme-gastown .analysis-bar {
     background: #3e2723;
+    border-top-color: #5d4037;
+    border-bottom: 3px solid #cd7f32;
+    color: #f5e6d3;
+}
+
+#screen.theme-gastown .analysis-label {
+    color: #cd7f32;
+}
+
+#screen.theme-gastown .pipeline-stage {
+    border-color: #5d4037;
+    color: #8b7355;
+}
+
+#screen.theme-gastown .pipeline-stage.active {
     border-color: #cd7f32;
-    box-shadow: var(--glow-lg), 0 4px 16px rgba(0, 0, 0, 0.6);
+    color: #cd7f32;
+}
+
+#screen.theme-gastown .pipeline-stage.done {
+    border-color: #2e7d32;
+    color: #4caf50;
+}
+
+/* Gastown: center panel — cream card with brown border */
+#screen.theme-gastown .center-panel {
+    background: #f5e6d3;
+    border: 2px solid #8b5e3c;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Gastown: tooltip — cream card */
+#screen.theme-gastown .agent-tooltip {
+    background: #f5e6d3;
+    border: 1px solid #c4a882;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 #screen.theme-gastown .tooltip-header {
-    background: rgba(205, 127, 50, 0.08);
     font-family: 'Cinzel', serif;
     text-transform: uppercase;
     letter-spacing: 2px;
+    color: #8b5e3c;
+    border-bottom-color: #c4a882;
 }
 
-#screen.theme-gastown .tooltip-body { color: #d9c9b0; }
-#screen.theme-gastown .tooltip-footer { text-transform: uppercase; }
+#screen.theme-gastown .tooltip-body { color: #2c1810; }
+#screen.theme-gastown .tooltip-footer { color: #5d4037; text-transform: uppercase; }
 
-/* Gastown: connections — brass lines */
-#screen.theme-gastown .connection-agree {
-    stroke: #2e7d32;
-    filter: drop-shadow(0 0 2px rgba(46, 125, 50, 0.3));
+/* Gastown: connections — clean, no glow */
+#screen.theme-gastown .connection-agree { stroke: #2e7d32; }
+#screen.theme-gastown .connection-disagree { stroke: #8b2500; }
+#screen.theme-gastown .connection-bridging { stroke: #cd7f32; }
+
+/* Gastown: nav bar (dark brown, like header) */
+#screen.theme-gastown #delib-nav {
+    background: #4a3728;
+    border-bottom-color: #5d4037;
 }
 
-#screen.theme-gastown .connection-disagree {
-    stroke: #8b2500;
-    filter: drop-shadow(0 0 2px rgba(139, 37, 0, 0.3));
-}
+#screen.theme-gastown .nav-label { color: #d4a574; }
 
-#screen.theme-gastown .connection-bridging {
-    stroke: #cd7f32;
-    filter: drop-shadow(0 0 4px rgba(205, 127, 50, 0.4));
-}
-
-/* Gastown: nav tabs — metal buttons */
 #screen.theme-gastown .delib-tab {
     font-family: 'Cinzel', serif;
     letter-spacing: 1px;
+    color: #d4a574;
+    border-color: #5d4037;
 }
 
 #screen.theme-gastown .delib-tab:hover {
-    text-shadow: var(--glow-sm);
+    color: #cd7f32;
+    border-color: #cd7f32;
 }
 
 #screen.theme-gastown .delib-tab.active {
+    color: #f5e6d3;
     background: rgba(205, 127, 50, 0.1);
-    text-shadow: var(--glow-sm);
-    box-shadow: 0 0 8px rgba(205, 127, 50, 0.15);
+    border-color: #cd7f32;
 }
 
-/* Gastown: brass cycle bar */
+/* Gastown: cycle bar */
 #screen.theme-gastown .cycle-progress {
-    background: linear-gradient(90deg, #8b4513, #cd7f32);
-    box-shadow: 0 0 6px rgba(205, 127, 50, 0.4);
+    background: #cd7f32;
 }
 
-/* Gastown: login form — industrial dispatch terminal */
+/* Gastown: login form */
 #screen.theme-gastown .login-title {
     font-family: 'Cinzel', serif;
-    text-shadow: var(--glow-lg);
     letter-spacing: 6px;
 }
 
 #screen.theme-gastown .login-input {
-    border-width: 2px;
-    border-color: #5d4037;
-    color: #f5e6d3;
+    border-color: #c4a882;
 }
 
 #screen.theme-gastown .login-input:focus {
-    border-color: #cd7f32;
-    box-shadow: var(--glow-md);
+    border-color: #8b5e3c;
+    box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.15);
 }
 
 #screen.theme-gastown .login-button {
     font-family: 'Cinzel', serif;
-    border-width: 2px;
     letter-spacing: 3px;
 }
 
 #screen.theme-gastown .login-button:hover {
-    box-shadow: var(--glow-md);
+    background: rgba(139, 94, 60, 0.08);
 }
 
 /* Gastown: multi-view */
 #screen.theme-gastown .multi-region {
-    background: rgba(62, 39, 35, 0.7);
+    background: #f5e6d3;
+    border-color: #c4a882;
 }
 
 #screen.theme-gastown .multi-region.focused {
     border-color: #cd7f32;
-    box-shadow: 0 0 16px rgba(205, 127, 50, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-#screen.theme-gastown .multi-region-title {
-    background: rgba(205, 127, 50, 0.05);
+/* Gastown: scrubber (on dark analysis/footer area) */
+#screen.theme-gastown .scrubber-bar {
+    background: #3e2723;
+    border-top-color: #5d4037;
 }
 
-#screen.theme-gastown .multi-region-topic {
-    text-shadow: var(--glow-sm);
-}
+#screen.theme-gastown .scrubber-btn { color: #cd7f32; border-color: #5d4037; }
+#screen.theme-gastown .scrubber-btn:hover { border-color: #cd7f32; }
+#screen.theme-gastown .scrubber-track { border-bottom-color: #5d4037; }
+#screen.theme-gastown .scrubber-label { color: #8b7355; }
+#screen.theme-gastown .scrubber-live { color: #4caf50; border-color: #4caf50; }
 
 /* Gastown: empty state */
 #screen.theme-gastown .empty-state {
-    text-shadow: var(--glow-sm);
     letter-spacing: 3px;
+    font-family: 'Cinzel', serif;
 }
 
-/* Gastown: scrubber brass glow */
-#screen.theme-gastown .scrubber-dot.active {
-    box-shadow: 0 0 4px rgba(205, 127, 50, 0.5);
-}
-
-/* Gastown: integrity warning — rust alert */
-#screen.theme-gastown .integrity-warning .diamond {
-    box-shadow: 0 0 20px rgba(139, 37, 0, 0.5), 0 0 40px rgba(139, 37, 0, 0.2) !important;
-}
-
-/* Gastown: scrollbar — dark brass */
-#screen.theme-gastown ::-webkit-scrollbar-track { background: #2c1810; }
+/* Gastown: scrollbar */
+#screen.theme-gastown ::-webkit-scrollbar-track { background: #3e2723; }
 #screen.theme-gastown ::-webkit-scrollbar-thumb { background: #5d4037; }
 #screen.theme-gastown ::-webkit-scrollbar-thumb:hover { background: #cd7f32; }
 
