@@ -1259,8 +1259,13 @@ loadConfig().then(() => {
     }
 });
 
+let extraWatchSources = []; // module-level to allow cleanup on reconnection
+
 function connectWatch(codes) {
-    // Connect SSE for the primary code
+    // Close previous extra sources to prevent leaks on reconnection
+    extraWatchSources.forEach(es => es.close());
+    extraWatchSources = [];
+
     const primary = codes[0];
     if (eventSource) eventSource.close();
 
@@ -1290,7 +1295,6 @@ function connectWatch(codes) {
     if (sysLabel) sysLabel.textContent = `WATCHING`;
 
     // For multi-code: fetch additional codes' state and start their SSE streams
-    const extraSources = [];
     if (codes.length > 1) {
         codes.slice(1).forEach(code => {
             fetch(`/api/watch/${code}/state`)
@@ -1319,15 +1323,15 @@ function connectWatch(codes) {
                     // ignore parse errors on secondary streams
                 }
             };
-            extraSources.push(extra);
-        });
-
-        // Clean up all SSE connections on page unload
-        window.addEventListener('beforeunload', () => {
-            extraSources.forEach(es => es.close());
+            extraWatchSources.push(extra);
         });
     }
 }
+
+// Clean up all extra SSE connections on page unload
+window.addEventListener('beforeunload', () => {
+    extraWatchSources.forEach(es => es.close());
+});
 
 let resizeTimer;
 window.addEventListener('resize', () => {

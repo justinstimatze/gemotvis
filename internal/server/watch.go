@@ -52,6 +52,7 @@ type watchManager struct {
 	sessions map[string]*watchSession // keyed by join code
 	gemotURL string
 	apiKey   string
+	done     chan struct{}
 }
 
 func newWatchManager(gemotURL, apiKey string) *watchManager {
@@ -59,15 +60,33 @@ func newWatchManager(gemotURL, apiKey string) *watchManager {
 		sessions: make(map[string]*watchSession),
 		gemotURL: gemotURL,
 		apiKey:   apiKey,
+		done:     make(chan struct{}),
 	}
 	go wm.reapLoop()
 	return wm
 }
 
 func (wm *watchManager) reapLoop() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
 	for {
-		time.Sleep(5 * time.Minute)
-		wm.reap()
+		select {
+		case <-ticker.C:
+			wm.reap()
+		case <-wm.done:
+			return
+		}
+	}
+}
+
+// Close stops the reap loop and cleans up all sessions.
+func (wm *watchManager) Close() {
+	close(wm.done)
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+	for code, sess := range wm.sessions {
+		sess.cancel()
+		delete(wm.sessions, code)
 	}
 }
 

@@ -49,7 +49,7 @@ type Poller struct {
 
 	mu       sync.RWMutex
 	current  *Snapshot
-	hashes   map[string]string // deliberation_id -> hash of state
+	hashes   map[string]string // deliberation_id -> hash of state; only accessed from the single Run() goroutine via poll()
 }
 
 func New(client *gemot.Client, h *hub.Hub, interval time.Duration, delibID string) *Poller {

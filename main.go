@@ -10,8 +10,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/justinstimatze/gemotvis/internal/gemot"
@@ -72,15 +74,9 @@ func cmdDemo() {
 	serviceKey := fs.String("service-key", envOr("GEMOTVIS_SERVICE_KEY", ""), "gemot API key for live watching")
 	fs.Parse(os.Args[1:])
 
-	srv := &http.Server{
-		Addr:         *addr,
-		Handler:      server.NewDemo(*cycle, *gemotURL, *serviceKey),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Minute,
-		IdleTimeout:  2 * time.Minute,
-	}
+	s := server.NewDemo(*cycle, *gemotURL, *serviceKey)
 	log.Printf("gemotvis demo on %s (cycle: %s)", *addr, *cycle)
-	log.Fatal(srv.ListenAndServe())
+	serve(*addr, s, s)
 }
 
 func cmdWatch() {
@@ -102,21 +98,18 @@ func cmdWatch() {
 	h := hub.New()
 	p := poller.New(client, h, *pollInterval, *delibID)
 
-	go p.Run(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go p.Run(ctx)
 
-	httpSrv := &http.Server{
-		Addr:         *addr,
-		Handler:      server.New(p, h),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Minute,
-		IdleTimeout:  2 * time.Minute,
-	}
+	s := server.New(p, h)
 
 	log.Printf("gemotvis watching %s on %s", *gemotURL, *addr)
 	if *delibID != "" {
 		log.Printf("deliberation: %s", *delibID)
 	}
-	log.Fatal(httpSrv.ListenAndServe())
+	serve(*addr, s, s)
+	cancel()
 }
 
 func cmdReplay() {
@@ -151,15 +144,9 @@ func cmdReplay() {
 		log.Fatal("snapshot contains no deliberations")
 	}
 
-	srv := &http.Server{
-		Addr:         *addr,
-		Handler:      server.NewReplay(&snapshot),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Minute,
-		IdleTimeout:  2 * time.Minute,
-	}
+	s := server.NewReplay(&snapshot)
 	log.Printf("gemotvis replay on %s (%d deliberation(s) from %s)", *addr, n, source)
-	log.Fatal(srv.ListenAndServe())
+	serve(*addr, s, s)
 }
 
 func cmdExport() {
@@ -244,6 +231,39 @@ func cmdExport() {
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(snapshot); err != nil {
 		log.Fatalf("encode: %v", err)
+	}
+}
+
+// serve starts the HTTP server with graceful shutdown on SIGINT/SIGTERM.
+// If s is non-nil, its Close method is called during shutdown.
+func serve(addr string, handler http.Handler, s *server.Server) {
+	httpSrv := &http.Server{
+		Addr:         addr,
+		Handler:      handler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Minute,
+		IdleTimeout:  2 * time.Minute,
+	}
+
+	go func() {
+		if err := httpSrv.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
+
+	log.Println("shutting down...")
+	if s != nil {
+		s.Close()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := httpSrv.Shutdown(ctx); err != nil {
+		log.Printf("shutdown error: %v", err)
 	}
 }
 

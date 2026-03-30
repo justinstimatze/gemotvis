@@ -772,6 +772,13 @@ footer {
     position: absolute;
 }
 
+/* Scrollbar — Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--vis-panel-border) var(--vis-bg);
+}
+
+/* Scrollbar — Chrome/Safari */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--vis-bg); }
 ::-webkit-scrollbar-thumb { background: var(--vis-panel-border); }

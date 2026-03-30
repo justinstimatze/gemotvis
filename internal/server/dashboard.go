@@ -45,6 +45,7 @@ type dashboardManager struct {
 	sessions  map[string]*dashboardSession
 	gemotURL  string
 	cryptoKey [32]byte // derived from server secret
+	done      chan struct{}
 }
 
 func newDashboardManager(gemotURL, serverSecret string) *dashboardManager {
@@ -55,15 +56,33 @@ func newDashboardManager(gemotURL, serverSecret string) *dashboardManager {
 		sessions:  make(map[string]*dashboardSession),
 		gemotURL:  gemotURL,
 		cryptoKey: key,
+		done:      make(chan struct{}),
 	}
 	go dm.reapLoop()
 	return dm
 }
 
 func (dm *dashboardManager) reapLoop() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
 	for {
-		time.Sleep(5 * time.Minute)
-		dm.reap()
+		select {
+		case <-ticker.C:
+			dm.reap()
+		case <-dm.done:
+			return
+		}
+	}
+}
+
+// Close stops the reap loop and cleans up all sessions.
+func (dm *dashboardManager) Close() {
+	close(dm.done)
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	for id, sess := range dm.sessions {
+		sess.cancel()
+		delete(dm.sessions, id)
 	}
 }
 
@@ -214,7 +233,7 @@ func (s *Server) handleSessionCreate(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionID,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   int(dashboardSessionTimeout.Seconds()),
 	})

@@ -40,6 +40,7 @@ type groupManager struct {
 	sessions map[string]*groupSession // keyed by group ID
 	gemotURL string
 	apiKey   string
+	done     chan struct{}
 }
 
 func newGroupManager(gemotURL, apiKey string) *groupManager {
@@ -47,15 +48,33 @@ func newGroupManager(gemotURL, apiKey string) *groupManager {
 		sessions: make(map[string]*groupSession),
 		gemotURL: gemotURL,
 		apiKey:   apiKey,
+		done:     make(chan struct{}),
 	}
 	go gm.reapLoop()
 	return gm
 }
 
 func (gm *groupManager) reapLoop() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
 	for {
-		time.Sleep(5 * time.Minute)
-		gm.reap()
+		select {
+		case <-ticker.C:
+			gm.reap()
+		case <-gm.done:
+			return
+		}
+	}
+}
+
+// Close stops the reap loop and cleans up all sessions.
+func (gm *groupManager) Close() {
+	close(gm.done)
+	gm.mu.Lock()
+	defer gm.mu.Unlock()
+	for id, sess := range gm.sessions {
+		sess.cancel()
+		delete(gm.sessions, id)
 	}
 }
 
@@ -64,7 +83,11 @@ func (gm *groupManager) reap() {
 	defer gm.mu.Unlock()
 	for id, sess := range gm.sessions {
 		if sess.idleSince() > groupSessionTimeout {
-			log.Printf("group: reaping session %s", id[:16])
+			truncID := id
+			if len(truncID) > 16 {
+				truncID = truncID[:16]
+			}
+			log.Printf("group: reaping session %s", truncID)
 			sess.cancel()
 			delete(gm.sessions, id)
 		}

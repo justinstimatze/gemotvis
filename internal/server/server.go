@@ -70,6 +70,19 @@ func NewReplay(snapshot *poller.Snapshot) *Server {
 	return s
 }
 
+// Close cleans up all manager goroutines and sessions.
+func (s *Server) Close() {
+	if s.watches != nil {
+		s.watches.Close()
+	}
+	if s.dashboards != nil {
+		s.dashboards.Close()
+	}
+	if s.groups != nil {
+		s.groups.Close()
+	}
+}
+
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h := w.Header()
 	h.Set("X-Content-Type-Options", "nosniff")
