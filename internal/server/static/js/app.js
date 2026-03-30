@@ -1004,6 +1004,43 @@ function getWatchCodes() {
     return codes;
 }
 
+// ===== Group Mode (shared link viewing) =====
+
+function getGroupID() {
+    const match = window.location.pathname.match(/^\/g\/([a-zA-Z0-9_-]{5,200})\/?$/);
+    return match ? match[1] : null;
+}
+
+function connectGroup(groupID) {
+    state.multiView = true;
+    if (eventSource) eventSource.close();
+
+    fetch(`/api/g/${groupID}/state`)
+        .then(r => {
+            if (!r.ok) throw new Error(`Group not found (${r.status})`);
+            return r.json();
+        })
+        .then(snap => {
+            state.deliberations = snap.deliberations || {};
+            render();
+        })
+        .catch(err => {
+            console.error('Group fetch error:', err);
+            const main = document.getElementById('main');
+            if (main) main.textContent = `Group not found: ${groupID}`;
+        });
+
+    eventSource = new EventSource(`/api/g/${groupID}/events`);
+    eventSource.onopen = () => { state.connected = true; updateConnectionStatus(); };
+    eventSource.onerror = () => { state.connected = false; updateConnectionStatus(); };
+    eventSource.onmessage = (e) => {
+        try { handleEvent(JSON.parse(e.data)); } catch (_) { /* ignore */ }
+    };
+
+    const sysLabel = document.querySelector('#system-name');
+    if (sysLabel) sysLabel.textContent = `GROUP: ${groupID.substring(0, 20)}`;
+}
+
 // ===== Dashboard Mode =====
 
 function isDashboard() {
@@ -1155,12 +1192,15 @@ setTimeout(() => {
 }, bootDelay);
 
 const watchCodes = getWatchCodes();
+const groupID = getGroupID();
 
 // Multi-view can also be activated via ?multi=true on any mode (for demo/testing)
 const forceMulti = new URLSearchParams(window.location.search).get('multi') === 'true';
 
 loadConfig().then(() => {
-    if (watchCodes.length > 1) {
+    if (groupID) {
+        connectGroup(groupID);
+    } else if (watchCodes.length > 1) {
         state.multiView = true;
         connectWatch(watchCodes);
     } else if (watchCodes.length === 1) {
