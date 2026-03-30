@@ -680,6 +680,12 @@ header {
     text-align: right;
 }
 
+.scrubber-speed {
+    min-width: 28px;
+    text-align: center;
+    font-size: 9px;
+}
+
 .scrubber-live {
     color: var(--vis-green);
     border-color: var(--vis-green);

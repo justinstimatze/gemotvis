@@ -39,12 +39,15 @@ let knownAgents = new Set(); // for detecting new agents
 let focusTimer = null; // timer to return to overview after idle
 
 // Scrubber state
+const SCRUBBER_SPEEDS = [1200, 600, 300]; // ms per step: 1x, 2x, 4x
+const SCRUBBER_SPEED_LABELS = ['1x', '2x', '4x'];
 const scrubber = {
     enabled: false,
     playing: false,
     eventIndex: null, // null = live/latest
     events: [],
     playTimer: null,
+    speedIdx: 0, // index into SCRUBBER_SPEEDS
 };
 
 // ===== Safe DOM Helpers =====
@@ -297,8 +300,19 @@ function startScrubberPlay() {
         if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
         scrubber.eventIndex = next;
         render();
-    }, 1200);
+    }, SCRUBBER_SPEEDS[scrubber.speedIdx]);
     updatePlayButton();
+}
+
+function cycleScrubberSpeed() {
+    scrubber.speedIdx = (scrubber.speedIdx + 1) % SCRUBBER_SPEEDS.length;
+    const btn = document.getElementById('scrubber-speed');
+    if (btn) btn.textContent = SCRUBBER_SPEED_LABELS[scrubber.speedIdx];
+    // Restart playback at new speed if currently playing
+    if (scrubber.playing) {
+        clearInterval(scrubber.playTimer);
+        startScrubberPlay();
+    }
 }
 
 function stopScrubberPlay() {
@@ -1571,6 +1585,7 @@ window.addEventListener('resize', () => {
 
 // Scrubber controls
 document.getElementById('scrubber-play')?.addEventListener('click', toggleScrubberPlay);
+document.getElementById('scrubber-speed')?.addEventListener('click', cycleScrubberSpeed);
 document.getElementById('scrubber-live')?.addEventListener('click', scrubToLive);
 
 // Click on track to jump to nearest event
