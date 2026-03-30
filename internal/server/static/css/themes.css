@@ -704,13 +704,13 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
 /* Vote pennant — banner hanging beside the shield */
 #screen.theme-classic .diamond-vote {
     position: absolute;
-    top: 8px;
-    right: -6px;
+    top: 2px;
+    right: -10px;
     left: auto;
     bottom: auto;
-    display: block;
     width: auto;
     height: auto;
+    display: block;
     align-items: initial;
     justify-content: initial;
     z-index: 6;
@@ -719,41 +719,32 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
 #screen.theme-classic .agent-vote {
     font-family: 'Cinzel', 'Georgia', serif;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
-    padding: 3px 6px 6px;
+    padding: 4px 8px 8px;
     display: block;
     text-align: center;
-    min-width: 32px;
+    min-width: 36px;
+    line-height: 1.2;
     /* Pennant/gonfalon shape — pointed bottom */
-    clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
-}
-
-#screen.theme-classic .vote-approve .agent-vote,
-#screen.theme-classic .agent-vote {
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
     text-shadow: none;
 }
 
 /* Pennant colors by vote */
-#screen.theme-classic .diamond-vote:has(.vote-approve) .agent-vote,
-#screen.theme-classic .vote-approve {
+#screen.theme-classic .agent-vote.vote-approve {
     background: #2D6B3F;
     color: #F5E6C8;
-    text-shadow: none;
 }
 
-#screen.theme-classic .diamond-vote:has(.vote-deny) .agent-vote,
-#screen.theme-classic .vote-deny {
+#screen.theme-classic .agent-vote.vote-deny {
     background: #E34234;
     color: #F5E6C8;
-    text-shadow: none;
 }
 
-#screen.theme-classic .diamond-vote:has(.vote-pass) .agent-vote,
-#screen.theme-classic .vote-pass {
+#screen.theme-classic .agent-vote.vote-pass {
     background: #8B5A2B;
-    color: #F5E6C8;
-    text-shadow: none;
+    color: #EDE0C4;
 }
 
 /* Classic: rubricated panel headers with pilcrow */
