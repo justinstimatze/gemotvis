@@ -66,11 +66,20 @@ internal/
 
 ```
 gemot /a2a  <--poll--  Poller  --on change-->  Hub  --SSE-->  Browser
+gemot /events --SSE push-->  Poller (triggers immediate re-fetch)
 
 For hosted watch: join code → /join/ lookup → per-session Poller → SSE
 For dashboard:    API key → encrypted session → per-user Poller → SSE
 For multi-view:   multiple SSE streams merged → spatial canvas → CSS zoom
 ```
+
+When `EnableSSE()` is called on a Poller, it connects to gemot's `/events` SSE endpoint and triggers an immediate state re-fetch on each relevant event (position_submitted, vote_cast, analysis_*). Timer-based polling continues as fallback.
+
+## Timeline Scrubber
+
+The scrubber bar (above the footer) lets users step through audit log events chronologically. Each event is a colored dot (cyan=position, green=vote, gold=analysis). Controls: click dot, arrow keys, Space play/pause, LIVE button.
+
+The scrubber filters `DelibState` client-side via `filterToTime()`: positions/votes filtered by `created_at`, agents derived from visible positions, analysis shown only after analyze event. Existing render functions are unchanged — the filter runs before passing data to them.
 
 ## Key Design Decisions
 

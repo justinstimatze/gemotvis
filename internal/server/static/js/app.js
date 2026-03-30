@@ -574,6 +574,28 @@ function renderAgents(ds) {
     });
 }
 
+// Create a slightly wavy SVG path between two points (hand-drawn road effect).
+// Seed makes the waviness stable across re-renders for the same agent pair.
+function createRoadPath(x1, y1, x2, y2, seed) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    // Perpendicular unit vector
+    const px = -dy / len, py = dx / len;
+    // Seeded pseudo-random offsets (deterministic per pair)
+    const r1 = ((seed * 7919 + 1) % 97) / 97 - 0.5; // -0.5..0.5
+    const r2 = ((seed * 6271 + 3) % 89) / 89 - 0.5;
+    const wobble = Math.min(len * 0.06, 12); // scale with distance, cap at 12px
+    // Two control points at 1/3 and 2/3 along the line, offset perpendicular
+    const cx1 = x1 + dx * 0.33 + px * r1 * wobble;
+    const cy1 = y1 + dy * 0.33 + py * r1 * wobble;
+    const cx2 = x1 + dx * 0.66 + px * r2 * wobble;
+    const cy2 = y1 + dy * 0.66 + py * r2 * wobble;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
+    return path;
+}
+
 function renderConnections(ds) {
     const svg = document.getElementById('connections');
     const agents = ds.agents || [];
@@ -615,22 +637,28 @@ function renderConnections(ds) {
             const y1 = positions[i].y * rect.height;
             const x2 = positions[j].x * rect.width;
             const y2 = positions[j].y * rect.height;
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x1);
-            line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2);
-            line.setAttribute('y2', y2);
-            line.setAttribute('class', `connection-line connection-${rel}`);
-            svg.appendChild(line);
+            if (activeTheme === 'classic') {
+                // Wavy bezier road path with waypoint dot
+                const road = createRoadPath(x1, y1, x2, y2, i * n + j);
+                road.setAttribute('class', `connection-line connection-${rel}`);
+                svg.appendChild(road);
 
-            // Waypoint dot at road midpoint (classic theme)
-            if (activeTheme === 'classic' && rel !== 'neutral') {
-                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                dot.setAttribute('cx', (x1 + x2) / 2);
-                dot.setAttribute('cy', (y1 + y2) / 2);
-                dot.setAttribute('r', '2.5');
-                dot.setAttribute('class', 'road-waypoint');
-                svg.appendChild(dot);
+                if (rel !== 'neutral') {
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', (x1 + x2) / 2);
+                    dot.setAttribute('cy', (y1 + y2) / 2);
+                    dot.setAttribute('r', '2.5');
+                    dot.setAttribute('class', 'road-waypoint');
+                    svg.appendChild(dot);
+                }
+            } else {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('class', `connection-line connection-${rel}`);
+                svg.appendChild(line);
             }
         }
     }
@@ -1497,6 +1525,16 @@ window.addEventListener('resize', () => {
 // Scrubber controls
 document.getElementById('scrubber-play')?.addEventListener('click', toggleScrubberPlay);
 document.getElementById('scrubber-live')?.addEventListener('click', scrubToLive);
+
+// Click on track to jump to nearest event
+document.getElementById('scrubber-track')?.addEventListener('click', (e) => {
+    if (!scrubber.events.length) return;
+    const track = e.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const idx = Math.round(pct * (scrubber.events.length - 1));
+    scrubTo(Math.max(0, Math.min(idx, scrubber.events.length - 1)));
+});
 
 document.addEventListener('keydown', (e) => {
     if (!scrubber.events.length) return;
