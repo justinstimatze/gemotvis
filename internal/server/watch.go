@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/justinstimatze/gemotvis/internal/gemot"
@@ -38,9 +39,12 @@ type watchSession struct {
 	delibID    string
 	poller     *poller.Poller
 	hub        *hub.Hub
-	lastAccess time.Time
+	lastAccess atomic.Int64 // unix timestamp, safe for concurrent access
 	cancel     context.CancelFunc
 }
+
+func (ws *watchSession) touch()                { ws.lastAccess.Store(time.Now().Unix()) }
+func (ws *watchSession) idleSince() time.Duration { return time.Since(time.Unix(ws.lastAccess.Load(), 0)) }
 
 // watchManager handles all active watch sessions.
 type watchManager struct {
@@ -71,7 +75,7 @@ func (wm *watchManager) reapLoop() {
 func (wm *watchManager) getOrCreate(code string) (*watchSession, error) {
 	wm.mu.RLock()
 	if sess, ok := wm.sessions[code]; ok {
-		sess.lastAccess = time.Now()
+		sess.touch()
 		wm.mu.RUnlock()
 		return sess, nil
 	}
@@ -104,7 +108,7 @@ func (wm *watchManager) getOrCreate(code string) (*watchSession, error) {
 
 	// Double-check after acquiring write lock
 	if sess, ok := wm.sessions[code]; ok {
-		sess.lastAccess = time.Now()
+		sess.touch()
 		return sess, nil
 	}
 
@@ -121,13 +125,13 @@ func (wm *watchManager) getOrCreate(code string) (*watchSession, error) {
 	go p.Run(ctx)
 
 	sess := &watchSession{
-		code:       code,
-		delibID:    info.DeliberationID,
-		poller:     p,
-		hub:        h,
-		lastAccess: time.Now(),
-		cancel:     cancel,
+		code:    code,
+		delibID: info.DeliberationID,
+		poller:  p,
+		hub:     h,
+		cancel:  cancel,
 	}
+	sess.touch()
 	wm.sessions[code] = sess
 
 	log.Printf("watch: new session for %s (deliberation %s)", code, info.DeliberationID)
@@ -171,10 +175,10 @@ func (wm *watchManager) reap() {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
 
-	now := time.Now()
 	for code, sess := range wm.sessions {
-		if now.Sub(sess.lastAccess) > watchSessionTimeout {
-			log.Printf("watch: reaping session %s (idle %s)", code, now.Sub(sess.lastAccess).Round(time.Second))
+		idle := sess.idleSince()
+		if idle > watchSessionTimeout {
+			log.Printf("watch: reaping session %s (idle %s)", code, idle.Round(time.Second))
 			sess.cancel()
 			delete(wm.sessions, code)
 		}
@@ -260,7 +264,7 @@ func (s *Server) handleWatchEvents(w http.ResponseWriter, r *http.Request) {
 		case msg := <-ch:
 			fmt.Fprintf(w, "data: %s\n\n", msg)
 			flusher.Flush()
-			sess.lastAccess = time.Now()
+			sess.touch()
 		case <-ping.C:
 			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
 			flusher.Flush()

@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/justinstimatze/gemotvis/internal/gemot"
@@ -32,9 +33,12 @@ type dashboardSession struct {
 	encryptedKey []byte // AES-GCM encrypted API key
 	poller       *poller.Poller
 	hub          *hub.Hub
-	lastAccess   time.Time
+	lastAccess   atomic.Int64 // unix timestamp, safe for concurrent access
 	cancel       context.CancelFunc
 }
+
+func (ds *dashboardSession) touch()                { ds.lastAccess.Store(time.Now().Unix()) }
+func (ds *dashboardSession) idleSince() time.Duration { return time.Since(time.Unix(ds.lastAccess.Load(), 0)) }
 
 type dashboardManager struct {
 	mu        sync.RWMutex
@@ -67,9 +71,8 @@ func (dm *dashboardManager) reap() {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 
-	now := time.Now()
 	for id, sess := range dm.sessions {
-		if now.Sub(sess.lastAccess) > dashboardSessionTimeout {
+		if sess.idleSince() > dashboardSessionTimeout {
 			log.Printf("dashboard: reaping session %s", id[:8])
 			sess.cancel()
 			delete(dm.sessions, id)
@@ -150,14 +153,15 @@ func (dm *dashboardManager) createSession(apiKey string) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	go p.Run(ctx)
 
-	dm.sessions[sessionID] = &dashboardSession{
+	sess := &dashboardSession{
 		id:           sessionID,
 		encryptedKey: encKey,
 		poller:       p,
 		hub:          h,
-		lastAccess:   time.Now(),
 		cancel:       cancel,
 	}
+	sess.touch()
+	dm.sessions[sessionID] = sess
 
 	log.Printf("dashboard: new session %s", sessionID[:8])
 	return sessionID, nil
@@ -168,7 +172,7 @@ func (dm *dashboardManager) getSession(sessionID string) *dashboardSession {
 	defer dm.mu.RUnlock()
 	sess, ok := dm.sessions[sessionID]
 	if ok {
-		sess.lastAccess = time.Now()
+		sess.touch()
 	}
 	return sess
 }
@@ -289,7 +293,7 @@ func (s *Server) handleDashboardEvents(w http.ResponseWriter, r *http.Request) {
 		case msg := <-ch:
 			fmt.Fprintf(w, "data: %s\n\n", msg)
 			flusher.Flush()
-			sess.lastAccess = time.Now()
+			sess.touch()
 		case <-ping.C:
 			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
 			flusher.Flush()
