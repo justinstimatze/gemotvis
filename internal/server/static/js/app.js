@@ -652,6 +652,31 @@ function renderConnections(ds) {
                     dot.setAttribute('class', 'road-waypoint');
                     svg.appendChild(dot);
                 }
+            } else if (activeTheme === 'gastown') {
+                // Industrial pipe: thick outer + thin inner highlight
+                const pipe = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                pipe.setAttribute('x1', x1); pipe.setAttribute('y1', y1);
+                pipe.setAttribute('x2', x2); pipe.setAttribute('y2', y2);
+                pipe.setAttribute('class', `connection-line connection-${rel}`);
+                svg.appendChild(pipe);
+
+                // Inner highlight (lighter, thinner)
+                if (rel !== 'neutral') {
+                    const inner = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    inner.setAttribute('x1', x1); inner.setAttribute('y1', y1);
+                    inner.setAttribute('x2', x2); inner.setAttribute('y2', y2);
+                    inner.setAttribute('class', 'pipe-inner');
+                    svg.appendChild(inner);
+                }
+
+                // Pipe joint circles at endpoints
+                for (const [px, py] of [[x1, y1], [x2, y2]]) {
+                    const joint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    joint.setAttribute('cx', px); joint.setAttribute('cy', py);
+                    joint.setAttribute('r', '4');
+                    joint.setAttribute('class', 'pipe-joint');
+                    svg.appendChild(joint);
+                }
             } else {
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', x1);
@@ -1245,9 +1270,16 @@ function isDashboard() {
 
 function showLoginForm() {
     const main = document.getElementById('main');
-    clearChildren(main);
+    // Hide persistent elements instead of destroying them
+    document.getElementById('agents')?.classList.add('hidden');
+    document.getElementById('connections')?.classList.add('hidden');
+    document.getElementById('center-panel')?.classList.add('hidden');
+    document.getElementById('empty-state')?.classList.add('hidden');
+    document.getElementById('scrubber-bar')?.classList.add('hidden');
+    // Remove any previous login form
+    document.getElementById('login-form-container')?.remove();
 
-    const form = el('div', { className: 'login-form' },
+    const form = el('div', { className: 'login-form', id: 'login-form-container' },
         el('div', { className: 'login-title' }, 'AGENT DASHBOARD'),
         el('div', { className: 'login-subtitle' }, 'ENTER YOUR GEMOT.DEV API KEY TO MONITOR YOUR DELIBERATIONS'),
         el('input', {

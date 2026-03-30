@@ -1435,10 +1435,35 @@ body.boot-gastown .boot-text:nth-child(3) {
 #screen.theme-gastown .tooltip-body { color: #2c1810; }
 #screen.theme-gastown .tooltip-footer { color: #5d4037; text-transform: uppercase; }
 
-/* Gastown: connections — clean, no glow */
-#screen.theme-gastown .connection-agree { stroke: #2e7d32; }
-#screen.theme-gastown .connection-disagree { stroke: #8b2500; }
-#screen.theme-gastown .connection-bridging { stroke: #cd7f32; }
+/* Gastown: connections — industrial pipes (thick stroke, round caps) */
+#screen.theme-gastown .connection-line {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 6;
+    opacity: 0.5;
+}
+
+#screen.theme-gastown .connection-agree { stroke: #5d4037; }
+#screen.theme-gastown .connection-disagree { stroke: #5d4037; stroke-dasharray: 12 6; }
+#screen.theme-gastown .connection-neutral { stroke: #8b7355; stroke-width: 3; stroke-dasharray: 4 4; opacity: 0.3; }
+#screen.theme-gastown .connection-bridging { stroke: #cd7f32; stroke-width: 8; }
+
+/* Pipe inner highlight — lighter stripe down the center */
+#screen.theme-gastown .pipe-inner {
+    stroke: #c4a882;
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
+    opacity: 0.4;
+}
+
+/* Pipe joints — small circles at connection endpoints */
+#screen.theme-gastown .pipe-joint {
+    fill: #5d4037;
+    stroke: #8b7355;
+    stroke-width: 1.5;
+    opacity: 0.5;
+}
 
 /* Gastown: nav bar (dark brown, like header) */
 #screen.theme-gastown #delib-nav {
@@ -1518,10 +1543,14 @@ body.boot-gastown .boot-text:nth-child(3) {
 #screen.theme-gastown .scrubber-label { color: #8b7355; }
 #screen.theme-gastown .scrubber-live { color: #4caf50; border-color: #4caf50; }
 
-/* Gastown: empty state */
+/* Gastown: empty state + empty messages in dark panels */
 #screen.theme-gastown .empty-state {
     letter-spacing: 3px;
     font-family: 'Cinzel', serif;
+}
+
+#screen.theme-gastown .empty-message {
+    color: #8b7355;
 }
 
 /* Gastown: scrollbar */
