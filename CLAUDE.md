@@ -120,7 +120,8 @@ Select via `?theme=` query param. Same HTML and JS for all themes — only CSS c
 |---|---|---|---|
 | Classic (default) | `theme-classic` | Shield (clip-path) | Parchment, blackletter, vermillion rubrication, cartographic terrain, manuscript borders |
 | MAGI | `theme-magi` | Diamond (45deg) | CRT scanlines, amber-on-black, kanji votes, tactical grid, boot sequence |
-| Minimal | `theme-minimal` | Circle | White background, system sans-serif, pill badges, rounded corners |
+| Minimal | `theme-minimal` | Circle | Clean #fafafa, system sans-serif, pill badges, Linear/Vercel-inspired |
+| Gastown | `theme-gastown` | Diamond | Warm parchment, dark brown bars, brass accents, Cinzel type, industrial pipes |
 
 Architecture: `base.css` defines `--vis-*` variables with classic palette defaults and neutral structural styles. `themes.css` adds theme-specific effects — MAGI adds CRT effects/glow, classic adds manuscript decorations (terrain, compass rose, shields), minimal overrides to a clean modern look. Fonts loaded dynamically in `app.js` per theme.
 
