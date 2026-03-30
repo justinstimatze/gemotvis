@@ -174,6 +174,7 @@ async function loadConfig() {
         const cfg = await resp.json();
         state.mode = cfg.mode || 'live';
         state.cycleInterval = cfg.cycle_interval || 0;
+        state.gemotURL = cfg.gemot_url || '';
 
         // Show/hide cycle bar
         const cycleBar = document.getElementById('cycle-bar');
@@ -1533,7 +1534,11 @@ function connectWatch(codes) {
     const primary = codes[0];
     if (eventSource) eventSource.close();
 
-    eventSource = new EventSource(`/api/watch/${primary}/events`);
+    // Use direct gemot SSE if available (lower latency), fall back to vis proxy
+    const gemotSSE = state.gemotURL ? `${state.gemotURL}/events?join_code=${primary}` : null;
+    const sseURL = gemotSSE || `/api/watch/${primary}/events`;
+
+    eventSource = new EventSource(sseURL);
 
     eventSource.onopen = () => {
         state.connected = true;
@@ -1543,7 +1548,20 @@ function connectWatch(codes) {
     eventSource.onmessage = (e) => {
         try {
             const msg = JSON.parse(e.data);
-            handleEvent(msg);
+            // Direct gemot SSE sends lightweight events — trigger a state re-fetch
+            if (gemotSSE && msg.type !== 'ping' && msg.type !== 'connected') {
+                fetch(`/api/watch/${primary}/state`)
+                    .then(r => r.json())
+                    .then(snap => {
+                        if (snap.deliberations) {
+                            Object.assign(state.deliberations, snap.deliberations);
+                            render();
+                        }
+                    })
+                    .catch(() => {}); // silent — state will refresh on next event
+            } else {
+                handleEvent(msg);
+            }
         } catch (err) {
             console.error('SSE parse error:', err);
         }
@@ -1552,6 +1570,16 @@ function connectWatch(codes) {
     eventSource.onerror = () => {
         state.connected = false;
         updateConnectionStatus();
+        // If direct gemot SSE fails, fall back to vis proxy
+        if (gemotSSE && eventSource.readyState === EventSource.CLOSED) {
+            console.log('Direct SSE failed, falling back to proxy');
+            eventSource = new EventSource(`/api/watch/${primary}/events`);
+            eventSource.onopen = () => { state.connected = true; updateConnectionStatus(); };
+            eventSource.onmessage = (e) => {
+                try { handleEvent(JSON.parse(e.data)); } catch (_) {}
+            };
+            eventSource.onerror = () => { state.connected = false; updateConnectionStatus(); };
+        }
     };
 
     // Update header to show watch mode

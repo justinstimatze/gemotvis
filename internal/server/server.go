@@ -30,6 +30,7 @@ type Server struct {
 	watches       *watchManager      // join code watch sessions (nil if no service key)
 	dashboards    *dashboardManager  // user dashboard sessions (nil if no gemot URL)
 	groups        *groupManager      // shared group viewing sessions (nil if no service key)
+	gemotURL      string             // gemot instance URL (exposed to frontend for direct SSE)
 }
 
 // New creates a server for live monitoring.
@@ -52,6 +53,7 @@ func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string) *Server {
 		cycleInterval: cycleInterval,
 	}
 	if gemotURL != "" && serviceKey != "" {
+		s.gemotURL = gemotURL
 		s.watches = newWatchManager(gemotURL, serviceKey)
 		s.dashboards = newDashboardManager(gemotURL, serviceKey)
 		s.groups = newGroupManager(gemotURL, serviceKey)
@@ -88,7 +90,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("X-Frame-Options", "DENY")
 	h.Set("Referrer-Policy", "no-referrer")
-	h.Set("Content-Security-Policy", "default-src 'self'; style-src 'self' https://fonts.googleapis.com; script-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com")
+	h.Set("Content-Security-Policy", "default-src 'self'; style-src 'self' https://fonts.googleapis.com; script-src 'self'; connect-src 'self' https://gemot.dev; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com")
 	s.mux.ServeHTTP(w, r)
 }
 
@@ -170,10 +172,11 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{ //nolint:errcheck
-		"mode":           mode,
-		"cycle_interval": s.cycleInterval.Milliseconds(),
+		"mode":              mode,
+		"cycle_interval":    s.cycleInterval.Milliseconds(),
 		"watch_enabled":     s.watches != nil,
 		"dashboard_enabled": s.dashboards != nil,
+		"gemot_url":         s.gemotURL,
 	})
 }
 
