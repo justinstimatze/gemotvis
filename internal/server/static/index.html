@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEMOTVIS // MAGI</title>
-    <link rel="stylesheet" href="/css/magi.css">
+    <title>Gemotvis</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/themes.css">
     <link rel="stylesheet" href="/css/layout.css">
 </head>
 <body>
@@ -104,6 +105,31 @@
         <!-- CRT overlay -->
         <div class="scanlines"></div>
     </div>
+
+    <!-- SVG defs for theme effects (zero visual impact until referenced) -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <defs>
+            <!-- Parchment grain texture (classic theme) -->
+            <filter id="parchment-grain">
+                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="noise"/>
+                <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
+                <feBlend in="SourceGraphic" in2="gray" mode="multiply" result="blend"/>
+                <feComponentTransfer in="blend">
+                    <feFuncA type="linear" slope="0.3"/>
+                </feComponentTransfer>
+            </filter>
+            <!-- Heraldic shield clip-path (classic theme agent nodes)
+                 Source: Wikimedia Commons, public domain -->
+            <clipPath id="shield" clipPathUnits="objectBoundingBox">
+                <path d="M0.006,0.005 V0.292
+                         C0.006,0.445 0.057,0.588 0.145,0.706
+                         C0.266,0.856 0.436,0.967 0.5,0.995
+                         C0.564,0.967 0.734,0.856 0.855,0.706
+                         C0.943,0.588 0.994,0.445 0.994,0.292
+                         V0.005 Z"/>
+            </clipPath>
+        </defs>
+    </svg>
 
     <script src="/js/app.js" type="module"></script>
 </body>

@@ -1,12 +1,13 @@
-// GEMOTVIS — MAGI-style deliberation monitor
+// GEMOTVIS — deliberation monitor
 // Main application controller
 
-const VOTE_LABELS = { 1: '承認', '-1': '否定', 0: '保留' };
+const VOTE_LABELS_MAGI = { 1: '承認', '-1': '否定', 0: '保留' };
+const VOTE_LABELS_EN = { 1: 'YEA', '-1': 'NAY', 0: '—' };
+let VOTE_LABELS = VOTE_LABELS_MAGI; // set by applyTheme()
 const VOTE_CLASSES = { 1: 'vote-approve', '-1': 'vote-deny', 0: 'vote-pass' };
 
 const PIPELINE_STAGES = ['taxonomy', 'extracting', 'deduplicating', 'crux_detection', 'summarizing', 'complete'];
 
-const MAGI_NAMES = ['MELCHIOR', 'BALTHASAR', 'CASPER'];
 const CLUSTER_COLORS = ['cluster-0', 'cluster-1', 'cluster-2', 'cluster-3', 'cluster-4', 'cluster-5'];
 
 // State
@@ -323,7 +324,7 @@ function renderAgents(ds) {
     });
 
     agents.forEach((agent, i) => {
-        const name = (n === 3 && i < 3) ? MAGI_NAMES[i] : shortAgentID(agent.id);
+        const name = shortAgentID(agent.id);
         const vote = voteMap[agent.id];
         const voteLabel = vote !== undefined ? VOTE_LABELS[vote] : '--';
         const voteClass = vote !== undefined ? VOTE_CLASSES[vote] : 'vote-pass';
@@ -357,7 +358,7 @@ function renderAgents(ds) {
         const tooltip = el('div', { className: 'agent-tooltip' },
             el('div', { className: 'tooltip-header' },
                 el('span', {}, agent.id),
-                el('span', { style: 'color:var(--magi-text-dim);margin-left:8px;' }, agent.model_family || ''),
+                el('span', { style: 'color:var(--vis-text-dim);margin-left:8px;' }, agent.model_family || ''),
             ),
             el('div', { className: 'tooltip-body' }, tooltipContent),
             el('div', { className: 'tooltip-footer' },
@@ -471,22 +472,22 @@ function renderCenterPanel(ds) {
     clearChildren(content);
 
     if (consensus.length > 0) {
-        content.appendChild(el('div', { style: 'margin-bottom:6px;color:var(--magi-green);font-size:10px;' }, 'CONSENSUS'));
+        content.appendChild(el('div', { style: 'margin-bottom:6px;color:var(--vis-green);font-size:10px;' }, 'CONSENSUS'));
         consensus.forEach(c => {
             content.appendChild(el('div', { style: 'margin-bottom:4px;font-size:10px;text-transform:none;' }, truncate(c.content, 120)));
         });
     }
     if (bridging.length > 0) {
-        content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:#ffd700;font-size:10px;' }, 'BRIDGING'));
+        content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:var(--vis-yellow);font-size:10px;' }, 'BRIDGING'));
         bridging.forEach(b => {
-            const score = el('span', { style: 'color:var(--magi-text-dim)' }, ` (${(b.bridging_score * 100).toFixed(0)}%)`);
+            const score = el('span', { style: 'color:var(--vis-text-dim)' }, ` (${(b.bridging_score * 100).toFixed(0)}%)`);
             const div = el('div', { style: 'margin-bottom:4px;font-size:10px;text-transform:none;' }, truncate(b.content, 100));
             div.appendChild(score);
             content.appendChild(div);
         });
     }
     if (analysis.compromise_proposal) {
-        content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:var(--magi-cyan);font-size:10px;' }, 'COMPROMISE'));
+        content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:var(--vis-cyan);font-size:10px;' }, 'COMPROMISE'));
         content.appendChild(el('div', { style: 'font-size:10px;text-transform:none;' }, truncate(analysis.compromise_proposal, 200)));
     }
 }
@@ -497,7 +498,7 @@ function renderCruxPanel(ds) {
     clearChildren(list);
 
     if (cruxes.length === 0) {
-        list.appendChild(el('div', { style: 'color:var(--magi-text-dim);padding:8px;' }, 'NO CRUXES DETECTED'));
+        list.appendChild(el('div', { style: 'color:var(--vis-text-dim);padding:8px;' }, 'NO CRUXES DETECTED'));
         return;
     }
 
@@ -511,8 +512,8 @@ function renderCruxPanel(ds) {
         const meta = el('div', { className: 'crux-meta' },
             el('span', {}, c.crux_type || 'mixed'),
             el('span', {}, ''),
-            el('span', { style: 'color:var(--magi-green)' }, `+${(c.agree_agents || []).length}`),
-            el('span', { style: 'color:var(--magi-red)' }, `-${(c.disagree_agents || []).length}`),
+            el('span', { style: 'color:var(--vis-green)' }, `+${(c.agree_agents || []).length}`),
+            el('span', { style: 'color:var(--vis-red)' }, `-${(c.disagree_agents || []).length}`),
         );
         // Insert controversy bar after type
         meta.children[1].appendChild(controversyBar);
@@ -555,7 +556,7 @@ function renderAuditLog(ds) {
     clearChildren(log);
 
     if (ops.length === 0) {
-        log.appendChild(el('div', { style: 'color:var(--magi-text-dim);padding:4px;' }, 'NO EVENTS'));
+        log.appendChild(el('div', { style: 'color:var(--vis-text-dim);padding:4px;' }, 'NO EVENTS'));
         return;
     }
 
@@ -1080,13 +1081,61 @@ function connectDashboard() {
     };
 }
 
+// ===== Theme =====
+
+const VALID_THEMES = ['classic', 'magi', 'minimal'];
+
+function applyTheme() {
+    const params = new URLSearchParams(window.location.search);
+    const theme = params.get('theme');
+    const screen = document.getElementById('screen');
+    const active = (theme && VALID_THEMES.includes(theme)) ? theme : 'classic';
+
+    // Classic is the base (no class needed), others get a theme class
+    if (active !== 'classic') {
+        screen.classList.add(`theme-${active}`);
+    } else {
+        // Classic always gets its class for the decorative enhancements
+        screen.classList.add('theme-classic');
+    }
+
+    VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI : VOTE_LABELS_EN;
+
+    // Load web fonts for classic theme (base defaults reference these)
+    if (active === 'classic' || !theme) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Cinzel:wght@400;700;900&display=swap';
+        document.head.appendChild(link);
+    }
+
+    return active;
+}
+
+const activeTheme = applyTheme();
+
+// Update page title per theme
+if (activeTheme === 'magi') {
+    document.title = 'GEMOTVIS // MAGI';
+    // MAGI center panel header stays as "MAGI" (set in HTML)
+} else {
+    if (activeTheme === 'minimal') {
+        document.title = 'Gemotvis';
+    } else {
+        document.title = 'Gemotvis \u2014 Deliberation Monitor';
+    }
+    const centerHeader = document.querySelector('#center-panel .panel-header');
+    if (centerHeader) centerHeader.textContent = 'ANALYSIS';
+}
+
 // ===== Init =====
 
-// Remove boot overlay after its CSS animation completes
+// Remove boot overlay — skip instantly for non-MAGI themes
+const bootDelay = activeTheme === 'magi' ? 3200 : 0;
 setTimeout(() => {
     const boot = document.getElementById('boot');
     if (boot) boot.classList.add('done');
-}, 3200);
+}, bootDelay);
 
 const watchCodes = getWatchCodes();
 

@@ -14,6 +14,7 @@ gemotvis export --api-key K --deliberation ID > out.json
 ```
 
 Add `?multi=true` to see all deliberations simultaneously with activity-driven zoom.
+Add `?theme=classic` or `?theme=minimal` to switch visual themes.
 
 Open `http://localhost:9090`.
 
@@ -36,7 +37,8 @@ internal/
     demo.go                      Built-in sample data (5 scenarios from real gemot scripts)
     static/                      Frontend (vanilla JS + CSS, //go:embed)
       index.html                 App shell with boot sequence + HUD elements
-      css/magi.css               CRT aesthetic (scanlines, glow, tactical grid, 1200+ lines)
+      css/base.css               Neutral structure + classic palette defaults (design tokens, layout, components)
+      css/themes.css             Theme-specific effects (MAGI CRT, classic manuscript, minimal clean)
       css/layout.css             Adaptive layouts (bilateral/triangle/polygon/positioned/grid)
       js/app.js                  SSE, state, rendering, multi-view, auto-cycle, demo loop (1200+ lines)
 ```
@@ -84,7 +86,7 @@ For multi-view:   multiple SSE streams merged → spatial canvas → CSS zoom
 ## Conventions
 
 - All DOM rendering uses safe methods (createElement, textContent). No innerHTML.
-- CSS custom properties in `:root` for theming. Colors: `--magi-*`.
+- CSS custom properties in `:root` for theming. Colors: `--vis-*`. Theme overrides via `#screen.theme-*` in `themes.css`.
 - Security headers (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on all responses.
 - Max 50 concurrent SSE clients, 20 watch sessions, 100 dashboard sessions.
 - `atomic.Int64` for shared session timestamps (race-free).
@@ -100,6 +102,18 @@ For multi-view:   multiple SSE streams merged → spatial canvas → CSS zoom
 | 4-7 | Regular polygon | `layout-polygon` |
 | 8+ | Flex grid | `layout-grid` |
 | Any with x,y coords | Geographic positions | `layout-positioned` |
+
+## Themes
+
+Select via `?theme=` query param. Same HTML and JS for all themes — only CSS changes.
+
+| Theme | Class | Agent Shape | Description |
+|---|---|---|---|
+| Classic (default) | `theme-classic` | Shield (clip-path) | Parchment, blackletter, vermillion rubrication, cartographic terrain, manuscript borders |
+| MAGI | `theme-magi` | Diamond (45deg) | CRT scanlines, amber-on-black, kanji votes, tactical grid, boot sequence |
+| Minimal | `theme-minimal` | Circle | White background, system sans-serif, pill badges, rounded corners |
+
+Architecture: `base.css` defines `--vis-*` variables with classic palette defaults and neutral structural styles. `themes.css` adds theme-specific effects — MAGI adds CRT effects/glow, classic adds manuscript decorations (terrain, compass rose, shields), minimal overrides to a clean modern look. Fonts loaded dynamically in `app.js` per theme.
 
 ## Multi-View
 

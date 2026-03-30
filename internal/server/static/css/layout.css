@@ -165,7 +165,7 @@
 
 /* Cluster group boxes in grid mode */
 .cluster-group {
-    border: 1px solid var(--magi-panel-border);
+    border: 1px solid var(--vis-panel-border);
     padding: 10px;
     margin: 5px;
     position: relative;
@@ -175,11 +175,11 @@
     position: absolute;
     top: -8px;
     left: 10px;
-    background: var(--magi-panel);
+    background: var(--vis-panel);
     padding: 0 6px;
     font-size: 9px;
     letter-spacing: 2px;
-    color: var(--magi-text-dim);
+    color: var(--vis-text-dim);
 }
 
 /* Center panel adjustments per layout */
