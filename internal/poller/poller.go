@@ -44,7 +44,8 @@ type Poller struct {
 	client    *gemot.Client
 	hub       *hub.Hub
 	interval  time.Duration
-	delibID   string // if set, watch only this deliberation
+	delibID   string   // if set, watch only this deliberation
+	delibIDs  []string // if set, watch these specific deliberations
 
 	mu       sync.RWMutex
 	current  *Snapshot
@@ -87,11 +88,27 @@ func (p *Poller) Run(ctx context.Context) {
 	}
 }
 
+// NewMulti creates a poller that watches a specific set of deliberation IDs.
+func NewMulti(client *gemot.Client, h *hub.Hub, interval time.Duration, delibIDs []string) *Poller {
+	return &Poller{
+		client:   client,
+		hub:      h,
+		interval: interval,
+		delibIDs: delibIDs,
+		current: &Snapshot{
+			Deliberations: make(map[string]*DelibState),
+		},
+		hashes: make(map[string]string),
+	}
+}
+
 func (p *Poller) poll(ctx context.Context) {
 	var ids []string
 
 	if p.delibID != "" {
 		ids = []string{p.delibID}
+	} else if len(p.delibIDs) > 0 {
+		ids = p.delibIDs
 	} else {
 		delibs, err := p.client.ListDeliberations()
 		if err != nil {

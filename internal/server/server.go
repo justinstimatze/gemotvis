@@ -29,6 +29,7 @@ type Server struct {
 	cycleInterval time.Duration   // auto-cycle interval for demo mode (0 = disabled)
 	watches       *watchManager      // join code watch sessions (nil if no service key)
 	dashboards    *dashboardManager  // user dashboard sessions (nil if no gemot URL)
+	groups        *groupManager      // shared group viewing sessions (nil if no service key)
 }
 
 // New creates a server for live monitoring.
@@ -53,6 +54,7 @@ func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string) *Server {
 	if gemotURL != "" && serviceKey != "" {
 		s.watches = newWatchManager(gemotURL, serviceKey)
 		s.dashboards = newDashboardManager(gemotURL, serviceKey)
+		s.groups = newGroupManager(gemotURL, serviceKey)
 	}
 	s.routes()
 	return s
@@ -87,6 +89,17 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("DELETE /api/session", s.handleSessionDelete)
 	s.mux.HandleFunc("GET /api/dashboard/state", s.handleDashboardState)
 	s.mux.HandleFunc("GET /api/dashboard/events", s.handleDashboardEvents)
+
+	// Group routes (shared link viewing — "anyone with the link")
+	s.mux.HandleFunc("GET /api/g/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/state") {
+			s.handleGroupState(w, r)
+		} else if strings.HasSuffix(r.URL.Path, "/events") {
+			s.handleGroupEvents(w, r)
+		} else {
+			http.Error(w, "not found", http.StatusNotFound)
+		}
+	})
 
 	// Watch routes (join code live viewing)
 	s.mux.HandleFunc("GET /api/watch/", func(w http.ResponseWriter, r *http.Request) {

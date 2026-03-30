@@ -537,7 +537,7 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
     text-shadow: 0 0 0.5px rgba(44, 24, 16, 0.3);
 }
 
-/* Classic: parchment surface with aging and grain */
+/* Classic: parchment surface with aging, map border frame */
 #screen.theme-classic main {
     background:
         radial-gradient(ellipse at 15% 25%, rgba(139, 90, 43, 0.08) 0%, transparent 40%),
@@ -545,7 +545,13 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
         radial-gradient(ellipse at 85% 70%, rgba(139, 90, 43, 0.07) 0%, transparent 30%),
         radial-gradient(ellipse at 40% 85%, rgba(139, 90, 43, 0.05) 0%, transparent 45%),
         radial-gradient(ellipse at 50% 50%, rgba(245, 230, 200, 0) 30%, rgba(210, 180, 140, 0.15) 100%);
-    box-shadow: inset 0 0 80px rgba(139, 90, 43, 0.12);
+    /* Double-rule map border + aged vignette */
+    box-shadow:
+        inset 0 0 80px rgba(139, 90, 43, 0.12),
+        inset 0 0 0 8px var(--vis-bg),
+        inset 0 0 0 9px rgba(139, 90, 43, 0.2),
+        inset 0 0 0 13px var(--vis-bg),
+        inset 0 0 0 14px rgba(139, 90, 43, 0.1);
 }
 
 /* Parchment grain overlay */
@@ -567,27 +573,39 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.06;
+    opacity: 0.15;
     background:
-        /* Forest clusters */
-        radial-gradient(ellipse at 8% 35%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 10% 33%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 9% 37%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        radial-gradient(ellipse at 12% 34%, #2D6B3F 0px, #2D6B3F 1px, transparent 2px),
-        radial-gradient(ellipse at 88% 22%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 90% 20%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 89% 24%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        radial-gradient(ellipse at 91% 22%, #2D6B3F 0px, #2D6B3F 1px, transparent 2px),
-        radial-gradient(ellipse at 87% 23%, #2D6B3F 0px, #2D6B3F 1px, transparent 2px),
-        radial-gradient(ellipse at 82% 75%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        radial-gradient(ellipse at 84% 73%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 83% 77%, #2D6B3F 0px, #2D6B3F 1px, transparent 2px),
-        /* Contour lines */
-        radial-gradient(ellipse at 30% 60%, transparent 80px, rgba(139, 90, 43, 0.4) 81px, transparent 83px),
-        radial-gradient(ellipse at 30% 60%, transparent 110px, rgba(139, 90, 43, 0.25) 111px, transparent 113px),
+        /* Forest clusters — groups of tree-like marks */
+        radial-gradient(ellipse at 8% 35%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
+        radial-gradient(ellipse at 10% 33%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
+        radial-gradient(ellipse at 9% 37%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
+        radial-gradient(ellipse at 12% 34%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
+        radial-gradient(ellipse at 6% 36%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
+        radial-gradient(ellipse at 11% 38%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
+        /* Upper-right forest */
+        radial-gradient(ellipse at 88% 22%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
+        radial-gradient(ellipse at 90% 20%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
+        radial-gradient(ellipse at 89% 24%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
+        radial-gradient(ellipse at 91% 22%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
+        radial-gradient(ellipse at 87% 23%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
+        radial-gradient(ellipse at 92% 19%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
+        /* Lower-right forest */
+        radial-gradient(ellipse at 82% 75%, #2D6B3F 0px, #2D6B3F 2.5px, transparent 3.5px),
+        radial-gradient(ellipse at 84% 73%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
+        radial-gradient(ellipse at 83% 77%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
+        radial-gradient(ellipse at 80% 74%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
+        /* River — winding blue-gray line across the map */
+        linear-gradient(155deg, transparent 32%, rgba(46, 88, 148, 0.2) 32.3%, rgba(46, 88, 148, 0.25) 32.6%, rgba(46, 88, 148, 0.2) 32.9%, transparent 33.2%),
+        linear-gradient(165deg, transparent 48%, rgba(46, 88, 148, 0.15) 48.2%, rgba(46, 88, 148, 0.2) 48.5%, rgba(46, 88, 148, 0.15) 48.8%, transparent 49%),
+        /* Hill contour lines */
+        radial-gradient(ellipse at 30% 60%, transparent 80px, rgba(139, 90, 43, 0.35) 81px, transparent 83px),
+        radial-gradient(ellipse at 30% 60%, transparent 110px, rgba(139, 90, 43, 0.2) 111px, transparent 113px),
+        radial-gradient(ellipse at 30% 60%, transparent 140px, rgba(139, 90, 43, 0.12) 141px, transparent 143px),
         radial-gradient(ellipse at 70% 35%, transparent 60px, rgba(139, 90, 43, 0.3) 61px, transparent 63px),
-        radial-gradient(ellipse at 70% 35%, transparent 90px, rgba(139, 90, 43, 0.2) 91px, transparent 93px),
-        radial-gradient(ellipse at 55% 80%, transparent 40px, rgba(139, 90, 43, 0.2) 41px, transparent 43px);
+        radial-gradient(ellipse at 70% 35%, transparent 90px, rgba(139, 90, 43, 0.18) 91px, transparent 93px),
+        /* Small hills */
+        radial-gradient(ellipse at 55% 80%, transparent 40px, rgba(139, 90, 43, 0.18) 41px, transparent 43px),
+        radial-gradient(ellipse at 20% 15%, transparent 30px, rgba(139, 90, 43, 0.12) 31px, transparent 33px);
 }
 
 /* Classic: double ink-rule header */
@@ -629,15 +647,52 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
     font-variant: small-caps;
 }
 
-/* Classic: heraldic shield agent nodes (public domain clip-path from Wikimedia Commons) */
+/* Classic: settlement-style agent nodes — shield keep with crenellated wall base */
+
+/* Wall/rampart base behind the shield */
+#screen.theme-classic .agent-node::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -35%);
+    width: 100px;
+    height: 50px;
+    z-index: 1;
+    background: linear-gradient(180deg, #D8C8A0, #C8B890);
+    /* Crenellations along the top via repeating gradient */
+    mask-image: repeating-linear-gradient(
+        90deg,
+        black 0px, black 8px,
+        transparent 8px, transparent 12px
+    );
+    -webkit-mask-image: repeating-linear-gradient(
+        90deg,
+        black 0px, black 8px,
+        transparent 8px, transparent 12px
+    );
+    mask-size: 100% 8px;
+    -webkit-mask-size: 100% 8px;
+    mask-position: top;
+    -webkit-mask-position: top;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    border: 1px solid rgba(139, 90, 43, 0.3);
+    border-top: none;
+    opacity: 0.5;
+}
+
+/* Heraldic shield — the keep/citadel (public domain clip-path from Wikimedia Commons) */
 #screen.theme-classic .diamond {
     clip-path: url(#shield);
     border-radius: 0;
     border: none;
     background: linear-gradient(180deg, #EDE0C4 0%, #E5D5B0 30%, #D8C8A0 100%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 2;
 }
 
+/* Gold border ring behind shield */
 #screen.theme-classic .diamond::after {
     clip-path: url(#shield);
     border: none;
@@ -646,16 +701,62 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
     z-index: -1;
 }
 
-/* Classic: vote styles */
+/* Vote pennant — banner hanging beside the shield */
+#screen.theme-classic .diamond-vote {
+    position: absolute;
+    top: 8px;
+    right: -6px;
+    left: auto;
+    bottom: auto;
+    display: block;
+    width: auto;
+    height: auto;
+    align-items: initial;
+    justify-content: initial;
+    z-index: 6;
+}
+
 #screen.theme-classic .agent-vote {
     font-family: 'Cinzel', 'Georgia', serif;
     font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 3px 6px 6px;
+    display: block;
+    text-align: center;
+    min-width: 32px;
+    /* Pennant/gonfalon shape — pointed bottom */
+    clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
 }
 
-#screen.theme-classic .vote-approve { text-shadow: 0 0 1px rgba(45, 107, 63, 0.3); }
-#screen.theme-classic .vote-deny { text-shadow: 0 0 1px rgba(227, 66, 52, 0.3); }
+#screen.theme-classic .vote-approve .agent-vote,
+#screen.theme-classic .agent-vote {
+    text-shadow: none;
+}
 
-/* Classic: rubricated panel headers */
+/* Pennant colors by vote */
+#screen.theme-classic .diamond-vote:has(.vote-approve) .agent-vote,
+#screen.theme-classic .vote-approve {
+    background: #2D6B3F;
+    color: #F5E6C8;
+    text-shadow: none;
+}
+
+#screen.theme-classic .diamond-vote:has(.vote-deny) .agent-vote,
+#screen.theme-classic .vote-deny {
+    background: #E34234;
+    color: #F5E6C8;
+    text-shadow: none;
+}
+
+#screen.theme-classic .diamond-vote:has(.vote-pass) .agent-vote,
+#screen.theme-classic .vote-pass {
+    background: #8B5A2B;
+    color: #F5E6C8;
+    text-shadow: none;
+}
+
+/* Classic: rubricated panel headers with pilcrow */
 #screen.theme-classic .panel-header {
     font-family: 'IM Fell English SC', 'Georgia', serif;
     font-variant: small-caps;
@@ -664,41 +765,94 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
     letter-spacing: 3px;
 }
 
-/* Classic: gold metrics */
+#screen.theme-classic .footer-panel .panel-header::before {
+    content: '\00B6 '; /* pilcrow — scribal section mark */
+    color: #CFB53B;
+}
+
+/* Classic: crux items as marginal glosses */
+#screen.theme-classic .crux-item {
+    border-left: 2px solid rgba(207, 181, 59, 0.3);
+    padding-left: 8px;
+    margin-left: 4px;
+}
+
+/* Classic: gold-leaf illuminated metrics */
 #screen.theme-classic .metric-value {
     font-family: 'Cinzel', 'Georgia', serif;
     color: #AF803C;
     text-shadow: 0 1px 0 rgba(207, 181, 59, 0.3);
 }
 
-/* Classic: audit log ink colors */
+#screen.theme-classic .metric {
+    background: linear-gradient(180deg, rgba(207, 181, 59, 0.03), rgba(207, 181, 59, 0.07));
+    padding: 4px;
+}
+
+/* Classic: audit log as scribal chronicle */
 #screen.theme-classic .audit-entry .timestamp { color: #2E5894; }
-#screen.theme-classic .audit-entry .method { color: #E34234; }
+#screen.theme-classic .audit-entry .method { color: #E34234; font-style: italic; }
 #screen.theme-classic .audit-entry .agent { color: #120A8F; }
 
-/* Classic: cartographic road connections */
+/* Manicule pointing hand on most recent entry */
+#screen.theme-classic .audit-entry:first-child::before {
+    content: '\261E '; /* pointing hand */
+    color: #E34234;
+}
+
+/* Classic: hand-drawn road connections via SVG displacement filter */
+#screen.theme-classic .connection-layer {
+    filter: url(#hand-drawn);
+}
+
 #screen.theme-classic .connection-line { stroke-linecap: round; stroke-linejoin: round; }
-#screen.theme-classic .connection-agree { stroke-width: 2; }
+#screen.theme-classic .connection-agree { stroke-width: 2.5; }
 #screen.theme-classic .connection-disagree { stroke-width: 1.5; stroke-dasharray: 4 4; }
 #screen.theme-classic .connection-neutral { stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.4; }
-#screen.theme-classic .connection-bridging { stroke-width: 3; }
+#screen.theme-classic .connection-bridging { stroke-width: 3.5; }
 
-/* Classic: center panel with ornament */
+/* Road waypoint markers (added by JS) */
+#screen.theme-classic .road-waypoint {
+    fill: #8B5A2B;
+    opacity: 0.3;
+}
+
+/* Classic: center panel as ornate map cartouche */
 #screen.theme-classic .center-panel {
-    box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.12);
+    border: 2px solid #8B5A2B;
+    outline: 1px solid rgba(139, 90, 43, 0.3);
+    outline-offset: 3px;
+    background: linear-gradient(180deg, #F5E6C8 0%, #EDE0C4 100%);
+    box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.12), inset 0 0 20px rgba(139, 90, 43, 0.05);
     position: relative;
 }
 
+/* Cartouche top ornament — fleuron line */
 #screen.theme-classic .center-panel::before {
-    content: '\2756';
+    content: '\2767\2014\2756\2014\2767';
     position: absolute;
     top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 16px;
+    font-size: 13px;
     color: #CFB53B;
     background: var(--vis-bg);
-    padding: 0 8px;
+    padding: 0 6px;
+    white-space: nowrap;
+    letter-spacing: 2px;
+}
+
+/* Cartouche bottom ornament */
+#screen.theme-classic .center-panel::after {
+    content: '\2619';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(207, 181, 59, 0.6);
+    background: var(--vis-bg);
+    padding: 0 6px;
 }
 
 /* Classic: double-rule footer */
@@ -740,20 +894,34 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
 #screen.theme-classic .cluster-3 .diamond { background: linear-gradient(180deg, #D0E8D5, #C0D8C5) !important; }
 #screen.theme-classic .cluster-3 .diamond::after { background: linear-gradient(180deg, #2D6B3F, #43B3AE) !important; }
 
-/* Classic: compass rose */
+/* Classic: decorative corner marks + compass rose */
 #screen.theme-classic .hud-corners { display: block; }
-#screen.theme-classic .hud-corner { display: none; }
-#screen.theme-classic .hud-corner.br {
+
+#screen.theme-classic .hud-corner {
     display: block;
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
     width: auto;
     height: auto;
     border: none;
+    opacity: 0.15;
+    font-size: 18px;
+    color: #8B5A2B;
+}
+
+#screen.theme-classic .hud-corner.tl { top: 4px; left: 8px; }
+#screen.theme-classic .hud-corner.tl::before { content: '\2619'; display: block; } /* ☙ reversed fleuron */
+
+#screen.theme-classic .hud-corner.tr { top: 4px; right: 8px; }
+#screen.theme-classic .hud-corner.tr::before { content: '\2767'; display: block; } /* ❧ fleuron */
+
+#screen.theme-classic .hud-corner.bl { bottom: 4px; left: 8px; }
+#screen.theme-classic .hud-corner.bl::before { content: '\2767'; display: block; transform: scaleX(-1); }
+
+/* Compass rose — bottom right */
+#screen.theme-classic .hud-corner.br {
+    bottom: 8px;
+    right: 8px;
     opacity: 0.12;
     font-size: 40px;
-    color: #8B5A2B;
 }
 #screen.theme-classic .hud-corner.br::before { content: '\2726'; display: block; }
 #screen.theme-classic .hud-corner.br::after {

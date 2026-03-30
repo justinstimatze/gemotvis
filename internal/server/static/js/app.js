@@ -440,13 +440,27 @@ function renderConnections(ds) {
         for (let j = i + 1; j < n; j++) {
             const key = `${agents[i].id}|${agents[j].id}`;
             const rel = pairScores[key] || 'neutral';
+            const x1 = positions[i].x * rect.width;
+            const y1 = positions[i].y * rect.height;
+            const x2 = positions[j].x * rect.width;
+            const y2 = positions[j].y * rect.height;
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', positions[i].x * rect.width);
-            line.setAttribute('y1', positions[i].y * rect.height);
-            line.setAttribute('x2', positions[j].x * rect.width);
-            line.setAttribute('y2', positions[j].y * rect.height);
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
             line.setAttribute('class', `connection-line connection-${rel}`);
             svg.appendChild(line);
+
+            // Waypoint dot at road midpoint (classic theme)
+            if (activeTheme === 'classic' && rel !== 'neutral') {
+                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', (x1 + x2) / 2);
+                dot.setAttribute('cy', (y1 + y2) / 2);
+                dot.setAttribute('r', '2.5');
+                dot.setAttribute('class', 'road-waypoint');
+                svg.appendChild(dot);
+            }
         }
     }
 }
