@@ -716,25 +716,30 @@ body.boot-classic .boot-text:nth-child(3) {
     clip-path: url(#castle);
     border-radius: 0;
     border: none;
-    background: linear-gradient(180deg, #C8B080 0%, #B8A070 40%, #A89060 100%);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(180deg, #C8B080 0%, #B0986A 30%, #A08858 60%, #988050 100%);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
     z-index: 2;
+    /* Subtle stone masonry texture via repeating gradient */
+    background-image:
+        repeating-linear-gradient(0deg, transparent 0px, transparent 11px, rgba(0,0,0,0.03) 11px, rgba(0,0,0,0.03) 12px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 23px, rgba(0,0,0,0.02) 23px, rgba(0,0,0,0.02) 24px),
+        linear-gradient(180deg, #C8B080, #988050);
 }
 
-/* Stone texture highlight on castle */
+/* Dark mortar outline behind castle */
 #screen.theme-classic .diamond::after {
     clip-path: url(#castle);
     border: none;
-    inset: -2px;
-    background: linear-gradient(180deg, #8B5A2B, #6B4423);
+    inset: -3px;
+    background: #5A3A1A;
     z-index: -1;
 }
 
-/* Vote pennant — banner hanging beside the shield */
+/* Vote banner — flag hanging from the castle top */
 #screen.theme-classic .diamond-vote {
     position: absolute;
-    top: 2px;
-    right: -10px;
+    top: -4px;
+    right: -16px;
     left: auto;
     bottom: auto;
     width: auto;
@@ -748,32 +753,34 @@ body.boot-classic .boot-text:nth-child(3) {
 #screen.theme-classic .agent-vote {
     font-family: 'Cinzel', 'Georgia', serif;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: 1px;
-    padding: 4px 8px 8px;
+    padding: 4px 10px 10px;
     display: block;
     text-align: center;
-    min-width: 36px;
+    min-width: 40px;
     line-height: 1.2;
-    /* Pennant/gonfalon shape — pointed bottom */
-    clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+    /* Banner/gonfalon shape */
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
     text-shadow: none;
+    box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Pennant colors by vote */
+/* Banner colors — rich heraldic tones */
 #screen.theme-classic .agent-vote.vote-approve {
-    background: #2D6B3F;
+    background: linear-gradient(180deg, #2D6B3F, #1A4A2A);
     color: #F5E6C8;
 }
 
 #screen.theme-classic .agent-vote.vote-deny {
-    background: #E34234;
+    background: linear-gradient(180deg, #8B1A1A, #6B1010);
     color: #F5E6C8;
 }
 
 #screen.theme-classic .agent-vote.vote-pass {
-    background: #8B5A2B;
-    color: #EDE0C4;
+    background: linear-gradient(180deg, #6B5030, #4A3520);
+    color: #D4C4A0;
+    font-size: 12px;
 }
 
 /* Classic: rubricated panel headers with pilcrow — dark rubric for readability */
@@ -1032,6 +1039,10 @@ body.boot-classic .boot-text:nth-child(3) {
 #screen.theme-classic .multi-region-status {
     font-family: 'IM Fell English SC', 'Georgia', serif;
     font-variant: small-caps;
+    color: #8B5A2B;
+    border-top: 1px solid rgba(139, 90, 43, 0.2);
+    font-size: 9px;
+    letter-spacing: 1px;
 }
 /* Mini castle in multi-view */
 #screen.theme-classic .multi-agent::before {
