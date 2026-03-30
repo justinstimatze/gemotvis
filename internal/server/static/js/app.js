@@ -11,6 +11,7 @@ const STATUS_LABELS = {
     magi: { online: 'ONLINE', offline: 'OFFLINE', closed: 'CLOSED', analyzing: 'ANALYZING' },
     classic: { online: 'Active', offline: 'Waiting', closed: 'Concluded', analyzing: 'Deliberating' },
     minimal: { online: 'Connected', offline: 'Disconnected', closed: 'Closed', analyzing: 'Analyzing' },
+    gastown: { online: 'OPERATIONAL', offline: 'OFFLINE', closed: 'SEALED', analyzing: 'PROCESSING' },
 };
 let STATUS = STATUS_LABELS.classic; // set by applyTheme()
 
@@ -1330,7 +1331,7 @@ function connectDashboard() {
 
 // ===== Theme =====
 
-const VALID_THEMES = ['classic', 'magi', 'minimal'];
+const VALID_THEMES = ['classic', 'magi', 'minimal', 'gastown'];
 
 function applyTheme() {
     const params = new URLSearchParams(window.location.search);
@@ -1344,14 +1345,19 @@ function applyTheme() {
 
     VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI
                 : active === 'minimal' ? VOTE_LABELS_MINIMAL
-                : VOTE_LABELS_CLASSIC;
+                : VOTE_LABELS_CLASSIC; // classic and gastown both use YEA/NAY
     STATUS = STATUS_LABELS[active] || STATUS_LABELS.classic;
 
-    // Load web fonts for classic theme (base defaults reference these)
+    // Load web fonts per theme
     if (active === 'classic' || !theme) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = 'https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Cinzel:wght@400;700;900&display=swap';
+        document.head.appendChild(link);
+    } else if (active === 'gastown') {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital@0;1&display=swap';
         document.head.appendChild(link);
     }
 
@@ -1375,6 +1381,11 @@ function applyTheme() {
             minimal: [
                 'Gemot',
             ],
+            gastown: [
+                '-- GEMOT --',
+                'WASTELAND DISPATCH',
+                'DELIBERATION ENGINE ONLINE',
+            ],
         };
         const lines = BOOT_CONTENT[active] || BOOT_CONTENT.classic;
         lines.forEach(text => {
@@ -1393,21 +1404,22 @@ const activeTheme = applyTheme();
 // Update page title per theme
 if (activeTheme === 'magi') {
     document.title = 'GEMOT // MAGI';
-    // MAGI center panel header stays as "MAGI" (set in HTML)
+} else if (activeTheme === 'gastown') {
+    document.title = 'GEMOT // WASTELAND';
+} else if (activeTheme === 'minimal') {
+    document.title = 'Gemot';
 } else {
-    if (activeTheme === 'minimal') {
-        document.title = 'Gemot';
-    } else {
-        document.title = 'Gemot \u2014 Deliberation Monitor';
-    }
+    document.title = 'Gemot \u2014 Deliberation Monitor';
+}
+if (activeTheme !== 'magi') {
     const centerHeader = document.querySelector('#center-panel .panel-header');
-    if (centerHeader) centerHeader.textContent = 'ANALYSIS';
+    if (centerHeader) centerHeader.textContent = activeTheme === 'gastown' ? 'DISPATCH' : 'ANALYSIS';
 }
 
 // ===== Init =====
 
 // Remove boot overlay after animation completes
-const bootDelay = activeTheme === 'magi' ? 3200 : activeTheme === 'classic' ? 2200 : 1200;
+const bootDelay = activeTheme === 'magi' ? 3200 : activeTheme === 'classic' ? 2200 : activeTheme === 'gastown' ? 2000 : 1200;
 setTimeout(() => {
     const boot = document.getElementById('boot');
     if (boot) boot.classList.add('done');
