@@ -102,10 +102,12 @@ function handleEvent(msg) {
         }
 
         case 'cycle':
-            if (!state.cyclePaused) {
+            if (!state.cyclePaused && !state.multiView) {
+                // Single-view tab cycling (server-driven)
                 cycleNext();
                 resetCycleProgress();
             }
+            // Multi-view uses its own client-side demo loop
             break;
 
         case 'ping':
@@ -173,6 +175,10 @@ function render() {
     if (state.multiView && ids.length > 1) {
         document.getElementById('delib-nav')?.classList.add('hidden');
         renderMultiView();
+        // Start demo loop if not already running and cycle is enabled
+        if (!demoLoopTimer && state.cycleInterval > 0) {
+            startDemoLoop();
+        }
         return;
     }
 
@@ -902,7 +908,56 @@ function onActivity(delibID) {
     // Don't interrupt if user manually focused (click)
     if (state.cyclePaused) return;
 
+    // Stop demo loop while we focus on real activity
+    stopDemoLoop();
     focusOnDelib(delibID);
+}
+
+// ===== Demo Loop (multi-view) =====
+// Cycles focus through each deliberation, then overview, in a loop.
+// Used for ambient display / conference demo mode.
+
+let demoLoopTimer = null;
+let demoLoopIndex = 0;
+
+function startDemoLoop() {
+    if (!state.multiView || state.cycleInterval <= 0) return;
+
+    const ids = Object.keys(state.deliberations);
+    if (ids.length <= 1) return;
+
+    // Sequence: overview, delib1, overview, delib2, overview, delib3, ...
+    // Each step gets cycleInterval ms
+    function step() {
+        if (state.cyclePaused) return;
+
+        const ids = Object.keys(state.deliberations);
+        const totalSteps = ids.length * 2; // zoom + overview for each
+        const stepInCycle = demoLoopIndex % totalSteps;
+
+        if (stepInCycle % 2 === 0) {
+            // Zoom into a deliberation
+            const delibIdx = Math.floor(stepInCycle / 2);
+            focusOnDelib(ids[delibIdx]);
+            // Override the auto-zoom-out timer — the loop handles timing
+            clearTimeout(focusTimer);
+        } else {
+            // Return to overview
+            zoomToOverview();
+        }
+
+        demoLoopIndex++;
+        demoLoopTimer = setTimeout(step, state.cycleInterval);
+    }
+
+    // Start with overview, first step after one interval
+    zoomToOverview();
+    demoLoopTimer = setTimeout(step, state.cycleInterval);
+}
+
+function stopDemoLoop() {
+    clearTimeout(demoLoopTimer);
+    demoLoopTimer = null;
 }
 
 function updateConnectionStatus() {
@@ -1134,6 +1189,18 @@ document.getElementById('main').addEventListener('click', (e) => {
     const region = e.target.closest('.multi-region');
     if (region && state.multiView) {
         const delibId = region.dataset.delibId;
-        if (delibId) focusOnDelib(delibId);
+        if (delibId) {
+            // Pause demo loop on manual click
+            state.cyclePaused = true;
+            stopDemoLoop();
+            focusOnDelib(delibId);
+
+            // Resume demo loop after 60s of no interaction
+            clearTimeout(cycleProgressTimer);
+            cycleProgressTimer = setTimeout(() => {
+                state.cyclePaused = false;
+                startDemoLoop();
+            }, 60000);
+        }
     }
 });
