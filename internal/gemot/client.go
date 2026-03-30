@@ -155,6 +155,30 @@ func (c *Client) GetAnalysisResult(deliberationID string) (*AnalysisResult, erro
 	return &result, nil
 }
 
+func (c *Client) ListByGroup(groupID string) ([]Deliberation, error) {
+	raw, err := c.call("gemot/list_by_group", map[string]any{"group_id": groupID})
+	if err != nil {
+		return nil, err
+	}
+	var result []Deliberation
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal deliberations: %w", err)
+	}
+	return result, nil
+}
+
+func (c *Client) ListByAgent(agentID string) ([]Deliberation, error) {
+	raw, err := c.call("gemot/list_by_agent", map[string]any{"agent_id": agentID})
+	if err != nil {
+		return nil, err
+	}
+	var result []Deliberation
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal deliberations: %w", err)
+	}
+	return result, nil
+}
+
 func (c *Client) GetAuditLog(deliberationID string) (*AuditLog, error) {
 	raw, err := c.call("gemot/get_audit_log", map[string]any{"deliberation_id": deliberationID})
 	if err != nil {
