@@ -328,12 +328,17 @@ function render() {
     renderDelibNav(ids, delibs);
 
     const active = delibs[state.activeDelibID];
+    const emptyEl = document.getElementById('empty-state');
     if (!active) {
-        const main = document.getElementById('main');
-        clearChildren(main);
-        main.appendChild(el('div', { className: 'empty-state' }, 'AWAITING DELIBERATION DATA'));
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        document.getElementById('agents')?.classList.add('hidden');
+        document.getElementById('connections')?.classList.add('hidden');
+        document.getElementById('center-panel')?.classList.add('hidden');
         return;
     }
+    if (emptyEl) emptyEl.classList.add('hidden');
+    document.getElementById('agents')?.classList.remove('hidden');
+    document.getElementById('connections')?.classList.remove('hidden');
 
     // Apply scrubber time filter if active
     let display = active;
