@@ -540,7 +540,7 @@ function renderCruxPanel(ds) {
         );
         // Insert controversy bar after type
         meta.children[1].appendChild(controversyBar);
-        meta.children[1].appendChild(document.createTextNode(` ${(c.controversy_score * 100).toFixed(0)}%`));
+        meta.children[1].appendChild(document.createTextNode(` ${((c.controversy_score || 0) * 100).toFixed(0)}%`));
 
         const item = el('div', { className: 'crux-item' },
             el('div', { className: 'crux-claim' }, truncate(c.crux_claim, 80)),
