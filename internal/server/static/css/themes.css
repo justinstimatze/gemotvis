@@ -1097,11 +1097,11 @@ body.boot-minimal .boot-overlay .boot-text {
 #screen.theme-minimal .status-indicator.offline { border-color: #fecaca; background: #fef2f2; }
 #screen.theme-minimal .status-indicator.analyzing { border-color: #a5f3fc; background: #ecfeff; }
 
-/* Minimal: circle agent nodes */
+/* Minimal: circle agent nodes — solid white with subtle border */
 #screen.theme-minimal .diamond {
     border-radius: 50%;
-    background: linear-gradient(180deg, rgba(37, 99, 235, 0.06), rgba(37, 99, 235, 0.02));
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 #screen.theme-minimal .diamond::after { border: none; }
@@ -1310,15 +1310,10 @@ body.boot-gastown .boot-text:nth-child(3) {
     background: #e8dcc8;
 }
 
-/* Gastown: bordered diamond nodes on light background */
+/* Gastown: solid bordered diamond nodes on light background */
 #screen.theme-gastown .diamond {
     border: 2px solid #8b5e3c;
-    background: linear-gradient(
-        135deg,
-        rgba(245, 230, 211, 0.9) 0%,
-        rgba(232, 220, 200, 0.8) 50%,
-        rgba(212, 196, 170, 0.9) 100%
-    );
+    background: linear-gradient(135deg, #f5e6d3 0%, #e8dcc8 50%, #ddd0b8 100%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 

@@ -386,3 +386,131 @@ func TestDecryptWithWrongKey(t *testing.T) {
 		t.Error("expected error decrypting with wrong key")
 	}
 }
+
+func TestCSPNoUnsafeInline(t *testing.T) {
+	srv := newTestServer()
+	req := httptest.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+
+	csp := w.Header().Get("Content-Security-Policy")
+	if csp == "" {
+		t.Fatal("missing Content-Security-Policy header")
+	}
+	if contains(csp, "unsafe-inline") {
+		t.Error("CSP contains unsafe-inline, which should have been removed")
+	}
+	if !contains(csp, "fonts.googleapis.com") {
+		t.Error("CSP missing fonts.googleapis.com for Google Fonts")
+	}
+	if !contains(csp, "fonts.gstatic.com") {
+		t.Error("CSP missing fonts.gstatic.com for font files")
+	}
+}
+
+func TestServerClose(t *testing.T) {
+	srv := newTestServer()
+	// Close should not panic on a server with nil managers
+	srv.Close()
+}
+
+func TestServerCloseWithManagers(t *testing.T) {
+	srv := NewDemo(0, "http://localhost:9999", "fake-key")
+	// This creates watches, dashboards, groups managers
+	// Close should stop their reap loops without deadlock
+	srv.Close()
+}
+
+func TestDemoSnapshotHasAuditLogs(t *testing.T) {
+	srv := newTestServer()
+	req := httptest.NewRequest("GET", "/api/state", nil)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+
+	var snap poller.Snapshot
+	if err := json.NewDecoder(w.Body).Decode(&snap); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	for id, ds := range snap.Deliberations {
+		if ds.AuditLog == nil || len(ds.AuditLog.Operations) == 0 {
+			t.Errorf("deliberation %q has no audit log (needed for scrubber)", id)
+		}
+	}
+}
+
+func TestDemoSnapshotHasPositionTimestamps(t *testing.T) {
+	srv := newTestServer()
+	req := httptest.NewRequest("GET", "/api/state", nil)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+
+	var snap poller.Snapshot
+	if err := json.NewDecoder(w.Body).Decode(&snap); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	for id, ds := range snap.Deliberations {
+		for _, p := range ds.Positions {
+			if p.CreatedAt.IsZero() {
+				t.Errorf("deliberation %q: position by %q has no created_at (needed for scrubber filter)", id, p.AgentID)
+			}
+		}
+	}
+}
+
+func TestDemoSnapshotHasVoteTimestamps(t *testing.T) {
+	srv := newTestServer()
+	req := httptest.NewRequest("GET", "/api/state", nil)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+
+	var snap poller.Snapshot
+	if err := json.NewDecoder(w.Body).Decode(&snap); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	for id, ds := range snap.Deliberations {
+		for _, v := range ds.Votes {
+			if v.CreatedAt.IsZero() {
+				t.Errorf("deliberation %q: vote by %q has no created_at (needed for scrubber filter)", id, v.AgentID)
+			}
+		}
+	}
+}
+
+func TestExtractGroupID(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{"valid events", "/api/g/my-group-id/events", "my-group-id"},
+		{"valid state", "/api/g/my-group-id/state", "my-group-id"},
+		{"no suffix", "/api/g/abcde", "abcde"},
+		{"with underscores", "/api/g/my_group_123/events", "my_group_123"},
+		{"empty", "/api/g/", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractGroupID(tt.path)
+			if got != tt.want {
+				t.Errorf("extractGroupID(%q) = %q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && searchString(s, substr)
+}
+
+func searchString(s, sub string) bool {
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}

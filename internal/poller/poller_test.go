@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/justinstimatze/gemotvis/internal/gemot"
+	"github.com/justinstimatze/gemotvis/internal/hub"
 )
 
 func TestAgentInfoSortByID(t *testing.T) {
@@ -171,3 +172,35 @@ func TestDelibStateTypes(t *testing.T) {
 }
 
 func floatPtr(v float64) *float64 { return &v }
+
+func TestEnableSSE(t *testing.T) {
+	client := gemot.NewClient("http://localhost:9999", "test-key")
+	h := &hub.Hub{}
+	p := New(client, h, 10*time.Second, "delib-1")
+
+	if p.sseEvents {
+		t.Error("sseEvents should be false by default")
+	}
+
+	p.EnableSSE()
+	if !p.sseEvents {
+		t.Error("sseEvents should be true after EnableSSE()")
+	}
+}
+
+func TestPollerGetSnapshotInitial(t *testing.T) {
+	client := gemot.NewClient("http://localhost:9999", "test-key")
+	h := &hub.Hub{}
+	p := New(client, h, 10*time.Second, "")
+
+	snap := p.GetSnapshot()
+	if snap == nil {
+		t.Fatal("initial snapshot should not be nil")
+	}
+	if snap.Deliberations == nil {
+		t.Error("initial snapshot should have non-nil Deliberations map")
+	}
+	if len(snap.Deliberations) != 0 {
+		t.Errorf("initial snapshot should have 0 deliberations, got %d", len(snap.Deliberations))
+	}
+}
