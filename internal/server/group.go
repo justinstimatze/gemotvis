@@ -138,7 +138,11 @@ func (gm *groupManager) getOrCreate(groupID string) (*groupSession, error) {
 	sess.touch()
 	gm.sessions[groupID] = sess
 
-	log.Printf("group: new session for %s (%d deliberations)", groupID[:16], len(delibs))
+	truncID := groupID
+	if len(truncID) > 16 {
+		truncID = truncID[:16]
+	}
+	log.Printf("group: new session for %s (%d deliberations)", truncID, len(delibs))
 	return sess, nil
 }
 

@@ -7,6 +7,13 @@ const VOTE_LABELS_MINIMAL = { 1: 'YES', '-1': 'NO', 0: '—' };
 let VOTE_LABELS = VOTE_LABELS_CLASSIC; // set by applyTheme()
 const VOTE_CLASSES = { 1: 'vote-approve', '-1': 'vote-deny', 0: 'vote-pass' };
 
+const STATUS_LABELS = {
+    magi: { online: 'ONLINE', offline: 'OFFLINE', closed: 'CLOSED', analyzing: 'ANALYZING' },
+    classic: { online: 'Active', offline: 'Waiting', closed: 'Concluded', analyzing: 'Deliberating' },
+    minimal: { online: 'Connected', offline: 'Disconnected', closed: 'Closed', analyzing: 'Analyzing' },
+};
+let STATUS = STATUS_LABELS.classic; // set by applyTheme()
+
 const PIPELINE_STAGES = ['taxonomy', 'extracting', 'deduplicating', 'crux_detection', 'summarizing', 'complete'];
 
 const CLUSTER_COLORS = ['cluster-0', 'cluster-1', 'cluster-2', 'cluster-3', 'cluster-4', 'cluster-5'];
@@ -254,13 +261,13 @@ function renderHeader(ds) {
 
     const status = document.getElementById('connection-status');
     if (d.status === 'analyzing') {
-        status.textContent = 'ANALYZING';
+        status.textContent = STATUS.analyzing;
         status.className = 'status-indicator analyzing';
     } else if (state.connected) {
-        status.textContent = d.status === 'closed' ? 'CLOSED' : 'ONLINE';
+        status.textContent = d.status === 'closed' ? STATUS.closed : STATUS.online;
         status.className = 'status-indicator online';
     } else {
-        status.textContent = 'OFFLINE';
+        status.textContent = STATUS.offline;
         status.className = 'status-indicator offline';
     }
 }
@@ -495,7 +502,8 @@ function renderCenterPanel(ds) {
     if (bridging.length > 0) {
         content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:var(--vis-yellow);font-size:10px;' }, 'BRIDGING'));
         bridging.forEach(b => {
-            const score = el('span', { style: 'color:var(--vis-text-dim)' }, ` (${(b.bridging_score * 100).toFixed(0)}%)`);
+            const pct = b.bridging_score != null ? `${(b.bridging_score * 100).toFixed(0)}%` : '';
+            const score = el('span', { style: 'color:var(--vis-text-dim)' }, pct ? ` (${pct})` : '');
             const div = el('div', { style: 'margin-bottom:4px;font-size:10px;text-transform:none;' }, truncate(b.content, 100));
             div.appendChild(score);
             content.appendChild(div);
@@ -520,7 +528,7 @@ function renderCruxPanel(ds) {
     cruxes.forEach(c => {
         const controversyFill = el('span', {
             className: 'controversy-fill',
-            style: `width:${(c.controversy_score * 100)}%`,
+            style: `width:${((c.controversy_score || 0) * 100)}%`,
         });
         const controversyBar = el('span', { className: 'controversy-bar' }, controversyFill);
 
@@ -552,8 +560,8 @@ function renderMetrics(ds) {
         { value: String((ds.positions || []).length), label: 'POSITIONS' },
         { value: String((ds.votes || []).length), label: 'VOTES' },
         { value: a ? String((a.cruxes || []).length) : '--', label: 'CRUXES' },
-        { value: a ? `${(a.participation_rate * 100).toFixed(0)}%` : '--', label: 'PARTICIPATION' },
-        { value: a ? `${(a.perspective_diversity * 100).toFixed(0)}%` : '--', label: 'DIVERSITY' },
+        { value: a?.participation_rate != null ? `${(a.participation_rate * 100).toFixed(0)}%` : '--', label: 'PARTICIPATION' },
+        { value: a?.perspective_diversity != null ? `${(a.perspective_diversity * 100).toFixed(0)}%` : '--', label: 'DIVERSITY' },
     ];
 
     metrics.forEach(m => {
@@ -832,7 +840,7 @@ function renderMultiView() {
 
         // Status indicator
         if (d.status === 'analyzing') {
-            regionEl.appendChild(el('div', { className: 'multi-region-status analyzing' }, 'ANALYZING'));
+            regionEl.appendChild(el('div', { className: 'multi-region-status analyzing' }, STATUS.analyzing));
         }
 
         // Crux count
@@ -979,10 +987,10 @@ function stopDemoLoop() {
 function updateConnectionStatus() {
     const status = document.getElementById('connection-status');
     if (state.connected) {
-        status.textContent = 'ONLINE';
+        status.textContent = STATUS.online;
         status.className = 'status-indicator online';
     } else {
-        status.textContent = 'OFFLINE';
+        status.textContent = STATUS.offline;
         status.className = 'status-indicator offline';
     }
 }
@@ -1037,7 +1045,7 @@ function connectGroup(groupID) {
         try { handleEvent(JSON.parse(e.data)); } catch (_) { /* ignore */ }
     };
 
-    const sysLabel = document.querySelector('#system-name');
+    const sysLabel = document.querySelector('.system-label');
     if (sysLabel) sysLabel.textContent = `GROUP: ${groupID.substring(0, 20)}`;
 }
 
@@ -1154,6 +1162,7 @@ function applyTheme() {
     VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI
                 : active === 'minimal' ? VOTE_LABELS_MINIMAL
                 : VOTE_LABELS_CLASSIC;
+    STATUS = STATUS_LABELS[active] || STATUS_LABELS.classic;
 
     // Load web fonts for classic theme (base defaults reference these)
     if (active === 'classic' || !theme) {

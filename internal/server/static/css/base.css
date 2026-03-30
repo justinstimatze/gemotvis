@@ -629,7 +629,7 @@ footer {
 /* Crux items */
 .crux-item {
     padding: 4px 0;
-    border-bottom: 1px solid rgba(139, 90, 43, 0.12);
+    border-bottom: 1px solid var(--vis-panel-border);
 }
 
 .crux-claim {
@@ -690,7 +690,7 @@ footer {
 .audit-entry {
     font-size: 10px;
     padding: 2px 0;
-    border-bottom: 1px solid rgba(139, 90, 43, 0.06);
+    border-bottom: 1px solid var(--vis-panel-border);
     color: var(--vis-text-dim);
 }
 
@@ -766,6 +766,10 @@ footer {
 
 .hidden {
     display: none !important;
+}
+
+.svg-defs {
+    position: absolute;
 }
 
 ::-webkit-scrollbar { width: 4px; }

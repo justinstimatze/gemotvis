@@ -10,7 +10,7 @@
 </head>
 <body>
     <!-- Boot sequence overlay — content set per theme by JS -->
-    <div class="boot-overlay" id="boot"></div>
+    <div class="boot-overlay" id="boot" aria-hidden="true"></div>
 
     <div id="screen" class="crt">
         <!-- Top bar -->
@@ -54,7 +54,7 @@
             <div class="edge-readout right" id="edge-right">STRUCTURED CONSENSUS PROTOCOL // A2A LINK</div>
 
             <!-- SVG layer for connection lines -->
-            <svg id="connections" class="connection-layer"></svg>
+            <svg id="connections" class="connection-layer" aria-hidden="true"></svg>
 
             <!-- Agent nodes container -->
             <div id="agents" class="agents-container"></div>
@@ -100,7 +100,7 @@
     </div>
 
     <!-- SVG defs for theme effects (zero visual impact until referenced) -->
-    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <svg class="svg-defs" width="0" height="0" aria-hidden="true">
         <defs>
             <!-- Parchment grain texture (classic theme) -->
             <filter id="parchment-grain">

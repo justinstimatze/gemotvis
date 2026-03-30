@@ -159,11 +159,6 @@
     color: rgba(255, 140, 0, 0.2);
 }
 
-@keyframes edgeScroll {
-    0% { transform: rotate(-90deg) translateX(-50%) translateY(0); }
-    100% { transform: rotate(-90deg) translateX(-50%) translateY(-100px); }
-}
-
 /* --- MAGI: header glow --- */
 
 #screen.theme-magi header {
@@ -319,6 +314,14 @@
     box-shadow: 0 0 4px rgba(255, 32, 32, 0.4);
 }
 
+#screen.theme-magi .crux-item {
+    border-bottom-color: rgba(255, 140, 0, 0.08);
+}
+
+#screen.theme-magi .audit-entry {
+    border-bottom-color: rgba(255, 140, 0, 0.04);
+}
+
 #screen.theme-magi .metric-value {
     text-shadow: var(--glow-md);
 }
@@ -370,6 +373,7 @@
 #screen.theme-magi .agent-tooltip {
     background: rgba(12, 12, 12, 0.95);
     box-shadow: var(--glow-lg), 0 4px 20px rgba(0, 0, 0, 0.8);
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 }
 
@@ -391,6 +395,7 @@
 #screen.theme-magi .center-panel {
     background: rgba(12, 12, 12, 0.92);
     box-shadow: var(--glow-lg), 0 0 40px rgba(255, 140, 0, 0.08);
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 }
 
@@ -521,6 +526,7 @@ body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; co
     #screen.theme-magi .scanlines, #screen.theme-magi .scanlines::after { display: none; }
     #screen.theme-magi::before { display: none; }
     #screen.theme-magi { animation: none; }
+    #screen.theme-magi .integrity-warning .diamond::after { animation: none; }
     body:has(#screen.theme-magi) .boot-overlay { display: none; }
 }
 
@@ -559,7 +565,7 @@ body:has(#screen.theme-classic) .boot-text:nth-child(1) {
 body:has(#screen.theme-classic) .boot-text:nth-child(2) {
     font-family: 'UnifrakturMaguntia', cursive;
     font-size: 36px;
-    color: #E34234;
+    color: #8B1A1A;
     letter-spacing: 4px;
     animation-delay: 0.4s;
 }
@@ -677,10 +683,10 @@ body:has(#screen.theme-classic) .boot-text:nth-child(3) {
     opacity: 0.5;
 }
 
-/* Classic: rubricated topic title */
+/* Classic: rubricated topic title — large text can use brighter vermillion */
 #screen.theme-classic .topic-label {
-    color: #E34234;
-    text-shadow: 0 0 1px rgba(227, 66, 52, 0.3);
+    color: #C41E3A;
+    text-shadow: 0 0 1px rgba(196, 30, 58, 0.3);
 }
 
 /* Classic: small caps labels */
@@ -794,12 +800,12 @@ body:has(#screen.theme-classic) .boot-text:nth-child(3) {
     color: #EDE0C4;
 }
 
-/* Classic: rubricated panel headers with pilcrow */
+/* Classic: rubricated panel headers with pilcrow — dark rubric for readability */
 #screen.theme-classic .panel-header {
     font-family: 'IM Fell English SC', 'Georgia', serif;
     font-variant: small-caps;
-    color: #E34234;
-    text-shadow: 0 0 1px rgba(227, 66, 52, 0.2);
+    color: #8B1A1A;
+    text-shadow: none;
     letter-spacing: 3px;
 }
 
@@ -829,7 +835,7 @@ body:has(#screen.theme-classic) .boot-text:nth-child(3) {
 
 /* Classic: audit log as scribal chronicle */
 #screen.theme-classic .audit-entry .timestamp { color: #2E5894; }
-#screen.theme-classic .audit-entry .method { color: #E34234; font-style: italic; }
+#screen.theme-classic .audit-entry .method { color: #8B1A1A; font-style: italic; }
 #screen.theme-classic .audit-entry .agent { color: #120A8F; }
 
 /* Manicule pointing hand on most recent entry */
@@ -985,8 +991,8 @@ body:has(#screen.theme-classic) .boot-text:nth-child(3) {
 }
 
 /* Classic: nav tabs */
-#screen.theme-classic .delib-tab:hover { color: #E34234; border-color: #E34234; }
-#screen.theme-classic .delib-tab.active { color: #E34234; border-color: #E34234; background: rgba(227, 66, 52, 0.04); }
+#screen.theme-classic .delib-tab:hover { color: #8B1A1A; border-color: #8B1A1A; }
+#screen.theme-classic .delib-tab.active { color: #8B1A1A; border-color: #8B1A1A; background: rgba(139, 26, 26, 0.04); }
 #screen.theme-classic .delib-tab.analyzing { color: #120A8F; border-color: #120A8F; }
 
 /* Classic: analysis bar */
@@ -999,23 +1005,23 @@ body:has(#screen.theme-classic) .boot-text:nth-child(3) {
 #screen.theme-classic .tooltip-header {
     font-family: 'IM Fell English SC', 'Georgia', serif;
     font-variant: small-caps;
-    color: #E34234;
+    color: #8B1A1A;
 }
 
 #screen.theme-classic .tooltip-footer { font-style: italic; }
 
 /* Classic: login form */
-#screen.theme-classic .login-title { color: #E34234; text-shadow: 0 0 1px rgba(227, 66, 52, 0.2); }
+#screen.theme-classic .login-title { color: #8B1A1A; }
 #screen.theme-classic .login-subtitle { font-style: italic; }
 #screen.theme-classic .login-button {
     font-family: 'IM Fell English SC', serif;
     font-variant: small-caps;
     letter-spacing: 3px;
 }
-#screen.theme-classic .login-button:hover { color: #E34234; border-color: #E34234; }
+#screen.theme-classic .login-button:hover { color: #8B1A1A; border-color: #8B1A1A; }
 
 /* Classic: multi-view shields */
-#screen.theme-classic .multi-region-topic { font-family: var(--vis-font-display); color: #E34234; }
+#screen.theme-classic .multi-region-topic { font-family: var(--vis-font-display); color: #8B1A1A; }
 #screen.theme-classic .multi-agent::before {
     clip-path: url(#shield);
     border-radius: 0;
