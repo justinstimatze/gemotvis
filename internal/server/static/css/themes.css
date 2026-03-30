@@ -394,25 +394,27 @@
     backdrop-filter: blur(4px);
 }
 
-/* --- MAGI: boot sequence --- */
+/* --- MAGI: boot sequence (only theme that shows it) --- */
 
-#screen.theme-magi ~ .boot-overlay,
 body:has(#screen.theme-magi) .boot-overlay {
+    display: flex;
+    background: #050505;
     animation: bootFade 0.5s ease-out 2.5s forwards;
 }
 
-#screen.theme-magi ~ .boot-overlay .boot-text,
 body:has(#screen.theme-magi) .boot-overlay .boot-text {
     text-transform: uppercase;
+    color: #ff8c00;
+    font-family: 'Courier New', 'Lucida Console', monospace;
     animation: bootLine 0.3s ease-out forwards;
 }
 
 body:has(#screen.theme-magi) .boot-text:nth-child(1) { animation-delay: 0.2s; }
 body:has(#screen.theme-magi) .boot-text:nth-child(2) { animation-delay: 0.5s; }
 body:has(#screen.theme-magi) .boot-text:nth-child(3) { animation-delay: 0.8s; }
-body:has(#screen.theme-magi) .boot-text:nth-child(4) { animation-delay: 1.1s; color: var(--vis-green); }
-body:has(#screen.theme-magi) .boot-text:nth-child(5) { animation-delay: 1.4s; color: var(--vis-green); }
-body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; color: var(--vis-cyan); font-size: 18px; letter-spacing: 6px; }
+body:has(#screen.theme-magi) .boot-text:nth-child(4) { animation-delay: 1.1s; color: #00ff41; }
+body:has(#screen.theme-magi) .boot-text:nth-child(5) { animation-delay: 1.4s; color: #00ff41; }
+body:has(#screen.theme-magi) .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; font-size: 18px; letter-spacing: 6px; }
 
 @keyframes bootLine {
     0% { opacity: 0; transform: translateY(5px); }

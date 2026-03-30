@@ -743,7 +743,7 @@ footer {
     inset: 0;
     background: var(--vis-bg);
     z-index: 2000;
-    display: flex;
+    display: none; /* hidden by default — MAGI theme enables it */
     flex-direction: column;
     align-items: center;
     justify-content: center;
