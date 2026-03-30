@@ -44,7 +44,7 @@ function el(tag, attrs, ...children) {
     if (attrs) {
         for (const [k, v] of Object.entries(attrs)) {
             if (k === 'className') e.className = v;
-            else if (k === 'style') e.setAttribute('style', v);
+            else if (k === 'style') e.style.cssText = v;
             else if (k.startsWith('on')) e[k] = v;
             else if (k === 'dataset') Object.assign(e.dataset, v);
             else e.setAttribute(k, v);
@@ -366,12 +366,12 @@ function renderAgents(ds) {
         const tooltip = el('div', { className: 'agent-tooltip' },
             el('div', { className: 'tooltip-header' },
                 el('span', {}, agent.id),
-                el('span', { style: 'color:var(--vis-text-dim);margin-left:8px;' }, agent.model_family || ''),
+                el('span', { className: 'tooltip-model' }, agent.model_family || ''),
             ),
             el('div', { className: 'tooltip-body' }, tooltipContent),
             el('div', { className: 'tooltip-footer' },
                 el('span', {}, `CONVICTION: ${(conviction * 100).toFixed(0)}%`),
-                trust < 1 ? el('span', { style: 'margin-left:8px;' }, `TRUST: ${(trust * 100).toFixed(0)}%`) : null,
+                trust < 1 ? el('span', { className: 'tooltip-trust' }, `TRUST: ${(trust * 100).toFixed(0)}%`) : null,
             ),
         );
 
@@ -494,24 +494,24 @@ function renderCenterPanel(ds) {
     clearChildren(content);
 
     if (consensus.length > 0) {
-        content.appendChild(el('div', { style: 'margin-bottom:6px;color:var(--vis-green);font-size:10px;' }, 'CONSENSUS'));
+        content.appendChild(el('div', { className: 'panel-label panel-label-consensus' }, 'CONSENSUS'));
         consensus.forEach(c => {
-            content.appendChild(el('div', { style: 'margin-bottom:4px;font-size:10px;text-transform:none;' }, truncate(c.content, 120)));
+            content.appendChild(el('div', { className: 'panel-text' }, truncate(c.content, 120)));
         });
     }
     if (bridging.length > 0) {
-        content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:var(--vis-yellow);font-size:10px;' }, 'BRIDGING'));
+        content.appendChild(el('div', { className: 'panel-label panel-label-bridging' }, 'BRIDGING'));
         bridging.forEach(b => {
             const pct = b.bridging_score != null ? `${(b.bridging_score * 100).toFixed(0)}%` : '';
-            const score = el('span', { style: 'color:var(--vis-text-dim)' }, pct ? ` (${pct})` : '');
-            const div = el('div', { style: 'margin-bottom:4px;font-size:10px;text-transform:none;' }, truncate(b.content, 100));
+            const score = el('span', { className: 'text-dim' }, pct ? ` (${pct})` : '');
+            const div = el('div', { className: 'panel-text' }, truncate(b.content, 100));
             div.appendChild(score);
             content.appendChild(div);
         });
     }
     if (analysis.compromise_proposal) {
-        content.appendChild(el('div', { style: 'margin-top:6px;margin-bottom:4px;color:var(--vis-cyan);font-size:10px;' }, 'COMPROMISE'));
-        content.appendChild(el('div', { style: 'font-size:10px;text-transform:none;' }, truncate(analysis.compromise_proposal, 200)));
+        content.appendChild(el('div', { className: 'panel-label panel-label-compromise' }, 'COMPROMISE'));
+        content.appendChild(el('div', { className: 'panel-text' }, truncate(analysis.compromise_proposal, 200)));
     }
 }
 
@@ -521,7 +521,7 @@ function renderCruxPanel(ds) {
     clearChildren(list);
 
     if (cruxes.length === 0) {
-        list.appendChild(el('div', { style: 'color:var(--vis-text-dim);padding:8px;' }, 'NO CRUXES DETECTED'));
+        list.appendChild(el('div', { className: 'empty-message' }, 'NO CRUXES DETECTED'));
         return;
     }
 
@@ -535,8 +535,8 @@ function renderCruxPanel(ds) {
         const meta = el('div', { className: 'crux-meta' },
             el('span', {}, c.crux_type || 'mixed'),
             el('span', {}, ''),
-            el('span', { style: 'color:var(--vis-green)' }, `+${(c.agree_agents || []).length}`),
-            el('span', { style: 'color:var(--vis-red)' }, `-${(c.disagree_agents || []).length}`),
+            el('span', { className: 'crux-agree' }, `+${(c.agree_agents || []).length}`),
+            el('span', { className: 'crux-disagree' }, `-${(c.disagree_agents || []).length}`),
         );
         // Insert controversy bar after type
         meta.children[1].appendChild(controversyBar);
@@ -579,7 +579,7 @@ function renderAuditLog(ds) {
     clearChildren(log);
 
     if (ops.length === 0) {
-        log.appendChild(el('div', { style: 'color:var(--vis-text-dim);padding:4px;' }, 'NO EVENTS'));
+        log.appendChild(el('div', { className: 'empty-message' }, 'NO EVENTS'));
         return;
     }
 
@@ -1151,13 +1151,9 @@ function applyTheme() {
     const screen = document.getElementById('screen');
     const active = (theme && VALID_THEMES.includes(theme)) ? theme : 'classic';
 
-    // Classic is the base (no class needed), others get a theme class
-    if (active !== 'classic') {
-        screen.classList.add(`theme-${active}`);
-    } else {
-        // Classic always gets its class for the decorative enhancements
-        screen.classList.add('theme-classic');
-    }
+    // Apply theme class to #screen and body (body class for boot overlay styling)
+    screen.classList.add(`theme-${active}`);
+    document.body.classList.add(`boot-${active}`);
 
     VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI
                 : active === 'minimal' ? VOTE_LABELS_MINIMAL

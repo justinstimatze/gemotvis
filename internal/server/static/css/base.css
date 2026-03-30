@@ -772,6 +772,19 @@ footer {
     position: absolute;
 }
 
+/* Panel content utility classes (used by JS rendering) */
+.panel-label { font-size: 10px; margin-bottom: 4px; }
+.panel-label-consensus { color: var(--vis-green); margin-bottom: 6px; }
+.panel-label-bridging { color: var(--vis-yellow); margin-top: 6px; }
+.panel-label-compromise { color: var(--vis-cyan); margin-top: 6px; }
+.panel-text { font-size: 10px; margin-bottom: 4px; text-transform: none; }
+.text-dim { color: var(--vis-text-dim); }
+.empty-message { color: var(--vis-text-dim); padding: 8px; }
+.tooltip-model { color: var(--vis-text-dim); margin-left: 8px; }
+.tooltip-trust { margin-left: 8px; }
+.crux-agree { color: var(--vis-green); }
+.crux-disagree { color: var(--vis-red); }
+
 /* Scrollbar — Firefox */
 * {
     scrollbar-width: thin;
