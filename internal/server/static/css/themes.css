@@ -1067,7 +1067,7 @@ body:has(#screen.theme-minimal) .boot-overlay .boot-text {
 
 #screen.theme-minimal {
     --vis-amber: #2563eb;
-    --vis-amber-dim: #93c5fd;
+    --vis-amber-dim: #64748b; /* slate-500 for readable secondary text on white */
     --vis-amber-glow: rgba(37, 99, 235, 0.15);
     --vis-green: #16a34a;
     --vis-green-dim: #22c55e;
@@ -1152,6 +1152,42 @@ body:has(#screen.theme-minimal) .boot-overlay .boot-text {
 #screen.theme-minimal .multi-region { border-radius: 8px; background: #ffffff; }
 #screen.theme-minimal .multi-region.focused { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); }
 #screen.theme-minimal .multi-agent::before { border-radius: 50%; transform: none; }
+
+/* Minimal: analysis pipeline */
+#screen.theme-minimal .pipeline-stage.active {
+    background: rgba(8, 145, 178, 0.06);
+    border-color: var(--vis-cyan);
+    color: var(--vis-cyan);
+}
+
+#screen.theme-minimal .pipeline-stage.done {
+    background: rgba(22, 163, 74, 0.06);
+    border-color: var(--vis-green-dim);
+    color: var(--vis-green);
+}
+
+/* Minimal: agent name and model readable on white */
+#screen.theme-minimal .agent-name {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Minimal: crux claim readable */
+#screen.theme-minimal .crux-claim {
+    color: var(--vis-text);
+    font-weight: 500;
+}
+
+/* Minimal: metric label readable */
+#screen.theme-minimal .metric-label {
+    color: #64748b;
+}
+
+/* Minimal: delib tab active state */
+#screen.theme-minimal .delib-tab.active {
+    background: rgba(37, 99, 235, 0.06);
+    font-weight: 600;
+}
 
 /* Minimal: integrity warning */
 #screen.theme-minimal .integrity-warning .diamond {

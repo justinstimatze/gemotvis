@@ -14,10 +14,10 @@
 :root {
     /* Classic manuscript palette (default) */
     --vis-amber: #8B5A2B;          /* iron gall ink */
-    --vis-amber-dim: #A0845C;      /* faded ink */
+    --vis-amber-dim: #7A5C3A;      /* faded ink (darkened for readability) */
     --vis-amber-glow: rgba(139, 90, 43, 0.2);
     --vis-green: #2D6B3F;          /* verdigris-adjacent */
-    --vis-green-dim: #43B3AE;      /* verdigris */
+    --vis-green-dim: #2D8A85;      /* verdigris (darkened for readability) */
     --vis-red: #E34234;            /* vermillion */
     --vis-red-dim: #C41E3A;        /* rubric red */
     --vis-blue: #2E5894;           /* azurite */
@@ -28,7 +28,7 @@
     --vis-panel: #EDE0C4;         /* aged parchment */
     --vis-panel-border: #8B5A2B;   /* ink rule line */
     --vis-text: #2C1810;           /* dark iron gall */
-    --vis-text-dim: #8B5A2B;       /* aged ink */
+    --vis-text-dim: #6B4423;       /* aged ink (darkened for readability) */
     --vis-font: 'IM Fell English', 'Georgia', 'Palatino Linotype', serif;
     --vis-font-display: 'UnifrakturMaguntia', 'MedievalSharp', cursive;
 
