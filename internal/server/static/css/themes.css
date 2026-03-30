@@ -683,16 +683,19 @@ body.boot-classic .boot-text:nth-child(3) {
     opacity: 0.5;
 }
 
-/* Classic: rubricated topic title — large text can use brighter vermillion */
+/* Classic: rubricated topic title — large, bold blackletter */
 #screen.theme-classic .topic-label {
-    color: #C41E3A;
-    text-shadow: 0 0 1px rgba(196, 30, 58, 0.3);
+    color: #6B1520;
+    font-size: 20px;
+    font-weight: bold;
 }
 
-/* Classic: small caps labels */
+/* Classic: small caps labels — readable dark ink */
 #screen.theme-classic .system-label {
     font-family: 'IM Fell English SC', 'Georgia', serif;
     font-variant: small-caps;
+    font-size: 15px;
+    color: var(--vis-text);
 }
 
 #screen.theme-classic .status-indicator {

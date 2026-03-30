@@ -1350,9 +1350,9 @@ if (activeTheme === 'magi') {
     // MAGI center panel header stays as "MAGI" (set in HTML)
 } else {
     if (activeTheme === 'minimal') {
-        document.title = 'Gemotvis';
+        document.title = 'Gemot';
     } else {
-        document.title = 'Gemotvis \u2014 Deliberation Monitor';
+        document.title = 'Gemot \u2014 Deliberation Monitor';
     }
     const centerHeader = document.querySelector('#center-panel .panel-header');
     if (centerHeader) centerHeader.textContent = 'ANALYSIS';
