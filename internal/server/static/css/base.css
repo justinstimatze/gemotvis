@@ -293,6 +293,7 @@ header {
 
 .agent-node:hover {
     filter: brightness(1.1);
+    z-index: 50; /* lift above other nodes so tooltip is visible */
 }
 
 .diamond {
@@ -680,10 +681,14 @@ header {
     text-align: right;
 }
 
-.scrubber-speed {
+.scrubber-speed, .scrubber-filter {
     min-width: 28px;
     text-align: center;
     font-size: 9px;
+}
+
+.scrubber-dot-dimmed {
+    opacity: 0.15;
 }
 
 .scrubber-live {
@@ -699,7 +704,7 @@ footer {
     gap: 0;
     border-top: 1px solid var(--vis-panel-border);
     flex-shrink: 0;
-    height: 180px;
+    height: 160px;
     background: var(--vis-panel);
 }
 

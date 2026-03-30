@@ -1,6 +1,7 @@
 package poller
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -159,31 +160,28 @@ func (p *Poller) readSSEStream(ctx context.Context, url string, notify chan<- st
 
 	log.Printf("sse: connected to %s", p.client.BaseURL()+"/events")
 
-	// Read SSE lines — we only need to detect "data:" lines to trigger re-fetch.
-	// We don't need to parse the JSON; the poll() will fetch full state.
-	buf := make([]byte, 4096)
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			chunk := string(buf[:n])
-			// Any data line that isn't a ping or connected event triggers a re-fetch
-			if strings.Contains(chunk, "\"position_submitted\"") ||
-				strings.Contains(chunk, "\"vote_cast\"") ||
-				strings.Contains(chunk, "\"analysis_started\"") ||
-				strings.Contains(chunk, "\"analysis_progress\"") ||
-				strings.Contains(chunk, "\"analysis_complete\"") ||
-				strings.Contains(chunk, "\"deliberation_created\"") {
-				// Non-blocking send — if a re-fetch is already pending, skip
-				select {
-				case notify <- struct{}{}:
-				default:
-				}
+	// Line-based SSE reading — detect event types that warrant a re-fetch.
+	// Using bufio.Scanner avoids buffer-boundary splits on event type strings.
+	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(make([]byte, 4096), 64*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "position_submitted") ||
+			strings.Contains(line, "vote_cast") ||
+			strings.Contains(line, "analysis_started") ||
+			strings.Contains(line, "analysis_progress") ||
+			strings.Contains(line, "analysis_complete") ||
+			strings.Contains(line, "deliberation_created") {
+			select {
+			case notify <- struct{}{}:
+			default:
 			}
 		}
-		if err != nil {
-			return err
-		}
 	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	return io.EOF // stream ended cleanly
 }
 
 // NewMulti creates a poller that watches a specific set of deliberation IDs.

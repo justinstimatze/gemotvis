@@ -45,9 +45,11 @@ const scrubber = {
     enabled: false,
     playing: false,
     eventIndex: null, // null = live/latest
-    events: [],
+    events: [],       // full event list
+    filtered: [],     // filtered by type
     playTimer: null,
-    speedIdx: 0, // index into SCRUBBER_SPEEDS
+    speedIdx: 0,
+    typeFilter: null, // null = all, or 'position'|'vote'|'analysis'
 };
 
 // ===== Safe DOM Helpers =====
@@ -238,20 +240,27 @@ function renderScrubber(ds) {
     const bar = document.getElementById('scrubber-bar');
     if (!bar || state.multiView) { bar?.classList.add('hidden'); return; }
 
-    const events = buildTimelineEvents(ds);
-    scrubber.events = events;
+    const allEvents = buildTimelineEvents(ds);
+    scrubber.events = allEvents;
 
-    if (events.length < 2) { bar.classList.add('hidden'); return; }
+    if (allEvents.length < 2) { bar.classList.add('hidden'); return; }
     bar.classList.remove('hidden');
+
+    // Update filter button label
+    const filterBtn = document.getElementById('scrubber-filter');
+    if (filterBtn) {
+        filterBtn.textContent = scrubber.typeFilter ? scrubber.typeFilter.toUpperCase() : 'ALL';
+    }
 
     const dots = document.getElementById('scrubber-dots');
     const label = document.getElementById('scrubber-label');
     clearChildren(dots);
 
-    events.forEach((evt, i) => {
-        const pct = (i / (events.length - 1)) * 100;
+    allEvents.forEach((evt, i) => {
+        const hidden = scrubber.typeFilter && evt.type !== scrubber.typeFilter;
+        const pct = (i / (allEvents.length - 1)) * 100;
         const dot = el('div', {
-            className: `scrubber-dot scrubber-dot-${evt.type} ${i === scrubber.eventIndex ? 'active' : ''}`,
+            className: `scrubber-dot scrubber-dot-${evt.type} ${i === scrubber.eventIndex ? 'active' : ''} ${hidden ? 'scrubber-dot-dimmed' : ''}`,
         });
         dot.style.cssText = `left: ${pct}%`;
         dot.title = evt.label;
@@ -302,6 +311,13 @@ function startScrubberPlay() {
         render();
     }, SCRUBBER_SPEEDS[scrubber.speedIdx]);
     updatePlayButton();
+}
+
+function cycleScrubberFilter() {
+    const filters = [null, 'position', 'vote', 'analysis'];
+    const idx = filters.indexOf(scrubber.typeFilter);
+    scrubber.typeFilter = filters[(idx + 1) % filters.length];
+    render();
 }
 
 function cycleScrubberSpeed() {
@@ -858,11 +874,12 @@ function formatTime(ts) {
 
 function polygonPosition(i, n) {
     const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-    const rx = 30;
-    const ry = 28;
+    // Scale radius with agent count to reduce overlap
+    const rx = n <= 4 ? 30 : n <= 5 ? 34 : 38;
+    const ry = n <= 4 ? 28 : n <= 5 ? 32 : 36;
     return {
         x: 50 + rx * Math.cos(angle),
-        y: 45 + ry * Math.sin(angle),
+        y: 46 + ry * Math.sin(angle),
     };
 }
 
@@ -1349,6 +1366,9 @@ function showLoginForm() {
 function connectDashboard() {
     if (eventSource) eventSource.close();
 
+    // Remove login form, restore visualization elements
+    document.getElementById('login-form-container')?.remove();
+
     const sysLabel = document.querySelector('.system-label');
     if (sysLabel) sysLabel.textContent = 'DASHBOARD';
 
@@ -1586,6 +1606,7 @@ window.addEventListener('resize', () => {
 // Scrubber controls
 document.getElementById('scrubber-play')?.addEventListener('click', toggleScrubberPlay);
 document.getElementById('scrubber-speed')?.addEventListener('click', cycleScrubberSpeed);
+document.getElementById('scrubber-filter')?.addEventListener('click', cycleScrubberFilter);
 document.getElementById('scrubber-live')?.addEventListener('click', scrubToLive);
 
 // Click on track to jump to nearest event
