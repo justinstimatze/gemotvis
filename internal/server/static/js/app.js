@@ -1145,9 +1145,9 @@ function connectWatch(codes) {
     if (sysLabel) sysLabel.textContent = `WATCHING`;
 
     // For multi-code: fetch additional codes' state and start their SSE streams
+    const extraSources = [];
     if (codes.length > 1) {
         codes.slice(1).forEach(code => {
-            // Fetch initial state
             fetch(`/api/watch/${code}/state`)
                 .then(r => r.json())
                 .then(snap => {
@@ -1158,13 +1158,13 @@ function connectWatch(codes) {
                 })
                 .catch(err => console.error(`Watch ${code}:`, err));
 
-            // Open SSE for updates
             const extra = new EventSource(`/api/watch/${code}/events`);
             extra.onmessage = (e) => {
                 try {
                     const msg = JSON.parse(e.data);
                     if (msg.type === 'state' && msg.data?.deliberation) {
                         state.deliberations[msg.data.deliberation.deliberation_id] = msg.data;
+                        onActivity(msg.data.deliberation.deliberation_id);
                         render();
                     } else if (msg.type === 'snapshot' && msg.data?.deliberations) {
                         Object.assign(state.deliberations, msg.data.deliberations);
@@ -1174,6 +1174,12 @@ function connectWatch(codes) {
                     // ignore parse errors on secondary streams
                 }
             };
+            extraSources.push(extra);
+        });
+
+        // Clean up all SSE connections on page unload
+        window.addEventListener('beforeunload', () => {
+            extraSources.forEach(es => es.close());
         });
     }
 }

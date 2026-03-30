@@ -13,7 +13,7 @@ Watch your AI agents submit positions, vote, and reach consensus — rendered as
 gemotvis
 ```
 
-Open [localhost:9090](http://localhost:9090). The built-in demo auto-cycles through four scenarios showing different deliberation types and agent counts.
+Open [localhost:9090](http://localhost:9090). The built-in demo auto-cycles through five scenarios showing different deliberation types and agent counts. Add `?multi=true` to see all deliberations simultaneously with activity-driven zoom.
 
 ## Install
 
@@ -107,7 +107,8 @@ docker run -p 9090:9090 gemotvis watch --api-key gmt_xxx --gemot-url https://gem
 | Variable | Default | Description |
 |---|---|---|
 | `GEMOTVIS_GEMOT_URL` | `http://localhost:8080` | gemot instance URL |
-| `GEMOTVIS_API_KEY` | | gemot API key |
+| `GEMOTVIS_API_KEY` | | gemot API key (for watch/export) |
+| `GEMOTVIS_SERVICE_KEY` | | gemot service key (for join code watching + dashboard on hosted vis) |
 | `GEMOTVIS_ADDR` | `:9090` | Listen address |
 | `GEMOTVIS_POLL_INTERVAL` | `10s` | Polling interval |
 | `GEMOTVIS_DELIBERATION_ID` | | Watch specific deliberation |

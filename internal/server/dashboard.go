@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -32,7 +33,7 @@ type dashboardSession struct {
 	poller       *poller.Poller
 	hub          *hub.Hub
 	lastAccess   time.Time
-	cancel       func()
+	cancel       context.CancelFunc
 }
 
 type dashboardManager struct {
@@ -193,7 +194,7 @@ func (s *Server) handleSessionCreate(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		APIKey string `json:"api_key"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.APIKey == "" {
+	if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&req); err != nil || req.APIKey == "" {
 		http.Error(w, "api_key required", http.StatusBadRequest)
 		return
 	}
