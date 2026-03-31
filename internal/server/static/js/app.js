@@ -493,8 +493,7 @@ function render() {
         const focused = state.focusedDelibID && delibs[state.focusedDelibID];
         const topicEl = document.querySelector('.topic-label');
         if (focused) {
-            topicEl.textContent = focused.deliberation?.topic || 'UNTITLED';
-            renderFocusedDetails();
+            renderFocusedDetails(); // sets header topic via renderHeader()
         } else {
             topicEl.textContent = `${ids.length} Deliberations`;
             document.getElementById('footer')?.classList.add('hidden');
@@ -1484,6 +1483,7 @@ function connectGroup(groupID) {
         })
         .then(snap => {
             state.deliberations = snap.deliberations || {};
+            trimLargeData(state.deliberations);
             render();
         })
         .catch(err => {
@@ -1931,10 +1931,12 @@ function connectWatch(codes) {
                     const msg = JSON.parse(e.data);
                     if (msg.type === 'state' && msg.data?.deliberation) {
                         state.deliberations[msg.data.deliberation.deliberation_id] = msg.data;
+                        trimLargeData(state.deliberations);
                         onActivity(msg.data.deliberation.deliberation_id);
                         render();
                     } else if (msg.type === 'snapshot' && msg.data?.deliberations) {
                         Object.assign(state.deliberations, msg.data.deliberations);
+                        trimLargeData(state.deliberations);
                         render();
                     }
                 } catch (err) {

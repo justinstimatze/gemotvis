@@ -223,9 +223,7 @@
         inset 0 0 60px rgba(255, 140, 0, 0.03);
 }
 
-#screen.theme-magi .diamond::after {
-    border: 1px solid rgba(255, 140, 0, 0.15);
-}
+/* diamond::after is styled with circuit-board pattern below */
 
 #screen.theme-magi .agent-name {
     text-shadow: var(--glow-sm);
@@ -1126,10 +1124,6 @@ body.boot-classic .boot-text:nth-child(3) {
 #screen.theme-classic .multi-agent::before {
     display: none;
 }
-/* Cluster distinction via subtle colored shadow halo, not fill */
-#screen.theme-classic .multi-agent.cluster-1::before { box-shadow: 0 0 6px rgba(31, 58, 107, 0.4); }
-#screen.theme-classic .multi-agent.cluster-2::before { box-shadow: 0 0 6px rgba(123, 30, 58, 0.4); }
-#screen.theme-classic .multi-agent.cluster-3::before { box-shadow: 0 0 6px rgba(46, 111, 64, 0.4); }
 
 /* Classic: empty state */
 #screen.theme-classic .empty-state { font-style: italic; letter-spacing: 1px; }
