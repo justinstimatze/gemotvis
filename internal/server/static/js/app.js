@@ -473,16 +473,7 @@ function render() {
         const topicEl = document.querySelector('.topic-label');
         if (focused) {
             topicEl.textContent = focused.deliberation?.topic || 'UNTITLED';
-            // Show footer with focused deliberation's detail
-            document.getElementById('footer')?.classList.remove('hidden');
-            document.getElementById('analysis-bar')?.classList.remove('hidden');
-            document.getElementById('scrubber-bar')?.classList.remove('hidden');
-            renderHeader(focused);
-            renderAnalysisBar(focused);
-            renderCruxPanel(focused);
-            renderMetrics(focused);
-            renderAuditLog(focused);
-            renderScrubber(focused);
+            renderFocusedDetails();
         } else {
             topicEl.textContent = `${ids.length} Deliberations`;
             document.getElementById('footer')?.classList.add('hidden');
@@ -1286,9 +1277,10 @@ function focusOnDelib(delibID) {
         screen.dataset.state = active?.deliberation?.status === 'analyzing' ? 'analyzing' : 'normal';
     }, FOCUS_TRANSITION_MS);
 
-    // Apply camera and update detail panels for focused deliberation
+    // Apply camera — the next SSE-triggered render() will populate detail panels
     updateCamera();
-    render(); // re-render to populate footer with focused delib's data
+    // Force a single non-recursive render for the detail panels
+    renderFocusedDetails();
 
     // Set timer to return to overview
     clearTimeout(focusTimer);
@@ -1300,7 +1292,31 @@ function zoomToOverview() {
     updateCamera();
     // Clear focused highlight from all regions
     document.querySelectorAll('.multi-region.focused').forEach(r => r.classList.remove('focused'));
-    render(); // re-render to hide footer and update header
+    // Hide detail panels and update header (no render() call to avoid recursion)
+    document.getElementById('footer')?.classList.add('hidden');
+    document.getElementById('analysis-bar')?.classList.add('hidden');
+    document.getElementById('scrubber-bar')?.classList.add('hidden');
+    const topicEl = document.querySelector('.topic-label');
+    if (topicEl) topicEl.textContent = `${Object.keys(state.deliberations).length} Deliberations`;
+    const roundEl = document.getElementById('round-display');
+    if (roundEl) roundEl.textContent = '';
+    const templateEl = document.getElementById('template-display');
+    if (templateEl) templateEl.textContent = '';
+}
+
+// Update detail panels for the focused deliberation without a full render()
+function renderFocusedDetails() {
+    const ds = state.focusedDelibID && state.deliberations[state.focusedDelibID];
+    if (!ds) return;
+    document.getElementById('footer')?.classList.remove('hidden');
+    document.getElementById('analysis-bar')?.classList.remove('hidden');
+    document.getElementById('scrubber-bar')?.classList.remove('hidden');
+    renderHeader(ds);
+    renderAnalysisBar(ds);
+    renderCruxPanel(ds);
+    renderMetrics(ds);
+    renderAuditLog(ds);
+    renderScrubber(ds);
 }
 
 function updateCamera() {
