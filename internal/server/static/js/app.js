@@ -719,6 +719,7 @@ function renderAgents(ds) {
                     const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
                     use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + iconId);
                     use.setAttribute('fill', '#3B2F20');
+                    use.setAttribute('fill-rule', 'evenodd');
                     svg.appendChild(use);
                     return svg;
                 })() : null,
