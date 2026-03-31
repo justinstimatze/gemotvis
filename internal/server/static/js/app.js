@@ -103,10 +103,25 @@ function connect() {
     };
 }
 
+// Trim audit logs and positions to prevent memory bloat on long sessions
+const MAX_AUDIT_ENTRIES = 200;
+const MAX_POSITIONS = 100;
+function trimLargeData(delibs) {
+    for (const ds of Object.values(delibs)) {
+        if (ds.audit_log?.operations?.length > MAX_AUDIT_ENTRIES) {
+            ds.audit_log.operations = ds.audit_log.operations.slice(-MAX_AUDIT_ENTRIES);
+        }
+        if (ds.positions?.length > MAX_POSITIONS) {
+            ds.positions = ds.positions.slice(-MAX_POSITIONS);
+        }
+    }
+}
+
 function handleEvent(msg) {
     switch (msg.type) {
         case 'snapshot':
             state.deliberations = msg.data.deliberations || {};
+            trimLargeData(state.deliberations);
             // Validate activeDelibID still exists in new snapshot
             if (!state.activeDelibID || !state.deliberations[state.activeDelibID]) {
                 const ids = Object.keys(state.deliberations);
@@ -120,6 +135,7 @@ function handleEvent(msg) {
             if (ds && ds.deliberation) {
                 const delibID = ds.deliberation.deliberation_id;
                 state.deliberations[delibID] = ds;
+                trimLargeData(state.deliberations);
                 onActivity(delibID);
                 render();
             }
@@ -274,10 +290,10 @@ function renderScrubber(ds) {
     });
 
     const idx = scrubber.eventIndex;
-    if (idx != null && events[idx]) {
-        const t = new Date(events[idx].time);
+    if (idx != null && allEvents[idx]) {
+        const t = new Date(allEvents[idx].time);
         const ts = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        label.textContent = `${ts} \u2014 ${events[idx].label}`;
+        label.textContent = `${ts} \u2014 ${allEvents[idx].label}`;
     } else {
         const liveText = state.mode === 'demo' || state.mode === 'replay' ? 'LATEST' : 'LIVE';
         label.textContent = liveText;
@@ -306,6 +322,7 @@ function toggleScrubberPlay() {
 }
 
 function startScrubberPlay() {
+    if (scrubber.playTimer) clearInterval(scrubber.playTimer); // prevent double-interval
     scrubber.playing = true;
     scrubber.enabled = true;
     if (scrubber.eventIndex == null) scrubber.eventIndex = 0;
