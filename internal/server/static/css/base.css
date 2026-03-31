@@ -49,7 +49,7 @@
 }
 
 body {
-    background: var(--vis-bg);
+    background: #ffffff; /* neutral white — themed by #screen background */
     color: var(--vis-text);
     font-family: var(--vis-font);
     font-size: 12px;

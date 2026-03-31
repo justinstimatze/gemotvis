@@ -1469,6 +1469,14 @@ body.boot-minimal .boot-overlay .boot-text {
 #screen.theme-minimal .empty-state { color: #d1d5db; font-weight: 400; letter-spacing: 0; font-size: 16px; }
 #screen.theme-minimal .empty-message { color: #d1d5db; }
 
+/* Minimal: landing page polish */
+#screen.theme-minimal .landing-title { font-weight: 300; font-size: 40px; letter-spacing: -0.02em; }
+#screen.theme-minimal .landing-subtitle { letter-spacing: 0.1em; font-size: 11px; }
+#screen.theme-minimal .landing-section-label { font-weight: 500; }
+#screen.theme-minimal .landing-select { border-radius: 8px; }
+#screen.theme-minimal .landing-go-btn { border-radius: 8px; }
+#screen.theme-minimal .landing-input { border-radius: 8px; }
+
 /* Minimal: integrity warning */
 #screen.theme-minimal .integrity-warning .diamond {
     border-color: #dc2626 !important;
