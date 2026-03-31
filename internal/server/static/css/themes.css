@@ -733,6 +733,19 @@ body.boot-classic .boot-text:nth-child(3) {
     display: none;
 }
 
+/* Classic: agent labels — bigger and bolder for readability */
+#screen.theme-classic .agent-name {
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#screen.theme-classic .agent-model {
+    font-family: 'IM Fell English', 'Georgia', serif;
+    font-style: italic;
+    font-size: 11px;
+}
+
 /* Vote banner — flag hanging from the settlement */
 #screen.theme-classic .diamond-vote {
     position: absolute;
