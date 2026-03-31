@@ -633,7 +633,7 @@ body.boot-classic .boot-text:nth-child(3) {
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.22;
+    opacity: 0.28;
     background:
         /* Forest clusters — groups of tree-like marks */
         radial-gradient(ellipse at 8% 35%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
@@ -780,9 +780,11 @@ body.boot-classic .boot-text:nth-child(3) {
 }
 
 #screen.theme-classic .agent-vote.vote-pass {
-    background: #6B5B45; /* ink-light */
-    color: #D4C4A0;
-    font-size: 12px;
+    background: transparent;
+    color: #6B5B45;
+    font-size: 11px;
+    clip-path: none;
+    padding: 2px 4px;
 }
 
 /* Classic: rubricated panel headers — vermillion rubric */
