@@ -1385,9 +1385,80 @@ body.boot-minimal .boot-overlay .boot-text {
 #screen.theme-minimal .login-button:hover { background: #eff6ff; }
 
 /* Minimal: multi-view */
-#screen.theme-minimal .multi-region { border-radius: 12px; background: #ffffff; border: 1px solid #e5e7eb; }
-#screen.theme-minimal .multi-region.focused { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08); }
-#screen.theme-minimal .multi-agent::before { border-radius: 50%; transform: none; border: 1.5px solid #d1d5db; background: #ffffff; }
+/* Minimal: multi-view cards */
+#screen.theme-minimal .multi-region {
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+#screen.theme-minimal .multi-region:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+#screen.theme-minimal .multi-region.focused {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
+}
+
+#screen.theme-minimal .multi-region-title {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 6px 10px;
+}
+
+#screen.theme-minimal .multi-region-topic {
+    font-size: 11px;
+    font-weight: 500;
+    color: #1e293b;
+    letter-spacing: 0;
+}
+
+#screen.theme-minimal .multi-region-meta {
+    font-size: 9px;
+    color: #9ca3af;
+}
+
+#screen.theme-minimal .multi-region-status {
+    font-size: 9px;
+    color: #9ca3af;
+    border-top: 1px solid #f0f0f0;
+}
+
+#screen.theme-minimal .multi-region-status.analyzing {
+    color: #0369a1;
+    background: rgba(224, 242, 254, 0.5);
+}
+
+#screen.theme-minimal .multi-agent::before {
+    border-radius: 50%;
+    transform: none;
+    border: 1.5px solid #d1d5db;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+#screen.theme-minimal .multi-agent.cluster-1::before { border-color: #0891b2; }
+#screen.theme-minimal .multi-agent.cluster-2::before { border-color: #a855f7; }
+#screen.theme-minimal .multi-agent.cluster-3::before { border-color: #16a34a; }
+
+#screen.theme-minimal .multi-agent-name {
+    font-size: 8px;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+#screen.theme-minimal .multi-agent-vote {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Minimal: multi-view connections */
+#screen.theme-minimal .multi-region-connections .connection-line {
+    stroke-width: 1;
+    opacity: 0.4;
+}
 
 /* Minimal: scrubber — subtle dots */
 #screen.theme-minimal .scrubber-bar { background: #ffffff; border-top: 1px solid #f0f0f0; }

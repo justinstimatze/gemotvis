@@ -1670,9 +1670,95 @@ loadConfig().then(() => {
         }).catch(() => showLoginForm());
     } else {
         if (forceMulti) state.multiView = true;
-        connect();
+        // Show landing page on root demo, or connect directly if ?demo param
+        const isExplicitDemo = new URLSearchParams(window.location.search).has('demo');
+        if (!isExplicitDemo && window.location.pathname === '/') {
+            showLanding();
+        }
+        connect(); // start demo SSE in background either way
     }
 });
+
+function showLanding() {
+    const main = document.getElementById('main');
+    document.getElementById('agents')?.classList.add('hidden');
+    document.getElementById('connections')?.classList.add('hidden');
+    document.getElementById('center-panel')?.classList.add('hidden');
+    document.getElementById('empty-state')?.classList.add('hidden');
+    document.getElementById('footer')?.classList.add('hidden');
+    document.getElementById('analysis-bar')?.classList.add('hidden');
+    document.getElementById('scrubber-bar')?.classList.add('hidden');
+    document.getElementById('delib-nav')?.classList.add('hidden');
+
+    document.getElementById('landing-overlay')?.remove();
+
+    const themes = [
+        { id: 'classic', label: 'Classic', desc: 'Medieval map' },
+        { id: 'magi', label: 'MAGI', desc: 'CRT / EVA' },
+        { id: 'minimal', label: 'Minimal', desc: 'Clean modern' },
+        { id: 'gastown', label: 'Gastown', desc: 'Steampunk' },
+    ];
+
+    const themeButtons = themes.map(t => {
+        const isCurrent = activeTheme === t.id;
+        return el('button', {
+            className: `landing-theme-btn ${isCurrent ? 'active' : ''}`,
+            onclick: () => {
+                const url = new URL(window.location);
+                if (t.id === 'classic') url.searchParams.delete('theme');
+                else url.searchParams.set('theme', t.id);
+                url.searchParams.set('demo', '1');
+                window.location.href = url.toString();
+            },
+        },
+            el('span', { className: 'landing-theme-name' }, t.label),
+            el('span', { className: 'landing-theme-desc' }, t.desc),
+        );
+    });
+
+    const overlay = el('div', { className: 'landing-overlay', id: 'landing-overlay' },
+        el('div', { className: 'landing-content' },
+            el('div', { className: 'landing-title' }, 'Gemot'),
+            el('div', { className: 'landing-subtitle' }, 'Deliberation Visualizer'),
+            el('div', { className: 'landing-section' },
+                el('div', { className: 'landing-section-label' }, 'Try the demo'),
+                el('div', { className: 'landing-themes' }, ...themeButtons),
+            ),
+            el('div', { className: 'landing-section' },
+                el('div', { className: 'landing-section-label' }, 'Watch a deliberation'),
+                el('div', { className: 'landing-watch-row' },
+                    el('input', {
+                        className: 'landing-input',
+                        type: 'text',
+                        placeholder: 'Enter join code...',
+                        id: 'landing-code-input',
+                    }),
+                    el('button', {
+                        className: 'landing-go-btn',
+                        onclick: () => {
+                            const code = document.getElementById('landing-code-input')?.value.trim();
+                            if (code) window.location.href = `/watch/${code}${window.location.search}`;
+                        },
+                    }, 'Watch'),
+                ),
+            ),
+            el('div', { className: 'landing-links' },
+                el('a', { href: '/dashboard' + window.location.search, className: 'landing-link' }, 'Agent Dashboard'),
+                el('span', { className: 'landing-link-sep' }, '\u00b7'),
+                el('a', { href: 'https://gemot.dev', className: 'landing-link' }, 'gemot.dev'),
+            ),
+        ),
+    );
+
+    main.appendChild(overlay);
+
+    document.getElementById('landing-code-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const code = e.target.value.trim();
+            if (code) window.location.href = `/watch/${code}${window.location.search}`;
+        }
+    });
+}
 
 let extraWatchSources = []; // module-level to allow cleanup on reconnection
 
