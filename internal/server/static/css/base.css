@@ -12,23 +12,23 @@
 /* ===== DESIGN TOKENS ===== */
 
 :root {
-    /* Classic manuscript palette (default) */
-    --vis-amber: #8B5A2B;          /* iron gall ink */
-    --vis-amber-dim: #7A5C3A;      /* faded ink (darkened for readability) */
-    --vis-amber-glow: rgba(139, 90, 43, 0.2);
-    --vis-green: #2D6B3F;          /* verdigris-adjacent */
-    --vis-green-dim: #2D8A85;      /* verdigris (darkened for readability) */
-    --vis-red: #E34234;            /* vermillion */
-    --vis-red-dim: #C41E3A;        /* rubric red */
-    --vis-blue: #2E5894;           /* azurite */
-    --vis-cyan: #120A8F;           /* ultramarine */
-    --vis-magenta: #66023C;        /* tyrian purple */
-    --vis-yellow: #CFB53B;         /* gold leaf */
-    --vis-bg: #F5E6C8;            /* parchment */
-    --vis-panel: #EDE0C4;         /* aged parchment */
-    --vis-panel-border: #8B5A2B;   /* ink rule line */
-    --vis-text: #2C1810;           /* dark iron gall */
-    --vis-text-dim: #6B4423;       /* aged ink (darkened for readability) */
+    /* Classic manuscript palette — KCD/Pentiment ink tones */
+    --vis-amber: #5A4A35;          /* ink medium (roads, borders) */
+    --vis-amber-dim: #6B5B45;      /* ink light (secondary text) */
+    --vis-amber-glow: rgba(59, 47, 32, 0.15);
+    --vis-green: #2E6F40;          /* verdigris */
+    --vis-green-dim: #3A8A55;      /* verdigris light */
+    --vis-red: #C34A14;            /* vermillion (Pentiment red) */
+    --vis-red-dim: #8B2500;        /* oxblood */
+    --vis-blue: #1F3A6B;           /* lapis lazuli */
+    --vis-cyan: #1F3A6B;           /* lapis (same as blue for classic) */
+    --vis-magenta: #5B2E7A;        /* tyrian purple */
+    --vis-yellow: #D6B04C;         /* gold leaf */
+    --vis-bg: #E8D5B5;            /* KCD parchment */
+    --vis-panel: #F1E0C3;         /* Pentiment beige */
+    --vis-panel-border: #5A4A35;   /* ink medium */
+    --vis-text: #1A1410;           /* ink black (fresh) */
+    --vis-text-dim: #5A4A35;       /* ink medium */
     --vis-font: 'IM Fell English', 'Georgia', 'Palatino Linotype', serif;
     --vis-font-display: 'UnifrakturMaguntia', 'MedievalSharp', cursive;
 

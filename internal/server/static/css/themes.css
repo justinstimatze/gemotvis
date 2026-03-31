@@ -591,9 +591,15 @@ body.boot-classic .boot-text:nth-child(3) {
     text-shadow: 0 0 0.5px rgba(44, 24, 16, 0.3);
 }
 
-/* Classic: parchment surface with aging, map border frame */
+/* Classic: parchment surface with aging, fold lines, map border frame */
 #screen.theme-classic main {
     background:
+        /* Fold creases at 1/3 and 2/3 — like a map folded into thirds */
+        linear-gradient(90deg, transparent 32.8%, rgba(139, 90, 43, 0.06) 33%, rgba(139, 90, 43, 0.08) 33.2%, rgba(139, 90, 43, 0.06) 33.4%, transparent 33.6%),
+        linear-gradient(90deg, transparent 66.2%, rgba(139, 90, 43, 0.06) 66.4%, rgba(139, 90, 43, 0.08) 66.6%, rgba(139, 90, 43, 0.06) 66.8%, transparent 67%),
+        /* Horizontal fold at center */
+        linear-gradient(180deg, transparent 49%, rgba(139, 90, 43, 0.05) 49.5%, rgba(139, 90, 43, 0.07) 50%, rgba(139, 90, 43, 0.05) 50.5%, transparent 51%),
+        /* Foxing / age spots */
         radial-gradient(ellipse at 15% 25%, rgba(139, 90, 43, 0.08) 0%, transparent 40%),
         radial-gradient(ellipse at 75% 15%, rgba(139, 90, 43, 0.06) 0%, transparent 35%),
         radial-gradient(ellipse at 85% 70%, rgba(139, 90, 43, 0.07) 0%, transparent 30%),
@@ -684,9 +690,9 @@ body.boot-classic .boot-text:nth-child(3) {
     opacity: 0.5;
 }
 
-/* Classic: rubricated topic title — large, bold blackletter */
+/* Classic: rubricated topic title — vermillion accent on ink background */
 #screen.theme-classic .topic-label {
-    color: #6B1520;
+    color: #C34A14; /* Pentiment vermillion */
     font-size: 20px;
     font-weight: bold;
 }
@@ -711,28 +717,24 @@ body.boot-classic .boot-text:nth-child(3) {
     display: none;
 }
 
-/* Castle tower — fortified settlement silhouette */
+/* Castle — ink-drawn settlement on parchment (KCD cartographic style) */
 #screen.theme-classic .diamond {
     clip-path: url(#castle);
     border-radius: 0;
     border: none;
-    background: linear-gradient(180deg, #C8B080 0%, #B0986A 30%, #A08858 60%, #988050 100%);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    background: #3B2F20; /* drawn in sepia ink, like a map illustration */
+    box-shadow: none;
     z-index: 2;
-    /* Subtle stone masonry texture via repeating gradient */
-    background-image:
-        repeating-linear-gradient(0deg, transparent 0px, transparent 11px, rgba(0,0,0,0.03) 11px, rgba(0,0,0,0.03) 12px),
-        repeating-linear-gradient(90deg, transparent 0px, transparent 23px, rgba(0,0,0,0.02) 23px, rgba(0,0,0,0.02) 24px),
-        linear-gradient(180deg, #C8B080, #988050);
 }
 
-/* Dark mortar outline behind castle */
+/* Ink bleed halo behind the castle — simulates ink absorption into parchment */
 #screen.theme-classic .diamond::after {
     clip-path: url(#castle);
     border: none;
-    inset: -3px;
-    background: #5A3A1A;
+    inset: -2px;
+    background: rgba(59, 47, 32, 0.3);
     z-index: -1;
+    filter: blur(1px);
 }
 
 /* Vote banner — flag hanging from the castle top */
@@ -766,28 +768,28 @@ body.boot-classic .boot-text:nth-child(3) {
     box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Banner colors — rich heraldic tones */
+/* Banner colors — manuscript pigment accents against ink castles */
 #screen.theme-classic .agent-vote.vote-approve {
-    background: linear-gradient(180deg, #2D6B3F, #1A4A2A);
+    background: #2E6F40; /* verdigris green */
     color: #F5E6C8;
 }
 
 #screen.theme-classic .agent-vote.vote-deny {
-    background: linear-gradient(180deg, #8B1A1A, #6B1010);
+    background: #C34A14; /* vermillion — the Pentiment red */
     color: #F5E6C8;
 }
 
 #screen.theme-classic .agent-vote.vote-pass {
-    background: linear-gradient(180deg, #6B5030, #4A3520);
+    background: #6B5B45; /* ink-light */
     color: #D4C4A0;
     font-size: 12px;
 }
 
-/* Classic: rubricated panel headers with pilcrow — dark rubric for readability */
+/* Classic: rubricated panel headers — vermillion rubric */
 #screen.theme-classic .panel-header {
     font-family: 'IM Fell English SC', 'Georgia', serif;
     font-variant: small-caps;
-    color: #8B1A1A;
+    color: #C34A14;
     text-shadow: none;
     letter-spacing: 3px;
 }
@@ -816,10 +818,10 @@ body.boot-classic .boot-text:nth-child(3) {
     padding: 4px;
 }
 
-/* Classic: audit log as scribal chronicle */
-#screen.theme-classic .audit-entry .timestamp { color: #2E5894; }
-#screen.theme-classic .audit-entry .method { color: #8B1A1A; font-style: italic; }
-#screen.theme-classic .audit-entry .agent { color: #120A8F; }
+/* Classic: audit log as scribal chronicle — ink tones */
+#screen.theme-classic .audit-entry .timestamp { color: #6B5B45; }
+#screen.theme-classic .audit-entry .method { color: #C34A14; font-style: italic; }
+#screen.theme-classic .audit-entry .agent { color: #1F3A6B; }
 
 /* Manicule pointing hand on most recent entry */
 #screen.theme-classic .audit-entry:first-child::before {
@@ -827,12 +829,12 @@ body.boot-classic .boot-text:nth-child(3) {
     color: #E34234;
 }
 
-/* Classic: hand-drawn road connections (bezier curves generated by JS) */
+/* Classic: hand-drawn road connections — ink-weight lines */
 #screen.theme-classic .connection-line { stroke-linecap: round; stroke-linejoin: round; }
-#screen.theme-classic .connection-agree { stroke-width: 2.5; }
-#screen.theme-classic .connection-disagree { stroke-width: 1.5; stroke-dasharray: 4 4; }
-#screen.theme-classic .connection-neutral { stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.4; }
-#screen.theme-classic .connection-bridging { stroke-width: 3.5; }
+#screen.theme-classic .connection-agree { stroke: #2E6F40; stroke-width: 2; }
+#screen.theme-classic .connection-disagree { stroke: #C34A14; stroke-width: 1.5; stroke-dasharray: 4 4; }
+#screen.theme-classic .connection-neutral { stroke: #6B5B45; stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
+#screen.theme-classic .connection-bridging { stroke: #D6B04C; stroke-width: 3; }
 
 /* Road waypoint markers (added by JS) */
 #screen.theme-classic .road-waypoint {
@@ -909,15 +911,32 @@ body.boot-classic .boot-text:nth-child(3) {
     border-right-color: rgba(139, 90, 43, 0.3);
 }
 
-/* Classic: cluster colors — earthy heraldic tones on stone castles */
-#screen.theme-classic .cluster-1 .diamond { background: linear-gradient(180deg, #B8A880, #9B8B68) !important; }
-#screen.theme-classic .cluster-1 .diamond::after { background: linear-gradient(180deg, #2E5894, #1A3A6B) !important; }
+/* Classic: cluster territory washes — CK3 style jewel-tone fills behind ink castles */
+/* The castle stays ink-dark; the agent-node gets a low-opacity territory glow */
+#screen.theme-classic .cluster-0 .diamond { background: #3B2F20; }
 
-#screen.theme-classic .cluster-2 .diamond { background: linear-gradient(180deg, #C0A898, #A89080) !important; }
-#screen.theme-classic .cluster-2 .diamond::after { background: linear-gradient(180deg, #8B1A1A, #6B1010) !important; }
+#screen.theme-classic .agent-node:has(.cluster-1) {
+    background: radial-gradient(ellipse, rgba(31, 58, 107, 0.12) 0%, transparent 70%);
+}
+#screen.theme-classic .cluster-1 .diamond::after { background: rgba(31, 58, 107, 0.4) !important; filter: blur(2px) !important; }
 
-#screen.theme-classic .cluster-3 .diamond { background: linear-gradient(180deg, #A8B898, #90A880) !important; }
-#screen.theme-classic .cluster-3 .diamond::after { background: linear-gradient(180deg, #2D6B3F, #1A4A2A) !important; }
+#screen.theme-classic .agent-node:has(.cluster-2) {
+    background: radial-gradient(ellipse, rgba(123, 30, 58, 0.12) 0%, transparent 70%);
+}
+#screen.theme-classic .cluster-2 .diamond::after { background: rgba(123, 30, 58, 0.4) !important; filter: blur(2px) !important; }
+
+#screen.theme-classic .agent-node:has(.cluster-3) {
+    background: radial-gradient(ellipse, rgba(46, 111, 64, 0.12) 0%, transparent 70%);
+}
+#screen.theme-classic .cluster-3 .diamond::after { background: rgba(46, 111, 64, 0.4) !important; filter: blur(2px) !important; }
+
+#screen.theme-classic .agent-node:has(.cluster-4) {
+    background: radial-gradient(ellipse, rgba(214, 176, 76, 0.12) 0%, transparent 70%);
+}
+
+#screen.theme-classic .agent-node:has(.cluster-5) {
+    background: radial-gradient(ellipse, rgba(91, 46, 122, 0.12) 0%, transparent 70%);
+}
 
 /* Classic: decorative corner marks + compass rose */
 #screen.theme-classic .hud-corners { display: block; }
@@ -1044,7 +1063,7 @@ body.boot-classic .boot-text:nth-child(3) {
     font-size: 9px;
     letter-spacing: 1px;
 }
-/* Mini castle in multi-view */
+/* Mini castle in multi-view — ink-drawn */
 #screen.theme-classic .multi-agent::before {
     clip-path: url(#castle);
     border-radius: 0;
@@ -1052,12 +1071,13 @@ body.boot-classic .boot-text:nth-child(3) {
     border: none;
     width: 28px;
     height: 28px;
-    background: linear-gradient(180deg, #C8B080, #A89060);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    background: #3B2F20;
+    box-shadow: none;
 }
-#screen.theme-classic .multi-agent.cluster-1::before { background: linear-gradient(180deg, #B8A880, #9B8B68); }
-#screen.theme-classic .multi-agent.cluster-2::before { background: linear-gradient(180deg, #C0A898, #A89080); }
-#screen.theme-classic .multi-agent.cluster-3::before { background: linear-gradient(180deg, #A8B898, #90A880); }
+/* Cluster distinction via subtle colored shadow halo, not fill */
+#screen.theme-classic .multi-agent.cluster-1::before { box-shadow: 0 0 6px rgba(31, 58, 107, 0.4); }
+#screen.theme-classic .multi-agent.cluster-2::before { box-shadow: 0 0 6px rgba(123, 30, 58, 0.4); }
+#screen.theme-classic .multi-agent.cluster-3::before { box-shadow: 0 0 6px rgba(46, 111, 64, 0.4); }
 
 /* Classic: empty state */
 #screen.theme-classic .empty-state { font-style: italic; letter-spacing: 1px; }
