@@ -1270,7 +1270,7 @@ function renderMultiView() {
         // Crux count
         const cruxCount = (ds.analysis?.cruxes || []).length;
         if (cruxCount > 0) {
-            regionEl.appendChild(el('div', { className: 'multi-region-status' }, `${cruxCount} CRUXES`));
+            regionEl.appendChild(el('div', { className: 'multi-region-status' }, `${cruxCount} ${cruxCount === 1 ? 'CRUX' : 'CRUXES'}`));
         }
 
         // Click handled via delegation on #main (see below)
