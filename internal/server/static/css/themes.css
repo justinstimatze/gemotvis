@@ -45,9 +45,9 @@
     --vis-text-dim: #884600;
     --vis-font: 'Courier New', 'Lucida Console', monospace;
     --vis-font-display: Impact, 'Arial Black', sans-serif;
-    --glow-sm: 0 0 4px var(--vis-amber-glow);
-    --glow-md: 0 0 8px var(--vis-amber-glow), 0 0 2px var(--vis-amber-glow);
-    --glow-lg: 0 0 16px var(--vis-amber-glow), 0 0 4px var(--vis-amber-glow);
+    --glow-sm: 0 0 2px var(--vis-amber-glow);
+    --glow-md: 0 0 4px var(--vis-amber-glow);
+    --glow-lg: 0 0 8px var(--vis-amber-glow), 0 0 2px var(--vis-amber-glow);
     --hazard-stripe: repeating-linear-gradient(
         45deg, #ffaa00 0px, #ffaa00 10px, #000 10px, #000 20px
     );
@@ -170,28 +170,29 @@
     text-shadow: var(--glow-sm);
 }
 
-/* Chromatic aberration on topic */
+/* Subtle chromatic aberration on topic — readable first, effect second */
 #screen.theme-magi .topic-label {
     text-shadow:
-        var(--glow-md),
-        0.5px 0 1px rgba(0, 200, 255, 0.3),
-        -0.5px 0 1px rgba(255, 0, 80, 0.2);
+        var(--glow-sm),
+        0.3px 0 0 rgba(0, 200, 255, 0.2),
+        -0.3px 0 0 rgba(255, 0, 80, 0.15);
+    font-size: 16px;
 }
 
-/* --- MAGI: status indicator glows --- */
+/* --- MAGI: status indicator glows — readable with subtle halo --- */
 
 #screen.theme-magi .status-indicator.online {
-    text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.15);
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.4);
+    box-shadow: 0 0 4px rgba(0, 255, 65, 0.1);
 }
 
 #screen.theme-magi .status-indicator.offline {
-    text-shadow: 0 0 8px rgba(255, 32, 32, 0.4);
+    text-shadow: 0 0 4px rgba(255, 32, 32, 0.3);
 }
 
 #screen.theme-magi .status-indicator.analyzing {
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
-    box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
+    text-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
+    box-shadow: 0 0 6px rgba(0, 255, 255, 0.15);
 }
 
 /* --- MAGI: nav tabs --- */
@@ -227,21 +228,22 @@
 }
 
 #screen.theme-magi .agent-name {
-    text-shadow: var(--glow-md);
+    text-shadow: var(--glow-sm);
+    font-size: 12px;
 }
 
-/* --- MAGI: vote glows --- */
+/* --- MAGI: vote glows — sharp text with subtle halo --- */
 
 #screen.theme-magi .vote-approve {
-    text-shadow: 0 0 12px rgba(0, 255, 65, 0.7), 0 0 24px rgba(0, 255, 65, 0.3);
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.5), 0 0 12px rgba(0, 255, 65, 0.2);
 }
 
 #screen.theme-magi .vote-deny {
-    text-shadow: 0 0 12px rgba(255, 32, 32, 0.7), 0 0 24px rgba(255, 32, 32, 0.3);
+    text-shadow: 0 0 6px rgba(255, 32, 32, 0.5), 0 0 12px rgba(255, 32, 32, 0.2);
 }
 
 #screen.theme-magi .vote-pass {
-    text-shadow: var(--glow-md);
+    text-shadow: var(--glow-sm);
 }
 
 /* --- MAGI: conviction fills --- */
@@ -323,7 +325,7 @@
 }
 
 #screen.theme-magi .metric-value {
-    text-shadow: var(--glow-md);
+    text-shadow: var(--glow-sm);
 }
 
 /* --- MAGI: footer glow --- */
@@ -340,18 +342,18 @@
 }
 
 #screen.theme-magi .analysis-label {
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    text-shadow: 0 0 4px rgba(0, 255, 255, 0.4);
 }
 
 #screen.theme-magi .pipeline-stage.active {
-    background: rgba(0, 255, 255, 0.12);
-    text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
-    box-shadow: 0 0 8px rgba(0, 255, 255, 0.15);
+    background: rgba(0, 255, 255, 0.1);
+    text-shadow: 0 0 4px rgba(0, 255, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 255, 255, 0.1);
 }
 
 #screen.theme-magi .pipeline-stage.done {
-    background: rgba(0, 255, 65, 0.08);
-    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+    background: rgba(0, 255, 65, 0.06);
+    text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
 }
 
 /* --- MAGI: connection glows --- */
