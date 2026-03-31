@@ -1584,6 +1584,10 @@ function applyTheme() {
     screen.classList.add(`theme-${active}`);
     document.body.classList.add(`boot-${active}`);
 
+    // Match body background to theme to prevent edge color mismatch
+    const bgMap = { classic: '#E8D5B5', magi: '#050505', minimal: '#ffffff', gastown: '#e8dcc8' };
+    document.body.style.background = bgMap[active] || '#ffffff';
+
     VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI
                 : active === 'minimal' ? VOTE_LABELS_MINIMAL
                 : VOTE_LABELS_CLASSIC; // classic and gastown both use YEA/NAY
