@@ -479,6 +479,11 @@ function render() {
             document.getElementById('footer')?.classList.add('hidden');
             document.getElementById('analysis-bar')?.classList.add('hidden');
             document.getElementById('scrubber-bar')?.classList.add('hidden');
+            // Clear round/template in overview
+            const roundEl = document.getElementById('round-display');
+            if (roundEl) roundEl.textContent = '';
+            const templateEl = document.getElementById('template-display');
+            if (templateEl) templateEl.textContent = '';
         }
 
         renderMultiView();
