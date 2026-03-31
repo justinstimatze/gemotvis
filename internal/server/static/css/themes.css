@@ -717,27 +717,23 @@ body.boot-classic .boot-text:nth-child(3) {
     display: none;
 }
 
-/* Castle — ink-drawn settlement on parchment (KCD cartographic style) */
+/* Settlement — SVG icon rendered inside diamond, no clip-path needed */
 #screen.theme-classic .diamond {
-    clip-path: url(#castle);
+    clip-path: none;
     border-radius: 0;
     border: none;
-    background: #3B2F20; /* drawn in sepia ink, like a map illustration */
+    background: transparent;
     box-shadow: none;
     z-index: 2;
+    overflow: visible;
 }
 
-/* Ink bleed halo behind the castle — simulates ink absorption into parchment */
+/* No ::after decoration needed — the SVG icon IS the visual */
 #screen.theme-classic .diamond::after {
-    clip-path: url(#castle);
-    border: none;
-    inset: -2px;
-    background: rgba(59, 47, 32, 0.3);
-    z-index: -1;
-    filter: blur(1px);
+    display: none;
 }
 
-/* Vote banner — flag hanging from the castle top */
+/* Vote banner — flag hanging from the settlement */
 #screen.theme-classic .diamond-vote {
     position: absolute;
     top: -4px;
@@ -749,7 +745,7 @@ body.boot-classic .boot-text:nth-child(3) {
     display: block;
     align-items: initial;
     justify-content: initial;
-    z-index: 6;
+    z-index: 20; /* above all castles but below tooltips (z:100) */
 }
 
 #screen.theme-classic .agent-vote {

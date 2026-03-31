@@ -704,7 +704,21 @@ function renderAgents(ds) {
             className: `agent-node ${trustClass} ${warningClass}${animClass}`,
             style,
         },
-            el('div', { className: `diamond ${convClass} ${clusterClass}` }),
+            el('div', { className: `diamond ${convClass} ${clusterClass}` },
+                // Classic theme: render SVG settlement icon inside diamond
+                activeTheme === 'classic' ? (() => {
+                    const icons = ['gi-castle', 'gi-watchtower', 'gi-village'];
+                    const iconId = icons[i % icons.length];
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('viewBox', '0 0 512 512');
+                    svg.style.cssText = 'width:100%;height:100%;position:absolute;inset:0;';
+                    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                    use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + iconId);
+                    use.setAttribute('fill', '#3B2F20');
+                    svg.appendChild(use);
+                    return svg;
+                })() : null,
+            ),
             el('div', { className: 'diamond-vote' },
                 el('span', { className: `agent-vote ${voteClass}` }, voteLabel),
             ),
@@ -736,7 +750,7 @@ function createRoadPath(x1, y1, x2, y2, seed) {
     // Seeded pseudo-random offsets (deterministic per pair)
     const r1 = ((seed * 7919 + 1) % 97) / 97 - 0.5; // -0.5..0.5
     const r2 = ((seed * 6271 + 3) % 89) / 89 - 0.5;
-    const wobble = Math.min(len * 0.22, 50); // bold hand-drawn winding roads
+    const wobble = Math.min(len * 0.3, 65); // very winding medieval roads
     // Two control points at 1/3 and 2/3 along the line, offset perpendicular
     const cx1 = x1 + dx * 0.33 + px * r1 * wobble;
     const cy1 = y1 + dy * 0.33 + py * r1 * wobble;
