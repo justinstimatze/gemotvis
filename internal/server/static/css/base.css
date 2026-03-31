@@ -881,12 +881,12 @@ footer {
 /* ===== LANDING PAGE ===== */
 
 .landing-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 15;
+    z-index: 500;
     background: var(--vis-bg);
 }
 
@@ -924,43 +924,30 @@ footer {
     text-transform: uppercase;
 }
 
-.landing-themes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.landing-demo-row {
+    display: flex;
     gap: 8px;
 }
 
-.landing-theme-btn {
-    background: var(--vis-panel);
-    border: 1px solid var(--vis-panel-border);
-    padding: 12px 8px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: var(--vis-font);
-    text-align: center;
-}
-
-.landing-theme-btn:hover {
-    border-color: var(--vis-amber);
-}
-
-.landing-theme-btn.active {
-    border-color: var(--vis-amber);
+.landing-select {
+    flex: 1;
     background: var(--vis-bg);
-}
-
-.landing-theme-name {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
+    border: 1px solid var(--vis-panel-border);
     color: var(--vis-text);
-    margin-bottom: 2px;
+    font-family: var(--vis-font);
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    cursor: pointer;
+    appearance: auto;
 }
 
-.landing-theme-desc {
-    display: block;
-    font-size: 10px;
-    color: var(--vis-text-dim);
+.landing-select:focus {
+    border-color: var(--vis-amber);
+}
+
+.landing-demo-btn {
+    white-space: nowrap;
 }
 
 .landing-watch-row {

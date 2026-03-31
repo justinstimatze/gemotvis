@@ -1681,6 +1681,7 @@ loadConfig().then(() => {
 
 function showLanding() {
     const main = document.getElementById('main');
+    // Hide everything — landing page takes the full screen
     document.getElementById('agents')?.classList.add('hidden');
     document.getElementById('connections')?.classList.add('hidden');
     document.getElementById('center-panel')?.classList.add('hidden');
@@ -1689,6 +1690,8 @@ function showLanding() {
     document.getElementById('analysis-bar')?.classList.add('hidden');
     document.getElementById('scrubber-bar')?.classList.add('hidden');
     document.getElementById('delib-nav')?.classList.add('hidden');
+    document.getElementById('cycle-bar')?.classList.add('hidden');
+    document.querySelector('header')?.classList.add('hidden');
 
     document.getElementById('landing-overlay')?.remove();
 
@@ -1699,22 +1702,27 @@ function showLanding() {
         { id: 'gastown', label: 'Gastown', desc: 'Steampunk' },
     ];
 
-    const themeButtons = themes.map(t => {
-        const isCurrent = activeTheme === t.id;
-        return el('button', {
-            className: `landing-theme-btn ${isCurrent ? 'active' : ''}`,
-            onclick: () => {
-                const url = new URL(window.location);
-                if (t.id === 'classic') url.searchParams.delete('theme');
-                else url.searchParams.set('theme', t.id);
-                url.searchParams.set('demo', '1');
-                window.location.href = url.toString();
-            },
-        },
-            el('span', { className: 'landing-theme-name' }, t.label),
-            el('span', { className: 'landing-theme-desc' }, t.desc),
-        );
+    const themeSelect = document.createElement('select');
+    themeSelect.className = 'landing-select';
+    themes.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `${t.label} — ${t.desc}`;
+        if (t.id === activeTheme) opt.selected = true;
+        themeSelect.appendChild(opt);
     });
+
+    const demoBtn = el('button', {
+        className: 'landing-go-btn landing-demo-btn',
+        onclick: () => {
+            const url = new URL(window.location);
+            const theme = themeSelect.value;
+            if (theme === 'classic') url.searchParams.delete('theme');
+            else url.searchParams.set('theme', theme);
+            url.searchParams.set('demo', '1');
+            window.location.href = url.toString();
+        },
+    }, 'Start Demo');
 
     const overlay = el('div', { className: 'landing-overlay', id: 'landing-overlay' },
         el('div', { className: 'landing-content' },
@@ -1722,7 +1730,7 @@ function showLanding() {
             el('div', { className: 'landing-subtitle' }, 'Deliberation Visualizer'),
             el('div', { className: 'landing-section' },
                 el('div', { className: 'landing-section-label' }, 'Try the demo'),
-                el('div', { className: 'landing-themes' }, ...themeButtons),
+                el('div', { className: 'landing-demo-row' }, themeSelect, demoBtn),
             ),
             el('div', { className: 'landing-section' },
                 el('div', { className: 'landing-section-label' }, 'Watch a deliberation'),
