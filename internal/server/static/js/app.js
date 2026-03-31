@@ -467,17 +467,27 @@ function render() {
     if (state.multiView && ids.length > 1) {
         document.getElementById('delib-nav')?.classList.add('hidden');
         document.getElementById('empty-state')?.classList.add('hidden');
-        document.getElementById('footer')?.classList.add('hidden');
-        document.getElementById('analysis-bar')?.classList.add('hidden');
-        document.getElementById('scrubber-bar')?.classList.add('hidden');
 
         // Update header for multi-view
         const focused = state.focusedDelibID && delibs[state.focusedDelibID];
         const topicEl = document.querySelector('.topic-label');
         if (focused) {
             topicEl.textContent = focused.deliberation?.topic || 'UNTITLED';
+            // Show footer with focused deliberation's detail
+            document.getElementById('footer')?.classList.remove('hidden');
+            document.getElementById('analysis-bar')?.classList.remove('hidden');
+            document.getElementById('scrubber-bar')?.classList.remove('hidden');
+            renderHeader(focused);
+            renderAnalysisBar(focused);
+            renderCruxPanel(focused);
+            renderMetrics(focused);
+            renderAuditLog(focused);
+            renderScrubber(focused);
         } else {
             topicEl.textContent = `${ids.length} Deliberations`;
+            document.getElementById('footer')?.classList.add('hidden');
+            document.getElementById('analysis-bar')?.classList.add('hidden');
+            document.getElementById('scrubber-bar')?.classList.add('hidden');
         }
 
         renderMultiView();
@@ -1276,8 +1286,9 @@ function focusOnDelib(delibID) {
         screen.dataset.state = active?.deliberation?.status === 'analyzing' ? 'analyzing' : 'normal';
     }, FOCUS_TRANSITION_MS);
 
-    // Apply camera without full re-render
+    // Apply camera and update detail panels for focused deliberation
     updateCamera();
+    render(); // re-render to populate footer with focused delib's data
 
     // Set timer to return to overview
     clearTimeout(focusTimer);
@@ -1289,17 +1300,7 @@ function zoomToOverview() {
     updateCamera();
     // Clear focused highlight from all regions
     document.querySelectorAll('.multi-region.focused').forEach(r => r.classList.remove('focused'));
-    // Update header
-    const topicEl = document.querySelector('.topic-label');
-    if (topicEl) {
-        const count = Object.keys(state.deliberations).length;
-        topicEl.textContent = `${count} Deliberations`;
-    }
-    // Hide round display in overview
-    const roundEl = document.getElementById('round-display');
-    if (roundEl) roundEl.textContent = '';
-    const templateEl = document.getElementById('template-display');
-    if (templateEl) templateEl.textContent = '';
+    render(); // re-render to hide footer and update header
 }
 
 function updateCamera() {
