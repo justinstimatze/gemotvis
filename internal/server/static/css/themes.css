@@ -1409,21 +1409,25 @@ body.boot-minimal .boot-overlay .boot-text {
 }
 
 #screen.theme-minimal .multi-region-topic {
-    font-size: 11px;
-    font-weight: 500;
-    color: #1e293b;
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
     letter-spacing: 0;
+    line-height: 1.3;
 }
 
 #screen.theme-minimal .multi-region-meta {
     font-size: 9px;
     color: #9ca3af;
+    font-weight: 400;
 }
 
 #screen.theme-minimal .multi-region-status {
-    font-size: 9px;
-    color: #9ca3af;
+    font-size: 10px;
+    font-weight: 500;
+    color: #6b7280;
     border-top: 1px solid #f0f0f0;
+    padding: 4px 10px;
 }
 
 #screen.theme-minimal .multi-region-status.analyzing {
