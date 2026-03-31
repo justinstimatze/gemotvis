@@ -344,6 +344,95 @@ function updatePlayButton() {
     if (btn) btn.textContent = scrubber.playing ? '\u23F8' : '\u25B6';
 }
 
+// ===== Terrain Decoration (classic theme) =====
+
+let terrainRendered = false;
+
+function renderTerrain() {
+    if (terrainRendered || activeTheme !== 'classic') return;
+    terrainRendered = true;
+
+    const main = document.getElementById('main');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'terrain-layer');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+    svg.setAttribute('viewBox', '0 0 1300 700');
+
+    const ink = '#3B2F20';
+
+    // Scatter tree clusters
+    const treeClusters = [
+        { x: 60, y: 180, count: 4, spread: 25 },
+        { x: 90, y: 520, count: 3, spread: 20 },
+        { x: 1180, y: 140, count: 5, spread: 28 },
+        { x: 1200, y: 480, count: 3, spread: 22 },
+        { x: 400, y: 620, count: 3, spread: 18 },
+        { x: 850, y: 100, count: 4, spread: 24 },
+        { x: 1050, y: 600, count: 3, spread: 20 },
+        { x: 180, y: 350, count: 2, spread: 15 },
+    ];
+
+    treeClusters.forEach(cluster => {
+        for (let i = 0; i < cluster.count; i++) {
+            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#gi-tree');
+            const ox = cluster.x + (i % 3) * cluster.spread - cluster.spread;
+            const oy = cluster.y + Math.floor(i / 3) * cluster.spread * 0.8;
+            const size = 18 + (i % 3) * 4;
+            use.setAttribute('x', ox);
+            use.setAttribute('y', oy);
+            use.setAttribute('width', size);
+            use.setAttribute('height', size);
+            use.setAttribute('fill', ink);
+            use.setAttribute('opacity', '0.12');
+            svg.appendChild(use);
+        }
+    });
+
+    // Hill/peak symbols
+    const hills = [
+        { x: 250, y: 550, w: 50, h: 30 },
+        { x: 900, y: 150, w: 60, h: 35 },
+        { x: 650, y: 600, w: 45, h: 25 },
+        { x: 1100, y: 350, w: 55, h: 30 },
+    ];
+
+    hills.forEach(h => {
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#gi-peaks');
+        use.setAttribute('x', h.x);
+        use.setAttribute('y', h.y);
+        use.setAttribute('width', h.w);
+        use.setAttribute('height', h.h);
+        use.setAttribute('fill', ink);
+        use.setAttribute('opacity', '0.08');
+        svg.appendChild(use);
+    });
+
+    // River — wavy blue-grey SVG path
+    const river = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    river.setAttribute('d', 'M-10,200 C150,180 200,280 350,250 S550,320 700,290 S900,350 1000,300 S1200,380 1320,340');
+    river.setAttribute('fill', 'none');
+    river.setAttribute('stroke', '#7A8B9A');
+    river.setAttribute('stroke-width', '3');
+    river.setAttribute('opacity', '0.2');
+    river.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(river);
+
+    // Second thinner river line for depth
+    const river2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    river2.setAttribute('d', 'M-10,205 C150,185 200,285 350,255 S550,325 700,295 S900,355 1000,305 S1200,385 1320,345');
+    river2.setAttribute('fill', 'none');
+    river2.setAttribute('stroke', '#7A8B9A');
+    river2.setAttribute('stroke-width', '1.5');
+    river2.setAttribute('opacity', '0.12');
+    river2.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(river2);
+
+    main.insertBefore(svg, main.firstChild);
+}
+
 // ===== Rendering =====
 
 function render() {
@@ -396,6 +485,9 @@ function render() {
     if (emptyEl) emptyEl.classList.add('hidden');
     document.getElementById('agents')?.classList.remove('hidden');
     document.getElementById('connections')?.classList.remove('hidden');
+
+    // Render terrain decorations (classic theme, once)
+    renderTerrain();
 
     // Apply scrubber time filter if active
     let display = active;
@@ -624,7 +716,7 @@ function createRoadPath(x1, y1, x2, y2, seed) {
     // Seeded pseudo-random offsets (deterministic per pair)
     const r1 = ((seed * 7919 + 1) % 97) / 97 - 0.5; // -0.5..0.5
     const r2 = ((seed * 6271 + 3) % 89) / 89 - 0.5;
-    const wobble = Math.min(len * 0.06, 12); // scale with distance, cap at 12px
+    const wobble = Math.min(len * 0.15, 35); // visible hand-drawn curve
     // Two control points at 1/3 and 2/3 along the line, offset perpendicular
     const cx1 = x1 + dx * 0.33 + px * r1 * wobble;
     const cy1 = y1 + dy * 0.33 + py * r1 * wobble;

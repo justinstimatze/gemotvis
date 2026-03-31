@@ -626,14 +626,14 @@ body.boot-classic .boot-text:nth-child(3) {
     mix-blend-mode: multiply;
 }
 
-/* Cartographic terrain features (KCD1 map inspired) */
+/* Cartographic terrain — CSS gradient accents (SVG terrain layer is primary) */
 #screen.theme-classic main::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.28;
+    opacity: 0.15;
     background:
         /* Forest clusters — groups of tree-like marks */
         radial-gradient(ellipse at 8% 35%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
