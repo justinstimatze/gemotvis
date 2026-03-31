@@ -34,6 +34,8 @@ let state = {
 
 let eventSource = null;
 let cycleProgressTimer = null;
+let renderDebounce = null;
+let directSSEFetchTimer = null;
 let previousVotes = {}; // agentID -> vote value, for detecting changes
 let knownAgents = new Set(); // for detecting new agents
 let focusTimer = null; // timer to return to overview after idle
@@ -137,7 +139,9 @@ function handleEvent(msg) {
                 state.deliberations[delibID] = ds;
                 trimLargeData(state.deliberations);
                 onActivity(delibID);
-                render();
+                // Debounce render — multiple state events arrive in rapid succession
+                clearTimeout(renderDebounce);
+                renderDebounce = setTimeout(render, 100);
             }
             break;
         }
@@ -1866,17 +1870,21 @@ function connectWatch(codes) {
     eventSource.onmessage = (e) => {
         try {
             const msg = JSON.parse(e.data);
-            // Direct gemot SSE sends lightweight events — trigger a state re-fetch
+            // Direct gemot SSE sends lightweight events — debounced state re-fetch
             if (gemotSSE && msg.type !== 'ping' && msg.type !== 'connected') {
-                fetch(`/api/watch/${primary}/state`)
-                    .then(r => r.json())
-                    .then(snap => {
-                        if (snap.deliberations) {
-                            Object.assign(state.deliberations, snap.deliberations);
-                            render();
-                        }
-                    })
-                    .catch(() => {}); // silent — state will refresh on next event
+                clearTimeout(directSSEFetchTimer);
+                directSSEFetchTimer = setTimeout(() => {
+                    fetch(`/api/watch/${primary}/state`)
+                        .then(r => r.json())
+                        .then(snap => {
+                            if (snap.deliberations) {
+                                Object.assign(state.deliberations, snap.deliberations);
+                                trimLargeData(state.deliberations);
+                                render();
+                            }
+                        })
+                        .catch(() => {});
+                }, 500); // debounce rapid events
             } else {
                 handleEvent(msg);
             }
