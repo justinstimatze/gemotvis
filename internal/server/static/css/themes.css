@@ -380,14 +380,50 @@
 #screen.theme-magi .tooltip-header {
     background: rgba(255, 140, 0, 0.05);
     text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
 }
 
 #screen.theme-magi .tooltip-body {
-    color: #bbb;
+    color: #ccc;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.5;
 }
 
 #screen.theme-magi .tooltip-footer {
     text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+}
+
+/* MAGI: center panel technical text */
+#screen.theme-magi .panel-text {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+#screen.theme-magi .panel-label {
+    font-family: var(--vis-font-display);
+    letter-spacing: 2px;
+}
+
+/* MAGI: diamond circuit-board interior pattern */
+#screen.theme-magi .diamond::before {
+    content: '';
+    position: absolute;
+    inset: 15%;
+    border: 1px solid rgba(255, 140, 0, 0.12);
+    transform: rotate(0deg);
+    pointer-events: none;
+}
+
+#screen.theme-magi .diamond::after {
+    border: 1px solid rgba(255, 140, 0, 0.15);
+    /* Cross-hair lines inside diamond */
+    background:
+        linear-gradient(0deg, transparent 48%, rgba(255, 140, 0, 0.06) 49%, rgba(255, 140, 0, 0.06) 51%, transparent 52%),
+        linear-gradient(90deg, transparent 48%, rgba(255, 140, 0, 0.06) 49%, rgba(255, 140, 0, 0.06) 51%, transparent 52%);
 }
 
 /* --- MAGI: center panel --- */
@@ -857,13 +893,23 @@ body.boot-classic .boot-text:nth-child(3) {
 
 /* Classic: center panel as ornate map cartouche */
 #screen.theme-classic .center-panel {
-    border: 2px solid #8B5A2B;
-    outline: 1px solid rgba(139, 90, 43, 0.3);
-    outline-offset: 3px;
-    background: linear-gradient(180deg, #F5E6C8 0%, #EDE0C4 100%);
-    box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.12), inset 0 0 20px rgba(139, 90, 43, 0.05);
+    border: 2px solid #5A4A35;
+    outline: 1px solid rgba(90, 74, 53, 0.25);
+    outline-offset: 4px;
+    background: linear-gradient(180deg, #F1E0C3 0%, #E8D5B5 100%);
+    box-shadow: 3px 4px 12px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(139, 90, 43, 0.04);
     position: relative;
+    max-width: 450px;
+    max-height: 240px;
 }
+
+/* Cartouche text — ink colors for consensus/bridging labels */
+#screen.theme-classic .panel-label-consensus { color: #2E6F40; font-weight: 600; }
+#screen.theme-classic .panel-label-bridging { color: #D6B04C; font-weight: 600; }
+#screen.theme-classic .panel-label-compromise { color: #1F3A6B; font-weight: 600; }
+#screen.theme-classic .panel-text { color: #1A1410; font-size: 11px; line-height: 1.5; }
+#screen.theme-classic .panel-header { font-size: 13px; }
+#screen.theme-classic .text-dim { color: #6B5B45; }
 
 /* Cartouche top ornament — fleuron line */
 #screen.theme-classic .center-panel::before {
@@ -1076,16 +1122,9 @@ body.boot-classic .boot-text:nth-child(3) {
     font-size: 9px;
     letter-spacing: 1px;
 }
-/* Mini castle in multi-view — ink-drawn */
+/* Mini castle in multi-view — SVG icon rendered by JS, hide pseudo-element */
 #screen.theme-classic .multi-agent::before {
-    clip-path: url(#castle);
-    border-radius: 0;
-    transform: none;
-    border: none;
-    width: 28px;
-    height: 28px;
-    background: #3B2F20;
-    box-shadow: none;
+    display: none;
 }
 /* Cluster distinction via subtle colored shadow halo, not fill */
 #screen.theme-classic .multi-agent.cluster-1::before { box-shadow: 0 0 6px rgba(31, 58, 107, 0.4); }
@@ -1857,6 +1896,16 @@ body.boot-gastown .boot-text:nth-child(3) {
 #screen.theme-gastown .scrubber-track { border-bottom-color: #5d4037; }
 #screen.theme-gastown .scrubber-label { color: #8b7355; }
 #screen.theme-gastown .scrubber-live { color: #4caf50; border-color: #4caf50; }
+
+/* Gastown: mini-view pipes — thinner but still pipe-like */
+#screen.theme-gastown .multi-region-connections .connection-line {
+    stroke-width: 3;
+    opacity: 0.5;
+}
+
+#screen.theme-gastown .multi-region-connections .connection-bridging {
+    stroke-width: 4;
+}
 
 /* Gastown: empty state + empty messages in dark panels */
 #screen.theme-gastown .empty-state {

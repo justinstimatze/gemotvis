@@ -1197,11 +1197,25 @@ function renderMultiView() {
             const clusterClass = agent.cluster_id != null
                 ? CLUSTER_COLORS[agent.cluster_id % CLUSTER_COLORS.length] : '';
 
+            const miniIcon = (activeTheme === 'classic') ? (() => {
+                const icons = ['gi-castle', 'gi-village'];
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('viewBox', '0 0 512 512');
+                svg.style.cssText = 'width:28px;height:28px;display:block;margin:0 auto;';
+                const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + icons[i % icons.length]);
+                use.setAttribute('fill', '#3B2F20');
+                use.setAttribute('fill-rule', 'evenodd');
+                svg.appendChild(use);
+                return svg;
+            })() : null;
+
             const node = el('div', {
                 className: `multi-agent ${clusterClass}`,
                 style: `left:${ax}%; top:${ay}%;`,
                 title: agent.id,
             },
+                miniIcon,
                 el('span', { className: `multi-agent-vote ${voteClass}` },
                     vote !== undefined ? VOTE_LABELS[vote] : '--'),
                 el('span', { className: 'multi-agent-name' }, shortAgentID(agent.id)),
@@ -1737,6 +1751,23 @@ function showLanding() {
         themeSelect.appendChild(opt);
     });
 
+    const themePreview = el('div', { className: 'landing-theme-preview', id: 'theme-preview' },
+        themes.find(t => t.id === activeTheme)?.desc || '');
+
+    themeSelect.addEventListener('change', () => {
+        const selected = themes.find(t => t.id === themeSelect.value);
+        const preview = document.getElementById('theme-preview');
+        if (preview && selected) {
+            const descs = {
+                classic: 'Ink-drawn settlements on parchment with forests, rivers, and winding roads',
+                magi: 'Evangelion CRT terminal with scanlines, kanji votes, and amber glow',
+                minimal: 'Clean modern dashboard inspired by Linear and Vercel',
+                gastown: 'Steampunk control room with brass pipes and industrial warmth',
+            };
+            preview.textContent = descs[selected.id] || selected.desc;
+        }
+    });
+
     const demoBtn = el('button', {
         className: 'landing-go-btn landing-demo-btn',
         onclick: () => {
@@ -1756,6 +1787,7 @@ function showLanding() {
             el('div', { className: 'landing-section' },
                 el('div', { className: 'landing-section-label' }, 'Try the demo'),
                 el('div', { className: 'landing-demo-row' }, themeSelect, demoBtn),
+                themePreview,
             ),
             el('div', { className: 'landing-section' },
                 el('div', { className: 'landing-section-label' }, 'Watch a deliberation'),

@@ -950,6 +950,14 @@ footer {
     white-space: nowrap;
 }
 
+.landing-theme-preview {
+    font-size: 11px;
+    color: var(--vis-text-dim);
+    margin-top: 6px;
+    font-style: italic;
+    min-height: 16px;
+}
+
 .landing-watch-row {
     display: flex;
     gap: 8px;
