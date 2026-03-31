@@ -147,6 +147,10 @@ function switchToDelib(id) {
     // Reset animation tracking so entering animations play for new view
     previousVotes = {};
     knownAgents.clear();
+    // Reset scrubber to live view for new deliberation
+    scrubber.enabled = false;
+    scrubber.eventIndex = null;
+    stopScrubberPlay();
 }
 
 function cycleNext() {

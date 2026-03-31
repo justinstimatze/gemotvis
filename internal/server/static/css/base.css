@@ -296,6 +296,12 @@ header {
     z-index: 50; /* lift above other nodes so tooltip is visible */
 }
 
+/* Nodes with active votes sit above nodes without */
+.agent-node:has(.vote-approve),
+.agent-node:has(.vote-deny) {
+    z-index: 10;
+}
+
 .diamond {
     width: 120px;
     height: 120px;
