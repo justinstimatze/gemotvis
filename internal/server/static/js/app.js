@@ -300,12 +300,16 @@ function renderScrubber(ds) {
 
     // In multi-view: build global timeline across all deliberations
     // In single-view: build timeline for the active deliberation
+    const isGlobal = state.multiView || !ds;
     let allEvents;
-    if (state.multiView || !ds) {
+    if (isGlobal) {
         allEvents = buildGlobalTimeline(state.deliberations);
     } else {
         allEvents = buildTimelineEvents(ds);
     }
+
+    // Pin scrubber to bottom in global mode
+    bar.classList.toggle('scrubber-global', isGlobal);
     scrubber.events = allEvents;
 
     if (allEvents.length < 2) { bar.classList.add('hidden'); return; }

@@ -616,6 +616,15 @@ header {
     height: 28px;
 }
 
+/* Pin scrubber to bottom when in global timeline mode */
+.scrubber-bar.scrubber-global {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
 .scrubber-btn {
     background: transparent;
     border: 1px solid var(--vis-panel-border);
