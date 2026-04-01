@@ -77,9 +77,15 @@ When `EnableSSE()` is called on a Poller, it connects to gemot's `/events` SSE e
 
 ## Timeline Scrubber
 
-The scrubber bar (above the footer) lets users step through audit log events chronologically. Each event is a colored dot (cyan=position, green=vote, gold=analysis). Controls: click dot, arrow keys, Space play/pause, LIVE button.
+The scrubber bar lets users step through events chronologically. In single-view, it shows one deliberation's events. In multi-view, it shows a **global timeline** across ALL deliberations — events sorted chronologically with `delibID` tags. Pinned to viewport bottom via `position: fixed` in multi-view.
 
-The scrubber filters `DelibState` client-side via `filterToTime()`: positions/votes filtered by `created_at`, agents derived from visible positions, analysis shown only after analyze event. Existing render functions are unchanged — the filter runs before passing data to them.
+Controls: play/pause, 1x/2x/4x speed, event type filter (ALL/POSITION/VOTE/ANALYSIS), arrow keys, click dot, click track, LIVE/LATEST button.
+
+When scrubbing in multi-view, the focused deliberation renders as a **full single-view** (identical quality to standalone mode), not a scaled mini-view. `filterToTime()` applied to the focused deliberation's data.
+
+## Landing Page
+
+`vis.gemot.dev/` shows a themed overlay with: theme dropdown selector, "Start Demo" button, watch code input, dashboard link. Auto-dismissed when navigating to `?demo=1`.
 
 ## Key Design Decisions
 
