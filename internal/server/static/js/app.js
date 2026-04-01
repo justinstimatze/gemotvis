@@ -351,25 +351,13 @@ function scrubTo(index, fromPlay) {
     scrubber.eventIndex = index;
     if (!fromPlay) state.cyclePaused = true;
 
-    // In multi-view: zoom to the event's deliberation and stop demo loop
+    // In multi-view: focus on the event's deliberation
     if (state.multiView && scrubber.events[index]?.delibID) {
         stopDemoLoop();
-        clearTimeout(focusTimer); // prevent auto-return to overview
-        const evt = scrubber.events[index];
-        state.focusedDelibID = evt.delibID;
-        updateCamera();
-        renderFocusedDetails();
-        // Update the scrubber label immediately
-        const label = document.getElementById('scrubber-label');
-        if (label) {
-            const t = new Date(evt.time);
-            const ts = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            label.textContent = `${ts} \u2014 ${evt.label}`;
-        }
-        updatePlayButton();
-    } else {
-        render();
+        clearTimeout(focusTimer);
+        state.focusedDelibID = scrubber.events[index].delibID;
     }
+    render();
 }
 
 function scrubToLive() {
@@ -549,24 +537,55 @@ function render() {
         // Update header for multi-view
         const focused = state.focusedDelibID && delibs[state.focusedDelibID];
         const topicEl = document.querySelector('.topic-label');
+
         if (focused) {
-            renderFocusedDetails(); // sets header topic via renderHeader()
-        } else {
-            topicEl.textContent = `${ids.length} Deliberations`;
-            document.getElementById('footer')?.classList.add('hidden');
-            document.getElementById('analysis-bar')?.classList.add('hidden');
-            // Show scrubber even in overview (global timeline)
+            // ZOOMED IN: render as full single-view for the focused deliberation
+            // Hide multi-canvas, show single-view elements
+            document.getElementById('multi-canvas')?.classList.add('hidden');
+            document.getElementById('agents')?.classList.remove('hidden');
+            document.getElementById('connections')?.classList.remove('hidden');
+            document.getElementById('footer')?.classList.remove('hidden');
+            document.getElementById('analysis-bar')?.classList.remove('hidden');
             document.getElementById('scrubber-bar')?.classList.remove('hidden');
-            renderScrubber(null); // null = use global timeline
-            // Clear round/template in overview
-            const roundEl = document.getElementById('round-display');
-            if (roundEl) roundEl.textContent = '';
-            const templateEl = document.getElementById('template-display');
-            if (templateEl) templateEl.textContent = '';
+            document.getElementById('main').className = '';
+
+            // Apply scrubber time filter if active
+            let display = focused;
+            if (scrubber.enabled && scrubber.eventIndex != null) {
+                const evt = scrubber.events[scrubber.eventIndex];
+                if (evt?.time) display = filterToTime(focused, evt.time);
+            }
+
+            renderTerrain();
+            renderHeader(display);
+            renderAnalysisBar(display);
+            renderAgents(display);
+            renderConnections(display);
+            renderCenterPanel(display);
+            renderCruxPanel(display);
+            renderMetrics(display);
+            renderAuditLog(display);
+            renderScrubber(null); // global timeline
+            return;
         }
 
+        // OVERVIEW: show multi-view grid
+        document.getElementById('agents')?.classList.add('hidden');
+        document.getElementById('connections')?.classList.add('hidden');
+        document.getElementById('center-panel')?.classList.add('hidden');
+        document.getElementById('multi-canvas')?.classList.remove('hidden');
+
+        topicEl.textContent = `${ids.length} Deliberations`;
+        document.getElementById('footer')?.classList.add('hidden');
+        document.getElementById('analysis-bar')?.classList.add('hidden');
+        document.getElementById('scrubber-bar')?.classList.remove('hidden');
+        renderScrubber(null);
+        const roundEl = document.getElementById('round-display');
+        if (roundEl) roundEl.textContent = '';
+        const templateEl = document.getElementById('template-display');
+        if (templateEl) templateEl.textContent = '';
+
         renderMultiView();
-        // Start demo loop if not already running and cycle is enabled
         if (!demoLoopTimer && state.cycleInterval > 0) {
             startDemoLoop();
         }
@@ -1375,10 +1394,8 @@ function focusOnDelib(delibID) {
         screen.dataset.state = active?.deliberation?.status === 'analyzing' ? 'analyzing' : 'normal';
     }, FOCUS_TRANSITION_MS);
 
-    // Apply camera — the next SSE-triggered render() will populate detail panels
-    updateCamera();
-    // Force a single non-recursive render for the detail panels
-    renderFocusedDetails();
+    // Render as full single-view for the focused deliberation
+    render();
 
     // Set timer to return to overview
     clearTimeout(focusTimer);
@@ -1387,13 +1404,16 @@ function focusOnDelib(delibID) {
 
 function zoomToOverview() {
     state.focusedDelibID = null;
-    updateCamera();
     // Clear focused highlight from all regions
     document.querySelectorAll('.multi-region.focused').forEach(r => r.classList.remove('focused'));
-    // Hide detail panels but keep scrubber (global timeline)
+    // Hide single-view elements, show multi-canvas
+    document.getElementById('agents')?.classList.add('hidden');
+    document.getElementById('connections')?.classList.add('hidden');
+    document.getElementById('center-panel')?.classList.add('hidden');
     document.getElementById('footer')?.classList.add('hidden');
     document.getElementById('analysis-bar')?.classList.add('hidden');
-    // Scrubber stays visible for global timeline navigation
+    document.getElementById('multi-canvas')?.classList.remove('hidden');
+    document.getElementById('main').className = 'multi-view';
     const topicEl = document.querySelector('.topic-label');
     if (topicEl) topicEl.textContent = `${Object.keys(state.deliberations).length} Deliberations`;
     const roundEl = document.getElementById('round-display');
