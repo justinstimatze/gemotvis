@@ -261,17 +261,56 @@ function buildTimelineEvents(ds) {
     }).sort((a, b) => new Date(a.time) - new Date(b.time));
 }
 
+// Build a global timeline from ALL deliberations (for multi-view replay)
+function buildGlobalTimeline(delibs) {
+    const events = [];
+    for (const [delibID, ds] of Object.entries(delibs)) {
+        const topic = ds.deliberation?.topic || delibID;
+        const shortTopic = topic.length > 30 ? topic.slice(0, 28) + '..' : topic;
+        const ops = ds.audit_log?.operations || [];
+        ops.forEach((op, i) => {
+            const method = op.method || '';
+            let type = 'other';
+            let action = method.replace('gemot/', '');
+            if (method.includes('submit_position')) {
+                type = 'position';
+                action = `${shortAgentID(op.agent_id || '')} submits position`;
+            } else if (method.includes('vote')) {
+                type = 'vote';
+                action = `${shortAgentID(op.agent_id || '')} votes`;
+            } else if (method.includes('analy')) {
+                type = 'analysis';
+                action = method.includes('complete') || method.includes('result') ? 'Analysis complete' : 'Analysis started';
+            }
+            events.push({
+                time: op.timestamp,
+                label: `${shortTopic}: ${action}`,
+                type,
+                delibID,
+                index: i,
+            });
+        });
+    }
+    return events.sort((a, b) => new Date(a.time) - new Date(b.time));
+}
+
 function renderScrubber(ds) {
     const bar = document.getElementById('scrubber-bar');
-    if (!bar || state.multiView) { bar?.classList.add('hidden'); return; }
+    if (!bar) return;
 
-    const allEvents = buildTimelineEvents(ds);
+    // In multi-view: build global timeline across all deliberations
+    // In single-view: build timeline for the active deliberation
+    let allEvents;
+    if (state.multiView || !ds) {
+        allEvents = buildGlobalTimeline(state.deliberations);
+    } else {
+        allEvents = buildTimelineEvents(ds);
+    }
     scrubber.events = allEvents;
 
     if (allEvents.length < 2) { bar.classList.add('hidden'); return; }
     bar.classList.remove('hidden');
 
-    // Update filter button label
     const filterBtn = document.getElementById('scrubber-filter');
     if (filterBtn) {
         filterBtn.textContent = scrubber.typeFilter ? scrubber.typeFilter.toUpperCase() : 'ALL';
@@ -307,11 +346,30 @@ function renderScrubber(ds) {
     updatePlayButton();
 }
 
-function scrubTo(index) {
+function scrubTo(index, fromPlay) {
     scrubber.enabled = true;
     scrubber.eventIndex = index;
-    state.cyclePaused = true; // pause demo cycling while scrubbing
-    render();
+    if (!fromPlay) state.cyclePaused = true;
+
+    // In multi-view: zoom to the event's deliberation and stop demo loop
+    if (state.multiView && scrubber.events[index]?.delibID) {
+        stopDemoLoop();
+        clearTimeout(focusTimer); // prevent auto-return to overview
+        const evt = scrubber.events[index];
+        state.focusedDelibID = evt.delibID;
+        updateCamera();
+        renderFocusedDetails();
+        // Update the scrubber label immediately
+        const label = document.getElementById('scrubber-label');
+        if (label) {
+            const t = new Date(evt.time);
+            const ts = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            label.textContent = `${ts} \u2014 ${evt.label}`;
+        }
+        updatePlayButton();
+    } else {
+        render();
+    }
 }
 
 function scrubToLive() {
@@ -326,15 +384,14 @@ function toggleScrubberPlay() {
 }
 
 function startScrubberPlay() {
-    if (scrubber.playTimer) clearInterval(scrubber.playTimer); // prevent double-interval
+    if (scrubber.playTimer) clearInterval(scrubber.playTimer);
     scrubber.playing = true;
     scrubber.enabled = true;
     if (scrubber.eventIndex == null) scrubber.eventIndex = 0;
     scrubber.playTimer = setInterval(() => {
         const next = (scrubber.eventIndex || 0) + 1;
         if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
-        scrubber.eventIndex = next;
-        render();
+        scrubTo(next, true); // fromPlay=true, don't pause cycling
     }, SCRUBBER_SPEEDS[scrubber.speedIdx]);
     updatePlayButton();
 }
@@ -498,7 +555,9 @@ function render() {
             topicEl.textContent = `${ids.length} Deliberations`;
             document.getElementById('footer')?.classList.add('hidden');
             document.getElementById('analysis-bar')?.classList.add('hidden');
-            document.getElementById('scrubber-bar')?.classList.add('hidden');
+            // Show scrubber even in overview (global timeline)
+            document.getElementById('scrubber-bar')?.classList.remove('hidden');
+            renderScrubber(null); // null = use global timeline
             // Clear round/template in overview
             const roundEl = document.getElementById('round-display');
             if (roundEl) roundEl.textContent = '';
@@ -1331,10 +1390,10 @@ function zoomToOverview() {
     updateCamera();
     // Clear focused highlight from all regions
     document.querySelectorAll('.multi-region.focused').forEach(r => r.classList.remove('focused'));
-    // Hide detail panels and update header (no render() call to avoid recursion)
+    // Hide detail panels but keep scrubber (global timeline)
     document.getElementById('footer')?.classList.add('hidden');
     document.getElementById('analysis-bar')?.classList.add('hidden');
-    document.getElementById('scrubber-bar')?.classList.add('hidden');
+    // Scrubber stays visible for global timeline navigation
     const topicEl = document.querySelector('.topic-label');
     if (topicEl) topicEl.textContent = `${Object.keys(state.deliberations).length} Deliberations`;
     const roundEl = document.getElementById('round-display');
@@ -1347,15 +1406,23 @@ function zoomToOverview() {
 function renderFocusedDetails() {
     const ds = state.focusedDelibID && state.deliberations[state.focusedDelibID];
     if (!ds) return;
+
+    // Apply scrubber time filter if active
+    let display = ds;
+    if (scrubber.enabled && scrubber.eventIndex != null) {
+        const evt = scrubber.events[scrubber.eventIndex];
+        if (evt?.time) display = filterToTime(ds, evt.time);
+    }
+
     document.getElementById('footer')?.classList.remove('hidden');
     document.getElementById('analysis-bar')?.classList.remove('hidden');
     document.getElementById('scrubber-bar')?.classList.remove('hidden');
-    renderHeader(ds);
-    renderAnalysisBar(ds);
-    renderCruxPanel(ds);
-    renderMetrics(ds);
-    renderAuditLog(ds);
-    renderScrubber(ds);
+    renderHeader(display);
+    renderAnalysisBar(display);
+    renderCruxPanel(display);
+    renderMetrics(display);
+    renderAuditLog(display);
+    renderScrubber(ds); // scrubber always gets full state for timeline dots
 }
 
 function updateCamera() {
