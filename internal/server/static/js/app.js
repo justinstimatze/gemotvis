@@ -1469,10 +1469,13 @@ function onActivity(delibID) {
     if (!state.multiView) return;
     state.lastActivity[delibID] = Date.now();
 
-    // Don't interrupt if user manually focused (click)
-    if (state.cyclePaused) return;
+    // Don't auto-focus if:
+    // - user is scrubbing the timeline
+    // - user manually paused (clicked a region)
+    // - we're in a live group (no demo cycle) — let user control navigation
+    if (state.cyclePaused || scrubber.enabled || state.cycleInterval === 0) return;
 
-    // Stop demo loop while we focus on real activity
+    // Only auto-focus in demo mode (ambient display)
     stopDemoLoop();
     focusOnDelib(delibID);
 }
