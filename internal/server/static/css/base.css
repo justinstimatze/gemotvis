@@ -1171,6 +1171,7 @@ footer {
     opacity: 0.1;
     color: var(--vis-text-dim);
     border: none;
+    transition: opacity 2s ease;
 }
 
 /* Graph edges: CSS div lines that transition smoothly with nodes */
@@ -1274,6 +1275,11 @@ footer {
 .graph-canvas:has(.graph-edge-active) .graph-node:not(.graph-node-active) {
     opacity: 0.45;
     transform: translate(-50%, -35%) scale(0.7) translateZ(-200px);
+}
+
+/* Fade out map when focused on a bilateral (positions no longer geographic) */
+.graph-canvas:has(.graph-edge-active) .world-map-bg {
+    opacity: 0 !important;
 }
 
 /* Inactive edges stay visible as structural context behind the chat panel */

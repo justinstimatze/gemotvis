@@ -2718,6 +2718,6 @@ body.boot-gastown .boot-text:nth-child(3) {
 }
 
 /* --- World map theming (inline SVG uses currentColor for strokes) --- */
-#screen.theme-minimal .world-map-bg { opacity: 0.15; color: #a3a3a3; }
-#screen.theme-magi .world-map-bg { opacity: 0.3; color: #ff8c00; }
-#screen.theme-gastown .world-map-bg { opacity: 0.2; color: #8b7355; }
+#screen.theme-minimal .world-map-bg { opacity: 0.12; color: #a3a3a3; }
+#screen.theme-magi .world-map-bg { opacity: 0.2; color: #ff8c00; }
+#screen.theme-gastown .world-map-bg { opacity: 0.15; color: #8b7355; }

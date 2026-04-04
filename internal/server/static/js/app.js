@@ -1804,10 +1804,11 @@ function renderGraphView(graph) {
                     svg.setAttribute('preserveAspectRatio', 'none');
                     svg.style.width = '100%';
                     svg.style.height = '100%';
+                    svg.setAttribute('style', 'stroke-linejoin:round;stroke-linecap:round');
                     svg.querySelectorAll('path').forEach(p => {
                         p.setAttribute('fill', 'none');
                         p.setAttribute('stroke', 'currentColor');
-                        p.setAttribute('stroke-width', '0.5');
+                        p.setAttribute('stroke-width', '0.3');
                     });
                 }
                 canvas.insertBefore(wrapper, canvas.firstChild);
