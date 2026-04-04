@@ -1336,16 +1336,19 @@ footer {
 
 .graph-node-name {
     display: block;
-    font-size: 12px;
+    font-size: 10px;
     letter-spacing: 1px;
     color: var(--vis-text);
     margin-top: 6px;
     text-transform: capitalize;
     font-family: var(--vis-font);
     font-weight: 600;
-    /* Float above edges */
     position: relative;
     z-index: 3;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     text-shadow: 0 0 6px var(--vis-bg), 0 0 12px var(--vis-bg);
 }
 

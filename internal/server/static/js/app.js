@@ -1536,7 +1536,7 @@ function polygonPosition(i, n) {
     }
     if (n === 3) {
         // Inverted triangle: two at top, one at bottom-center (chat in middle)
-        return [{ x: 12, y: 18 }, { x: 88, y: 18 }, { x: 50, y: 85 }][i] || { x: 50, y: 50 };
+        return [{ x: 12, y: 18 }, { x: 88, y: 18 }, { x: 50, y: 78 }][i] || { x: 50, y: 50 };
     }
     if (n === 4) {
         // Four corners (chat in center)
@@ -1945,24 +1945,15 @@ function renderGraphView(graph) {
     const ch = canvas.offsetHeight || 1;
     const canvasRect = canvas.getBoundingClientRect();
 
-    // For edge positioning, read actual icon center positions
+    // For edge positioning, use the computed node positions (posMap)
+    // instead of getBoundingClientRect which is distorted by 3D perspective
     const liveNodePos = {};
-    canvas.querySelectorAll('.graph-node').forEach(n => {
-        const icon = n.querySelector('.graph-node-icon');
-        if (icon) {
-            const ir = icon.getBoundingClientRect();
-            liveNodePos[n.dataset.agentId] = {
-                px: ir.left + ir.width / 2 - canvasRect.left,
-                py: ir.top + ir.height / 2 - canvasRect.top,
-            };
-        } else {
-            const r = n.getBoundingClientRect();
-            liveNodePos[n.dataset.agentId] = {
-                px: r.left + r.width / 2 - canvasRect.left,
-                py: r.top + r.height / 2 - canvasRect.top,
-            };
-        }
-    });
+    for (const [id, pos] of Object.entries(posMap)) {
+        liveNodePos[id] = {
+            px: pos.x / 100 * cw,
+            py: pos.y / 100 * ch,
+        };
+    }
 
     graph.edges.forEach(edge => {
         const rawDs = delibs[edge.delibID];
