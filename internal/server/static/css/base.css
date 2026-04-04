@@ -1186,9 +1186,9 @@ footer {
 }
 
 .graph-node-active .graph-node-icon {
-    width: 56px;
-    height: 56px;
-    font-size: 22px;
+    width: 72px;
+    height: 72px;
+    font-size: 26px;
 }
 
 .graph-node-active .graph-node-name {
@@ -1298,14 +1298,14 @@ footer {
     text-shadow: 0 0 4px var(--vis-bg);
 }
 
-/* Graph view: center panel — vertically centered between header and footer */
+/* Graph view: center panel — fill available height between header and footer */
 .graph-view #center-panel {
-    position: absolute;
+    position: absolute !important;
     z-index: 10;
-    left: 50%;
-    transform: translateX(-50%);
-    top: 4%;
-    bottom: 260px;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: 2% !important;
+    bottom: 258px !important; /* footer (220px) + scrubber (28px) + gap */
     max-width: 520px;
     min-width: 340px;
     overflow: hidden;

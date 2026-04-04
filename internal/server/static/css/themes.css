@@ -557,12 +557,12 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     transform: rotate(45deg);
     border: 2px solid #ff8c00;
     background: linear-gradient(135deg, #1a1200 0%, #0c0c0c 100%);
-    box-shadow: 0 0 12px rgba(255, 140, 0, 0.3), inset 0 0 8px rgba(255, 140, 0, 0.1);
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.4), 0 0 40px rgba(255, 140, 0, 0.15), inset 0 0 10px rgba(255, 140, 0, 0.15);
     font-family: 'Courier New', monospace;
     font-size: 18px;
     font-weight: bold;
     color: #ff8c00;
-    text-shadow: 0 0 6px rgba(255, 140, 0, 0.8);
+    text-shadow: 0 0 8px rgba(255, 140, 0, 0.9);
 }
 
 #screen.theme-magi .graph-node-icon > * {
@@ -576,9 +576,9 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 
 #screen.theme-magi .graph-node-active .graph-node-icon {
     border-color: #00ffff;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 12px rgba(0, 255, 255, 0.15);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), 0 0 60px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.2);
     color: #00ffff;
-    text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+    text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
 }
 
 #screen.theme-magi .graph-node-name {
@@ -701,7 +701,16 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     animation: chatFadeIn 0.4s ease-out;
 }
 
-#screen.theme-magi .chat-new .chat-text::after {
+#screen.theme-magi .chat-left.chat-new .chat-text::after {
+    content: '▊';
+    color: #ff8c00;
+    animation: cursorBlink 0.6s step-end infinite;
+    font-size: 12px;
+    margin-left: 1px;
+    text-shadow: 0 0 6px rgba(255, 140, 0, 0.8);
+}
+
+#screen.theme-magi .chat-right.chat-new .chat-text::after {
     content: '▊';
     color: #00ffff;
     animation: cursorBlink 0.6s step-end infinite;

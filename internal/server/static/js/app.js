@@ -1647,9 +1647,9 @@ function getGraphNodePositions(graph) {
 function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
     if (!activeAgentA || !activeAgentB) return basePositions;
 
-    // Active pair: left and right, vertically centered for the chat panel
-    const focusA = { x: 10, y: 30 };
-    const focusB = { x: 90, y: 30 };
+    // Active pair: left and right, vertically centered in the viewport
+    const focusA = { x: 8, y: 40 };
+    const focusB = { x: 92, y: 40 };
 
     return basePositions.map(n => {
         if (n.id === activeAgentA) return { ...n, x: focusA.x, y: focusA.y };
