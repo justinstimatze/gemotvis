@@ -2263,6 +2263,28 @@ loadConfig().then(() => {
             showLanding();
         }
         connect(); // start demo SSE in background either way
+
+        // In replay mode with multiple deliberations, auto-enable multi-view
+        // (the snapshot arrives via SSE; check after first event)
+        if (!forceMulti) {
+            const origHandler = eventSource?.onmessage;
+            if (eventSource) {
+                const origOnMessage = eventSource.onmessage;
+                eventSource.onmessage = (e) => {
+                    if (origOnMessage) origOnMessage(e);
+                    // After first snapshot, check if we should enable multi-view
+                    if (state.mode === 'replay' && Object.keys(state.deliberations).length > 2 && !state.multiView) {
+                        state.multiView = true;
+                        // Dismiss landing if showing
+                        document.getElementById('landing-overlay')?.remove();
+                        document.querySelector('header')?.classList.remove('hidden');
+                        render();
+                    }
+                    // Restore original handler
+                    eventSource.onmessage = origOnMessage;
+                };
+            }
+        }
     }
 });
 
