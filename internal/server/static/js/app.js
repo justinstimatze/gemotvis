@@ -586,8 +586,9 @@ function render() {
     const delibs = state.deliberations;
     const ids = Object.keys(delibs);
 
-    // Multi-view: render all deliberations as a unified graph
-    if (state.multiView && ids.length > 1) {
+    // Graph mode: default for replay/demo, optional for live
+    const useGraphMode = state.multiView || state.mode === 'demo' || state.mode === 'replay';
+    if (useGraphMode && ids.length >= 1) {
         document.getElementById('delib-nav')?.classList.add('hidden');
         document.getElementById('empty-state')?.classList.add('hidden');
 
@@ -1596,14 +1597,26 @@ function buildGraphFromDelibs(delibs) {
         // Single-agent deliberations: agent appears as an isolated node
     }
 
-    // Find a group deliberation whose agents are a superset of bilateral agents
-    const bilateralAgents = new Set();
-    edges.forEach(e => { bilateralAgents.add(e.a); bilateralAgents.add(e.b); });
-    for (const g of groups) {
-        const gSet = new Set(g.agents);
-        if ([...bilateralAgents].every(a => gSet.has(a))) {
-            groupDelibID = g.delibID;
-            break;
+    // For single deliberations with 3+ agents and no bilaterals,
+    // create pairwise edges between all agents (the graph IS the deliberation)
+    if (edges.length === 0 && groups.length > 0) {
+        const g = groups[0];
+        groupDelibID = g.delibID;
+        for (let i = 0; i < g.agents.length; i++) {
+            for (let j = i + 1; j < g.agents.length; j++) {
+                edges.push({ a: g.agents[i], b: g.agents[j], delibID: g.delibID });
+            }
+        }
+    } else {
+        // Find a group deliberation whose agents are a superset of bilateral agents
+        const bilateralAgents = new Set();
+        edges.forEach(e => { bilateralAgents.add(e.a); bilateralAgents.add(e.b); });
+        for (const g of groups) {
+            const gSet = new Set(g.agents);
+            if ([...bilateralAgents].every(a => gSet.has(a))) {
+                groupDelibID = g.delibID;
+                break;
+            }
         }
     }
 
@@ -1877,12 +1890,19 @@ function renderGraphView(graph) {
 
     // Compute node positions: base layout, then shift if an edge is focused
     const basePositions = getGraphNodePositions(graph);
+
+    // Check if this is a single-delib graph (all edges share one delibID)
+    const uniqueDelibIDs = new Set(graph.edges.map(e => e.delibID));
+    const isSingleDelib = uniqueDelibIDs.size <= 1;
+
+    // For single-delib: no bilateral focus, keep overview positions
+    // For multi-delib: focus on the active bilateral
     let activeAgentA = null, activeAgentB = null;
-    if (graphState.activeEdge) {
+    if (graphState.activeEdge && !isSingleDelib) {
         const activeEdge = graph.edges.find(e => e.delibID === graphState.activeEdge);
         if (activeEdge) { activeAgentA = activeEdge.a; activeAgentB = activeEdge.b; }
     }
-    const nodePositions = graphState.activeEdge
+    const nodePositions = (activeAgentA && activeAgentB)
         ? computeFocusedLayout(basePositions, activeAgentA, activeAgentB)
         : basePositions;
     const posMap = {};
@@ -1933,7 +1953,7 @@ function renderGraphView(graph) {
         if (isActive || isScrubTarget) edgeClass += ' graph-edge-active';
         if (posCount === 0) edgeClass += ' graph-edge-empty';
 
-        const edgeId = `edge-${edge.delibID}`;
+        const edgeId = isSingleDelib ? `edge-${edge.a}-${edge.b}` : `edge-${edge.delibID}`;
         let edgeEl = canvas.querySelector(`[data-edge-id="${edgeId}"]`);
         if (!edgeEl) {
             edgeEl = el('div', { className: edgeClass, dataset: { edgeId: edgeId, delibId: edge.delibID } });
@@ -1983,8 +2003,11 @@ function renderGraphView(graph) {
             }
         });
 
-        const isEdgeAgent = graphState.activeEdge && graph.edges.some(e =>
-            e.delibID === graphState.activeEdge && (e.a === agentID || e.b === agentID));
+        // In single-delib mode, all agents are active participants
+        const isEdgeAgent = isSingleDelib
+            ? (graphState.activeEdge != null)
+            : (graphState.activeEdge && graph.edges.some(e =>
+                e.delibID === graphState.activeEdge && (e.a === agentID || e.b === agentID)));
 
         // Try to find existing node to update in place (smooth transition)
         let node = canvas.querySelector(`.graph-node[data-agent-id="${agentID}"]`);
@@ -2016,26 +2039,33 @@ function renderGraphView(graph) {
         }
     });
 
-    // Center panel: show for the active deliberation (bilateral or group)
+    // Center panel: show for the active deliberation
     const centerPanel = document.getElementById('center-panel');
     const topicEl = document.querySelector('.topic-label');
 
-    if (graphState.activeEdge && delibs[graphState.activeEdge]) {
-        const rawDs = delibs[graphState.activeEdge];
+    // Determine which delib to show in the center panel
+    const activeDelibID = graphState.activeEdge || (isSingleDelib ? graph.groupDelibID : null);
+
+    if (activeDelibID && delibs[activeDelibID]) {
+        const rawDs = delibs[activeDelibID];
         const ds = scrubTime ? filterToTime(rawDs, scrubTime) : rawDs;
 
         const hasContent = (ds.positions || []).length > 0 || ds.analysis;
-        if (!hasContent) {
+        if (!hasContent && !isSingleDelib) {
             centerPanel.classList.add('hidden');
         }
         renderCenterPanel(ds);
 
         if (topicEl) {
-            const rawAgents = (rawDs.agents || []).map(a => shortAgentID(a.id));
-            if (rawAgents.length <= 3) {
-                topicEl.textContent = rawAgents.join(' \u2194 ');
+            if (isSingleDelib) {
+                topicEl.textContent = rawDs.deliberation?.topic || 'Deliberation';
             } else {
-                topicEl.textContent = rawDs.deliberation?.topic || 'Group Deliberation';
+                const rawAgents = (rawDs.agents || []).map(a => shortAgentID(a.id));
+                if (rawAgents.length <= 3) {
+                    topicEl.textContent = rawAgents.join(' \u2194 ');
+                } else {
+                    topicEl.textContent = rawDs.deliberation?.topic || 'Group Deliberation';
+                }
             }
         }
 
