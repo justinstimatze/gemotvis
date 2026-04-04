@@ -1831,8 +1831,8 @@ function renderGraphView(graph) {
             // Update stats
             const statsEl = node.querySelector('.graph-node-stats');
             if (activeGemots > 0) {
-                if (statsEl) statsEl.textContent = `${totalMessages} msg · ${activeGemots} gemots`;
-                else node.appendChild(el('div', { className: 'graph-node-stats' }, `${totalMessages} msg · ${activeGemots} gemots`));
+                if (statsEl) statsEl.textContent = `${totalMessages} msg · ${activeGemots} gemot${activeGemots !== 1 ? 's' : ''}`;
+                else node.appendChild(el('div', { className: 'graph-node-stats' }, `${totalMessages} msg · ${activeGemots} gemot${activeGemots !== 1 ? 's' : ''}`));
             } else if (statsEl) {
                 statsEl.remove();
             }
@@ -1845,7 +1845,7 @@ function renderGraphView(graph) {
             },
                 el('div', { className: 'graph-node-icon' }, name.charAt(0).toUpperCase()),
                 el('div', { className: 'graph-node-name' }, name),
-                activeGemots > 0 ? el('div', { className: 'graph-node-stats' }, `${totalMessages} msg · ${activeGemots} gemots`) : null,
+                activeGemots > 0 ? el('div', { className: 'graph-node-stats' }, `${totalMessages} msg · ${activeGemots} gemot${activeGemots !== 1 ? 's' : ''}`) : null,
             );
             canvas.appendChild(node);
         }

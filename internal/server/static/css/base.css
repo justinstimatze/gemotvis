@@ -1228,7 +1228,7 @@ footer {
 
 /* When an edge is active, inactive nodes recede in 3D perspective */
 .graph-canvas:has(.graph-edge-active) .graph-node:not(.graph-node-active) {
-    opacity: 0.35;
+    opacity: 0.45;
     transform: translate(-50%, -35%) scale(0.7) translateZ(-200px);
 }
 
