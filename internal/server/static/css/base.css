@@ -1597,6 +1597,7 @@ footer {
     .graph-node-icon { width: 32px; height: 32px; font-size: 14px; }
     .graph-node-name { font-size: 9px; letter-spacing: 0.5px; }
     .chat-bubble { font-size: 12px; max-width: 95%; }
+    .graph-view #center-panel { left: 2%; right: 2%; top: 12%; }
 }
 
 /* ===== ACCESSIBILITY ===== */
