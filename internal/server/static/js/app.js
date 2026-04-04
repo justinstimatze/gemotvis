@@ -1569,51 +1569,74 @@ let graphState = {
     hoverEdge: null,     // delibID being hovered
 };
 
-// Lat/lon to percentage position using equirectangular projection.
-// Returns { x, y } as percentages (0-100) of the canvas.
-function latLonToXY(lat, lon) {
-    const x = ((lon + 180) / 360) * 100;
-    const y = ((90 - lat) / 180) * 100;
-    // Add padding so nodes don't sit at the very edges
-    const padX = 5, padY = 8;
-    return {
-        x: padX + x * (100 - 2 * padX) / 100,
-        y: padY + y * (100 - 2 * padY) / 100,
+// Lat/lon projection with auto-zoom to fit agent bounding box.
+// Call computeLatLonBounds first to set the viewport, then latLonToXY to project.
+let _latLonBounds = null;
+
+function computeLatLonBounds(agents) {
+    let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+    agents.forEach(a => {
+        if (a.lat != null && a.lon != null) {
+            minLat = Math.min(minLat, a.lat);
+            maxLat = Math.max(maxLat, a.lat);
+            minLon = Math.min(minLon, a.lon);
+            maxLon = Math.max(maxLon, a.lon);
+        }
+    });
+    // Add 20% padding around the bounding box
+    const latRange = maxLat - minLat || 10;
+    const lonRange = maxLon - minLon || 10;
+    const pad = 0.25;
+    _latLonBounds = {
+        minLat: minLat - latRange * pad,
+        maxLat: maxLat + latRange * pad,
+        minLon: minLon - lonRange * pad,
+        maxLon: maxLon + lonRange * pad,
     };
 }
 
-// Fixed positions for 7 Diplomacy powers (roughly matches a Europe map layout)
-const DIPLOMACY_POSITIONS = {
-    'england-agent':  { x: 22, y: 16 },
-    'france-agent':   { x: 24, y: 52 },
-    'germany-agent':  { x: 44, y: 24 },
-    'italy-agent':    { x: 46, y: 64 },
-    'austria-agent':  { x: 60, y: 42 },
-    'russia-agent':   { x: 80, y: 24 },
-    'turkey-agent':   { x: 82, y: 60 },
-};
+function latLonToXY(lat, lon) {
+    if (!_latLonBounds) {
+        // Fallback to full world if bounds not computed
+        const x = ((lon + 180) / 360) * 100;
+        const y = ((90 - lat) / 180) * 100;
+        return { x, y };
+    }
+    const b = _latLonBounds;
+    const x = ((lon - b.minLon) / (b.maxLon - b.minLon)) * 100;
+    const y = ((b.maxLat - lat) / (b.maxLat - b.minLat)) * 100;
+    // Clamp and add margin
+    const margin = 8;
+    return {
+        x: margin + Math.max(0, Math.min(100, x)) * (100 - 2 * margin) / 100,
+        y: margin + Math.max(0, Math.min(100, y)) * (100 - 2 * margin) / 100,
+    };
+}
+
 
 function getGraphNodePositions(graph) {
     const nodes = graph.nodes;
     const edges = graph.edges;
 
-    // Check if all nodes match known Diplomacy powers
-    const allDiplomacy = nodes.every(n => DIPLOMACY_POSITIONS[n]);
-    if (allDiplomacy) return nodes.map(n => ({ id: n, ...DIPLOMACY_POSITIONS[n] }));
-
-    // Check if agents have lat/lon — collect from ALL delibs, project to world map
+    // Check if agents have lat/lon — project to world map (takes priority)
     const delibs = state.deliberations;
-    const latLonMap = {};
+    const allAgentsWithLatLon = [];
     for (const ds of Object.values(delibs)) {
         (ds.agents || []).forEach(a => {
-            if (a.lat != null && a.lon != null && !latLonMap[a.id]) {
-                latLonMap[a.id] = latLonToXY(a.lat, a.lon);
-            }
+            if (a.lat != null && a.lon != null) allAgentsWithLatLon.push(a);
         });
     }
-    if (nodes.every(n => latLonMap[n])) {
-        state._showWorldMap = true;
-        return nodes.map(n => ({ id: n, ...latLonMap[n] }));
+    if (allAgentsWithLatLon.length > 0) {
+        // Compute bounding box for auto-zoom, then project each agent
+        computeLatLonBounds(allAgentsWithLatLon);
+        const latLonMap = {};
+        allAgentsWithLatLon.forEach(a => {
+            if (!latLonMap[a.id]) latLonMap[a.id] = latLonToXY(a.lat, a.lon);
+        });
+        if (nodes.every(n => latLonMap[n])) {
+            state._showWorldMap = true;
+            return nodes.map(n => ({ id: n, ...latLonMap[n] }));
+        }
     }
     state._showWorldMap = false;
 
@@ -1758,14 +1781,12 @@ function renderGraphView(graph) {
     }
 
     // Show world map background when agents have lat/lon
-    if (state._showWorldMap && !canvas.querySelector('.world-map-bg')) {
-        const mapEl = el('img', {
-            className: 'world-map-bg',
-            src: '/world.svg',
-            'aria-hidden': 'true',
-        });
-        canvas.insertBefore(mapEl, canvas.firstChild);
-    } else if (!state._showWorldMap) {
+    if (state._showWorldMap) {
+        if (!canvas.querySelector('.world-map-bg')) {
+            const mapEl = el('img', { className: 'world-map-bg', src: '/world.svg', 'aria-hidden': 'true' });
+            canvas.insertBefore(mapEl, canvas.firstChild);
+        }
+    } else {
         canvas.querySelector('.world-map-bg')?.remove();
     }
 
