@@ -2224,6 +2224,18 @@ if (activeTheme !== 'magi') {
     if (centerHeader) centerHeader.textContent = activeTheme === 'gastown' ? 'DISPATCH' : 'ANALYSIS';
 }
 
+// Theme switcher in header
+const themeSwitcher = document.getElementById('theme-switcher');
+if (themeSwitcher) {
+    themeSwitcher.value = activeTheme;
+    themeSwitcher.addEventListener('change', () => {
+        const url = new URL(window.location);
+        if (themeSwitcher.value === 'minimal') url.searchParams.delete('theme');
+        else url.searchParams.set('theme', themeSwitcher.value);
+        window.location.href = url.toString();
+    });
+}
+
 // ===== Init =====
 
 // Remove boot overlay after animation completes
