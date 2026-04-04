@@ -1369,9 +1369,33 @@ function shortAgentID(id) {
 }
 
 // Render text with agent names highlighted (bold mentions).
-// Returns a DocumentFragment with text nodes and strong spans.
-function renderTextWithMentions(text, agentIDs) {
-    const names = agentIDs.map(id => shortAgentID(id)).filter(n => n.length > 2);
+// Uses ALL known agents across all deliberations, not just the current bilateral.
+function renderTextWithMentions(text, _agentIDs) {
+    // Collect all unique agent names + common variants from every deliberation
+    const allNames = new Set();
+    for (const ds of Object.values(state.deliberations)) {
+        (ds.agents || []).forEach(a => {
+            const name = shortAgentID(a.id);
+            if (name.length > 2) {
+                allNames.add(name);
+                // Generate adjective/demonym variants
+                const lower = name.toLowerCase();
+                if (lower.endsWith('a')) allNames.add(lower + 'n');        // austria → austrian
+                else if (lower.endsWith('y')) allNames.add(lower.slice(0, -1) + 'ish'); // turkey → turkish
+                else if (lower.endsWith('e')) allNames.add(lower.slice(0, -1) + 'ish'); // france → french... no
+                else allNames.add(lower + 'ish');  // england → english... close enough
+                // Common specific overrides
+                const demonyms = {
+                    france: 'french', russia: 'russian', england: 'english',
+                    turkey: 'turkish', germany: 'german', italy: 'italian',
+                    austria: 'austrian', spain: 'spanish', china: 'chinese',
+                    japan: 'japanese', brazil: 'brazilian', india: 'indian',
+                };
+                if (demonyms[lower]) allNames.add(demonyms[lower]);
+            }
+        });
+    }
+    const names = [...allNames];
     if (names.length === 0) return document.createTextNode(text);
 
     const escaped = names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
