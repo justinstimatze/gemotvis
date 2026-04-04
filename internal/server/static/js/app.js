@@ -1800,8 +1800,9 @@ function renderGraphView(graph) {
                     svg.style.width = '100%';
                     svg.style.height = '100%';
                     svg.querySelectorAll('path').forEach(p => {
-                        p.setAttribute('fill', 'currentColor');
-                        p.setAttribute('stroke', 'none');
+                        p.setAttribute('fill', 'none');
+                        p.setAttribute('stroke', 'currentColor');
+                        p.setAttribute('stroke-width', '0.5');
                     });
                 }
                 canvas.insertBefore(wrapper, canvas.firstChild);
