@@ -9,5 +9,6 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /gemotvis /gemotvis
 COPY testdata/v9-diplomacy.json /data/v9-diplomacy.json
+COPY testdata/hermes-code-review.json /data/hermes-code-review.json
 EXPOSE 9090
-ENTRYPOINT ["/gemotvis", "replay", "/data/v9-diplomacy.json"]
+ENTRYPOINT ["/gemotvis", "replay", "/data/v9-diplomacy.json", "/data/hermes-code-review.json"]

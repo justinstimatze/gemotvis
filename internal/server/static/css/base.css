@@ -534,11 +534,12 @@ header {
     border: 1px solid var(--vis-amber);
     min-width: 240px;
     max-width: 340px;
-    z-index: 100;
+    z-index: 9999;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s;
     text-transform: none;
+    transform: translateX(-50%) translateZ(100px); /* pop above everything in 3D */
 }
 
 .agent-node:hover > .agent-tooltip {

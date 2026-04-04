@@ -2374,12 +2374,23 @@ loadConfig().then(() => {
         }).catch(() => showLoginForm());
     } else {
         if (forceMulti) state.multiView = true;
-        // Show landing page on root demo, or connect directly if ?demo param
-        const isExplicitDemo = new URLSearchParams(window.location.search).has('demo');
-        if (!isExplicitDemo && window.location.pathname === '/') {
-            showLanding();
+
+        // Switch dataset if ?data= param is present
+        const dataParam = new URLSearchParams(window.location.search).get('data');
+        const afterSwitch = () => {
+            const isExplicitDemo = new URLSearchParams(window.location.search).has('demo');
+            if (!isExplicitDemo && window.location.pathname === '/') {
+                showLanding();
+            }
+            connect();
+        };
+        if (dataParam) {
+            fetch(`/api/switch?data=${encodeURIComponent(dataParam)}`, { method: 'POST' })
+                .then(() => afterSwitch())
+                .catch(() => afterSwitch());
+        } else {
+            afterSwitch();
         }
-        connect(); // start demo SSE in background either way
     }
 });
 
@@ -2431,6 +2442,22 @@ function showLanding() {
         }
     });
 
+    // Dataset selector — populated from /api/datasets
+    const dataSelect = document.createElement('select');
+    dataSelect.className = 'landing-select';
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = 'Default demo';
+    dataSelect.appendChild(defaultOpt);
+    fetch('/api/datasets').then(r => r.json()).then(info => {
+        (info.datasets || []).forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            dataSelect.appendChild(opt);
+        });
+    }).catch(() => {});
+
     const demoBtn = el('button', {
         className: 'landing-go-btn landing-demo-btn',
         onclick: () => {
@@ -2440,6 +2467,7 @@ function showLanding() {
             else url.searchParams.set('theme', theme);
             url.searchParams.set('demo', '1');
             url.searchParams.set('multi', 'true');
+            if (dataSelect.value) url.searchParams.set('data', dataSelect.value);
             window.location.href = url.toString();
         },
     }, 'Start Demo');
@@ -2450,7 +2478,7 @@ function showLanding() {
             el('div', { className: 'landing-subtitle' }, 'Deliberation Visualizer'),
             el('div', { className: 'landing-section' },
                 el('div', { className: 'landing-section-label' }, 'Try the demo'),
-                el('div', { className: 'landing-demo-row' }, themeSelect, demoBtn),
+                el('div', { className: 'landing-demo-row' }, dataSelect, themeSelect, demoBtn),
                 themePreview,
             ),
             el('div', { className: 'landing-section' },

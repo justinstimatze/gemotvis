@@ -118,34 +118,55 @@ func cmdReplay() {
 	fs.Parse(os.Args[1:])
 
 	if fs.NArg() < 1 {
-		log.Fatal("usage: gemotvis replay <file.json | https://...>")
-	}
-	source := fs.Arg(0)
-
-	// Load snapshot from file or URL
-	var data []byte
-	var err error
-	if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") {
-		data, err = fetchURL(source)
-	} else {
-		data, err = os.ReadFile(source)
-	}
-	if err != nil {
-		log.Fatalf("load snapshot: %v", err)
+		log.Fatal("usage: gemotvis replay <file.json ...>")
 	}
 
-	var snapshot poller.Snapshot
-	if err := json.Unmarshal(data, &snapshot); err != nil {
-		log.Fatalf("parse snapshot: %v", err)
+	// Load all specified files as named datasets
+	datasets := make(map[string]*poller.Snapshot)
+	var firstName string
+	for _, source := range fs.Args() {
+		var data []byte
+		var err error
+		if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") {
+			data, err = fetchURL(source)
+		} else {
+			data, err = os.ReadFile(source)
+		}
+		if err != nil {
+			log.Fatalf("load snapshot %s: %v", source, err)
+		}
+
+		var snapshot poller.Snapshot
+		if err := json.Unmarshal(data, &snapshot); err != nil {
+			log.Fatalf("parse snapshot %s: %v", source, err)
+		}
+		if len(snapshot.Deliberations) == 0 {
+			log.Printf("warning: %s contains no deliberations, skipping", source)
+			continue
+		}
+
+		// Derive name from filename: "testdata/v9-diplomacy.json" -> "diplomacy"
+		name := source
+		if idx := strings.LastIndex(name, "/"); idx >= 0 {
+			name = name[idx+1:]
+		}
+		name = strings.TrimSuffix(name, ".json")
+		name = strings.TrimPrefix(name, "v9-")
+		name = strings.TrimPrefix(name, "hermes-")
+
+		datasets[name] = &snapshot
+		if firstName == "" {
+			firstName = name
+		}
+		log.Printf("  loaded %s: %d deliberation(s)", name, len(snapshot.Deliberations))
 	}
 
-	n := len(snapshot.Deliberations)
-	if n == 0 {
-		log.Fatal("snapshot contains no deliberations")
+	if len(datasets) == 0 {
+		log.Fatal("no valid snapshots loaded")
 	}
 
-	s := server.NewReplay(&snapshot)
-	log.Printf("gemotvis replay on %s (%d deliberation(s) from %s)", *addr, n, source)
+	s := server.NewReplayMulti(datasets, firstName)
+	log.Printf("gemotvis replay on %s (%d dataset(s))", *addr, len(datasets))
 	serve(*addr, s, s)
 }
 

@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -31,6 +32,8 @@ type Server struct {
 	dashboards    *dashboardManager  // user dashboard sessions (nil if no gemot URL)
 	groups        *groupManager      // shared group viewing sessions (nil if no service key)
 	gemotURL      string             // gemot instance URL (exposed to frontend for direct SSE)
+	datasets      map[string]*poller.Snapshot // named datasets for multi-replay
+	defaultData   string                      // default dataset name
 }
 
 // New creates a server for live monitoring.
@@ -72,6 +75,19 @@ func NewReplay(snapshot *poller.Snapshot) *Server {
 	return s
 }
 
+// NewReplayMulti creates a server with multiple named datasets.
+// The ?data= URL parameter selects which dataset to serve.
+func NewReplayMulti(datasets map[string]*poller.Snapshot, defaultName string) *Server {
+	s := &Server{
+		mux:         http.NewServeMux(),
+		snapshot:     datasets[defaultName],
+		datasets:     datasets,
+		defaultData:  defaultName,
+	}
+	s.routes()
+	return s
+}
+
 // Close cleans up all manager goroutines and sessions.
 func (s *Server) Close() {
 	if s.watches != nil {
@@ -98,6 +114,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/state", s.handleState)
 	s.mux.HandleFunc("GET /api/events", s.handleEvents)
 	s.mux.HandleFunc("GET /api/config", s.handleConfig)
+	s.mux.HandleFunc("GET /api/datasets", s.handleDatasets)
+	s.mux.HandleFunc("POST /api/switch", s.handleSwitch)
 
 	// Dashboard routes (API key session auth)
 	s.mux.HandleFunc("POST /api/session", s.handleSessionCreate)
@@ -158,6 +176,43 @@ func (s *Server) getSnapshot() *poller.Snapshot {
 func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(s.getSnapshot()) //nolint:errcheck
+}
+
+func (s *Server) handleDatasets(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if s.datasets == nil {
+		json.NewEncoder(w).Encode(map[string]any{"datasets": []string{}, "active": ""}) //nolint:errcheck
+		return
+	}
+	names := make([]string, 0, len(s.datasets))
+	for name := range s.datasets {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	active := s.defaultData
+	for name, snap := range s.datasets {
+		if snap == s.snapshot {
+			active = name
+			break
+		}
+	}
+	json.NewEncoder(w).Encode(map[string]any{"datasets": names, "active": active}) //nolint:errcheck
+}
+
+func (s *Server) handleSwitch(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("data")
+	if s.datasets == nil || name == "" {
+		http.Error(w, "no datasets", http.StatusBadRequest)
+		return
+	}
+	snap, ok := s.datasets[name]
+	if !ok {
+		http.Error(w, "unknown dataset: "+name, http.StatusNotFound)
+		return
+	}
+	s.snapshot = snap
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "active": name}) //nolint:errcheck
 }
 
 // handleConfig returns client-side configuration (cycle interval, mode).
