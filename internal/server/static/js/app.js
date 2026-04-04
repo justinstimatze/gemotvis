@@ -1102,19 +1102,27 @@ function renderCenterPanel(ds) {
             renderCenterPanel._thread = thread;
         }
 
-        // Remove previous "chat-new" class and end marker
-        thread.querySelector('.chat-new')?.classList.remove('chat-new');
+        // Cancel any in-progress typing and fill previous bubbles with full text
+        if (typingTimer) {
+            clearInterval(typingTimer);
+            typingTimer = null;
+        }
+
+        // Rebuild ALL bubbles on every position change — ensures old messages
+        // always have their full text, even if typing was interrupted
+        while (thread.firstChild) thread.removeChild(thread.firstChild);
         content.querySelector('.chat-end-marker')?.remove();
 
-        // Only render NEW positions (after prevPosCount)
-        const newPositions = positions.slice(prevPosCount);
-        newPositions.forEach((p, idx) => {
+        const allPositions = positions;
+        allPositions.forEach((p, idx) => {
             const agentIdx = agentIDs.indexOf(p.agent_id);
-            const isLeft = agentIdx % 2 === 0; // alternate: even=left, odd=right
-            const isNewest = (prevPosCount + idx) === positions.length - 1;
+            const isLeft = agentIdx % 2 === 0;
+            const isNewest = idx === positions.length - 1;
+            const isNewlyAdded = idx >= prevPosCount;
 
             const textNode = el('div', { className: 'chat-text' });
-            if (!isNewest || !scrubber.playing) {
+            const shouldType = isNewest && isNewlyAdded && scrubber.playing;
+            if (!shouldType) {
                 const text = p.content;
                 const paragraphs = text.split(/\n\n+/);
                 if (paragraphs.length > 1) {
@@ -1131,14 +1139,14 @@ function renderCenterPanel(ds) {
             }
 
             const bubble = el('div', {
-                className: `chat-bubble ${isLeft ? 'chat-left' : 'chat-right'} ${isNewest ? 'chat-new' : ''}`,
+                className: `chat-bubble ${isLeft ? 'chat-left' : 'chat-right'} ${shouldType ? 'chat-new' : ''}`,
             },
                 el('div', { className: 'chat-name' }, shortAgentID(p.agent_id)),
                 textNode,
             );
             thread.appendChild(bubble);
 
-            if (isNewest && scrubber.playing) {
+            if (shouldType) {
                 requestAnimationFrame(() => typeReveal(textNode, p.content));
             }
         });
@@ -1492,15 +1500,16 @@ function typeReveal(textEl, fullText) {
     textEl.textContent = '';
     const panel = textEl.closest('.panel-content');
     const speed = Math.max(15, Math.min(40, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7 / words.length));
+    // Check if user has scrolled up BEFORE typing starts — respect that throughout
+    const userScrolledUp = panel && (panel.scrollHeight - panel.scrollTop - panel.clientHeight > 100);
     typingTimer = setInterval(() => {
         shown++;
         const partial = words.slice(0, shown).join('');
         while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
         textEl.appendChild(renderTextWithMentions(partial, []));
-        // Only auto-scroll if user is near the bottom (within 50px)
-        if (panel) {
-            const atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 50;
-            if (atBottom) panel.scrollTop = panel.scrollHeight;
+        // Always scroll during typing unless user had scrolled up before this message
+        if (panel && !userScrolledUp) {
+            panel.scrollTop = panel.scrollHeight;
         }
         if (shown >= words.length) {
             clearInterval(typingTimer);

@@ -1368,7 +1368,7 @@ footer {
     left: 50% !important;
     transform: translateX(-50%) translateZ(50px) !important;
     top: 1% !important;
-    bottom: 10px !important; /* just above footer+scrubber, they have their own z-index */
+    bottom: 30% !important; /* leave room for bottom-positioned agents */
     max-width: 480px !important;
     min-width: 320px;
     max-height: none !important; /* override base .center-panel max-height: 200px */
