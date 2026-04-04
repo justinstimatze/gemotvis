@@ -651,21 +651,29 @@ function render() {
             }
         }
 
-        renderGraphView(graph);
-
-        if (!scrubber.playing && !scrubber.autoplayStarted && scrubber.events.length > 2) {
+        // Before first render: set scrubber to beginning so we don't flash the full state
+        if (!scrubber.autoplayStarted && !scrubber.playing && scrubber.events.length > 2) {
             scrubber.autoplayStarted = true;
+            scrubber.enabled = true;
+            scrubber.eventIndex = 0;
 
             // Restore deep link position if ?t= param exists
             const tParam = new URLSearchParams(window.location.search).get('t');
             if (tParam != null) {
-                const idx = Math.min(parseInt(tParam, 10) || 0, scrubber.events.length - 1);
-                scrubTo(idx, true);
+                scrubber.eventIndex = Math.min(parseInt(tParam, 10) || 0, scrubber.events.length - 1);
+            }
+        }
+
+        renderGraphView(graph);
+
+        // Start autoplay after first render
+        if (scrubber.autoplayStarted && !scrubber.playing) {
+            const tParam = new URLSearchParams(window.location.search).get('t');
+            if (tParam != null) {
                 startScrubberPlay();
                 return;
             }
 
-            // Show a "beginning" indicator before autoplay launches
             const gc = document.getElementById('graph-canvas');
             if (gc) {
                 let readyEl = gc.querySelector('.graph-ready-indicator');
@@ -680,10 +688,7 @@ function render() {
                     gc.appendChild(readyEl);
                 }
 
-                // Start playback after a pause, keep indicator visible well into playback
-                setTimeout(() => {
-                    startScrubberPlay();
-                }, 3000);
+                setTimeout(() => { startScrubberPlay(); }, 3000);
                 setTimeout(() => {
                     if (readyEl.isConnected) readyEl.classList.add('fading');
                     setTimeout(() => { if (readyEl.isConnected) readyEl.remove(); }, 1200);
@@ -1515,10 +1520,23 @@ function formatTime(ts) {
 }
 
 function polygonPosition(i, n) {
+    // For graph view, use wide layouts that leave room for the center panel
+    if (n === 2) {
+        // Bilateral: left and right
+        return [{ x: 12, y: 40 }, { x: 88, y: 40 }][i] || { x: 50, y: 50 };
+    }
+    if (n === 3) {
+        // Inverted triangle: two at top, one at bottom-center (chat in middle)
+        return [{ x: 12, y: 18 }, { x: 88, y: 18 }, { x: 50, y: 85 }][i] || { x: 50, y: 50 };
+    }
+    if (n === 4) {
+        // Four corners (chat in center)
+        return [{ x: 12, y: 15 }, { x: 88, y: 15 }, { x: 12, y: 80 }, { x: 88, y: 80 }][i] || { x: 50, y: 50 };
+    }
+
     const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-    // Scale radius with agent count to reduce overlap
-    const rx = n <= 4 ? 30 : n <= 5 ? 34 : 38;
-    const ry = n <= 4 ? 28 : n <= 5 ? 32 : 36;
+    const rx = n <= 4 ? 38 : n <= 5 ? 40 : 42;
+    const ry = n <= 4 ? 35 : n <= 5 ? 38 : 40;
     return {
         x: 50 + rx * Math.cos(angle),
         y: 46 + ry * Math.sin(angle),
