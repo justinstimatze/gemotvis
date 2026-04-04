@@ -1641,51 +1641,23 @@ function getGraphNodePositions(graph) {
     return result;
 }
 
-// Compute focused layout: active pair anchored left/right at a comfortable height,
-// rest of graph keeps its horizontal positions but shifts upward off-screen.
-// The graph stays connected — edges follow the nodes — creating a sense of the
-// full network reconfiguring with the active edge pulled into view.
+// Compute focused layout: active pair left/right at vertical center,
+// inactive nodes stay near their original positions — CSS 3D perspective
+// handles the visual depth (translateZ pushes them behind the active pair).
 function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
     if (!activeAgentA || !activeAgentB) return basePositions;
 
-    // Active pair: anchored with room above for graph remnants to peek in
-    const anchorY = 22;
-    const focusA = { x: 12, y: anchorY };
-    const focusB = { x: 88, y: anchorY };
+    // Active pair: left and right, vertically centered for the chat panel
+    const focusA = { x: 10, y: 30 };
+    const focusB = { x: 90, y: 30 };
 
-    const baseA = basePositions.find(n => n.id === activeAgentA);
-    const baseB = basePositions.find(n => n.id === activeAgentB);
-    if (!baseA || !baseB) return basePositions;
-
-    // Compute how much to shift the active edge's midpoint to our anchor point
-    const baseMidY = (baseA.y + baseB.y) / 2;
-    const shiftY = baseMidY - anchorY;
-
-    const result = basePositions.map(n => {
+    return basePositions.map(n => {
         if (n.id === activeAgentA) return { ...n, x: focusA.x, y: focusA.y };
         if (n.id === activeAgentB) return { ...n, x: focusB.x, y: focusB.y };
 
-        // Keep horizontal position, shift vertically upward above the active pair.
-        const relY = n.y - baseMidY;
-        const newY = anchorY + relY - shiftY * 0.5;
-        return { ...n, x: n.x, y: Math.min(newY, anchorY - 8) };
+        // Inactive nodes: keep their base positions — 3D perspective handles depth
+        return n;
     });
-
-    // Push apart overlapping inactive nodes — need at least 16% horizontal separation
-    // so labels don't collide
-    const inactive = result.filter(n => n.id !== activeAgentA && n.id !== activeAgentB);
-    inactive.sort((a, b) => a.x - b.x);
-    for (let i = 1; i < inactive.length; i++) {
-        const prev = inactive[i - 1];
-        const curr = inactive[i];
-        const dx = Math.abs(curr.x - prev.x);
-        if (dx < 16) {
-            // Shift current node right to make room
-            curr.x = prev.x + 16;
-        }
-    }
-
-    return result;
 }
 
 let _prevGraphActiveEdge = null;

@@ -1121,6 +1121,8 @@ footer {
     position: absolute;
     inset: 0;
     overflow: hidden;
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
 }
 
 .graph-view {
@@ -1175,12 +1177,12 @@ footer {
 }
 
 .graph-node:hover {
-    transform: translate(-50%, -35%) scale(1.08);
+    transform: translate(-50%, -35%) scale(1.08) translateZ(10px);
 }
 
 .graph-node-active {
     z-index: 3;
-    transform: translate(-50%, -35%) scale(1.15);
+    transform: translate(-50%, -35%) scale(1.15) translateZ(30px);
 }
 
 .graph-node-active .graph-node-icon {
@@ -1229,14 +1231,15 @@ footer {
     opacity: 0.4;
 }
 
-/* When an edge is active, fade non-participating nodes as they drift off */
+/* When an edge is active, inactive nodes recede in 3D perspective */
 .graph-canvas:has(.graph-edge-active) .graph-node:not(.graph-node-active) {
-    opacity: 0.3;
+    opacity: 0.35;
+    transform: translate(-50%, -35%) scale(0.7) translateZ(-200px);
 }
 
-/* Dim but keep non-active edges visible so graph stays connected */
+/* Dim but keep non-active edges visible, pushed back in 3D */
 .graph-canvas:has(.graph-edge-active) .graph-edge-div:not(.graph-edge-active) {
-    opacity: 0.5 !important;
+    opacity: 0.4 !important;
     height: 1px !important;
 }
 .graph-canvas:has(.graph-edge-active) .graph-edge-count-div {
@@ -1295,14 +1298,14 @@ footer {
     text-shadow: 0 0 4px var(--vis-bg);
 }
 
-/* Graph view: center panel — directly under the anchored nodes, hard-capped above footer */
+/* Graph view: center panel — vertically centered between header and footer */
 .graph-view #center-panel {
     position: absolute;
     z-index: 10;
     left: 50%;
     transform: translateX(-50%);
-    top: 6%;
-    bottom: 260px; /* footer (220px) + scrubber (28px) + margin */
+    top: 4%;
+    bottom: 260px;
     max-width: 520px;
     min-width: 340px;
     overflow: hidden;
