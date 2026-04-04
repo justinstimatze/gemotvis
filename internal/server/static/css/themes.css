@@ -598,6 +598,7 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     letter-spacing: 2px;
     text-transform: uppercase;
     text-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
+    margin-top: 16px; /* clear the rotated diamond's bottom corner */
 }
 
 #screen.theme-magi .graph-node-active .graph-node-name {

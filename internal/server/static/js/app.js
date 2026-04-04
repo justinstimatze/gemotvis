@@ -1337,9 +1337,20 @@ function renderAuditLog(ds) {
 // ===== Helpers =====
 
 // Generate a distinct color for agent index i out of n total agents.
-// Uses evenly spaced hues with consistent saturation/lightness.
+// Theme-aware: MAGI uses phosphor CRT colors, others use HSL rotation.
 function agentColor(i, n) {
-    const hue = (i * 360 / Math.max(n, 1) + 210) % 360; // start at blue, rotate
+    if (activeTheme === 'magi') {
+        // EVA palette: amber, cyan, green, magenta, red, yellow, blue-white
+        const magiPalette = ['#ff8c00', '#00ffff', '#00ff41', '#ff00ff', '#ff2020', '#ffcc00', '#8888ff'];
+        return magiPalette[i % magiPalette.length];
+    }
+    if (activeTheme === 'gastown') {
+        // Warm industrial: brass, copper, rust, verdigris, iron, gold, bronze
+        const gastownPalette = ['#cd9b1d', '#b87333', '#c45a3c', '#4a7c6f', '#8b8682', '#daa520', '#a0522d'];
+        return gastownPalette[i % gastownPalette.length];
+    }
+    // Minimal: evenly spaced hues, clean and saturated
+    const hue = (i * 360 / Math.max(n, 1) + 210) % 360;
     return `hsl(${hue}, 65%, 50%)`;
 }
 
