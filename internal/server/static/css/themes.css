@@ -568,566 +568,6 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 }
 
 
-/* =============================================================================
-   GEMOT CLASSIC — Medieval manuscript enhancements
-   The base.css defaults already use the classic palette. This section adds
-   the manuscript-specific decorative details: parchment texture, rubrication,
-   shield shapes, cartographic terrain, blackletter typography.
-   Fonts: UnifrakturMaguntia (display), IM Fell English (body), Cinzel (numerals).
-   Agent nodes are heraldic shields; connections are cartographic roads (KCD1 style).
-   ============================================================================= */
-
-/* Classic: boot sequence — opening the codex */
-body.boot-classic .boot-overlay {
-    display: flex;
-    background: #F5E6C8;
-    animation: bootFade 0.6s ease-out 1.8s forwards;
-}
-
-body.boot-classic .boot-overlay .boot-text {
-    font-family: 'IM Fell English', 'Georgia', serif;
-    color: #8B5A2B;
-    opacity: 0;
-    animation: classicBootIn 0.5s ease-out forwards;
-}
-
-/* Star ornament */
-body.boot-classic .boot-text:nth-child(1) {
-    font-size: 28px;
-    color: #CFB53B;
-    animation-delay: 0.1s;
-}
-
-/* "Gemot" in blackletter */
-body.boot-classic .boot-text:nth-child(2) {
-    font-family: 'UnifrakturMaguntia', cursive;
-    font-size: 36px;
-    color: #8B1A1A;
-    letter-spacing: 4px;
-    animation-delay: 0.4s;
-}
-
-/* "Deliberation Monitor" in small caps */
-body.boot-classic .boot-text:nth-child(3) {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-    font-size: 12px;
-    letter-spacing: 4px;
-    color: #8B5A2B;
-    animation-delay: 0.8s;
-}
-
-@keyframes classicBootIn {
-    0% { opacity: 0; transform: translateY(6px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-/* Classic: ink bleed on text */
-#screen.theme-classic {
-    text-shadow: 0 0 0.5px rgba(44, 24, 16, 0.3);
-}
-
-/* Classic: parchment surface with aging, fold lines, map border frame */
-#screen.theme-classic main {
-    background:
-        /* Fold creases at 1/3 and 2/3 — like a map folded into thirds */
-        linear-gradient(90deg, transparent 32.8%, rgba(139, 90, 43, 0.06) 33%, rgba(139, 90, 43, 0.08) 33.2%, rgba(139, 90, 43, 0.06) 33.4%, transparent 33.6%),
-        linear-gradient(90deg, transparent 66.2%, rgba(139, 90, 43, 0.06) 66.4%, rgba(139, 90, 43, 0.08) 66.6%, rgba(139, 90, 43, 0.06) 66.8%, transparent 67%),
-        /* Horizontal fold at center */
-        linear-gradient(180deg, transparent 49%, rgba(139, 90, 43, 0.05) 49.5%, rgba(139, 90, 43, 0.07) 50%, rgba(139, 90, 43, 0.05) 50.5%, transparent 51%),
-        /* Foxing / age spots */
-        radial-gradient(ellipse at 15% 25%, rgba(139, 90, 43, 0.08) 0%, transparent 40%),
-        radial-gradient(ellipse at 75% 15%, rgba(139, 90, 43, 0.06) 0%, transparent 35%),
-        radial-gradient(ellipse at 85% 70%, rgba(139, 90, 43, 0.07) 0%, transparent 30%),
-        radial-gradient(ellipse at 40% 85%, rgba(139, 90, 43, 0.05) 0%, transparent 45%),
-        radial-gradient(ellipse at 50% 50%, rgba(245, 230, 200, 0) 30%, rgba(210, 180, 140, 0.15) 100%);
-    /* Double-rule map border + aged vignette */
-    box-shadow:
-        inset 0 0 80px rgba(139, 90, 43, 0.12),
-        inset 0 0 0 8px var(--vis-bg),
-        inset 0 0 0 9px rgba(139, 90, 43, 0.2),
-        inset 0 0 0 13px var(--vis-bg),
-        inset 0 0 0 14px rgba(139, 90, 43, 0.1);
-}
-
-/* Parchment grain overlay */
-#screen.theme-classic main::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    filter: url(#parchment-grain);
-    opacity: 0.5;
-    pointer-events: none;
-    z-index: 0;
-    mix-blend-mode: multiply;
-}
-
-/* Cartographic terrain — CSS gradient accents (SVG terrain layer is primary) */
-#screen.theme-classic main::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.15;
-    background:
-        /* Forest clusters — groups of tree-like marks */
-        radial-gradient(ellipse at 8% 35%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
-        radial-gradient(ellipse at 10% 33%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
-        radial-gradient(ellipse at 9% 37%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 12% 34%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 6% 36%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        radial-gradient(ellipse at 11% 38%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        /* Upper-right forest */
-        radial-gradient(ellipse at 88% 22%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
-        radial-gradient(ellipse at 90% 20%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
-        radial-gradient(ellipse at 89% 24%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 91% 22%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 87% 23%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        radial-gradient(ellipse at 92% 19%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        /* Lower-right forest */
-        radial-gradient(ellipse at 82% 75%, #2D6B3F 0px, #2D6B3F 2.5px, transparent 3.5px),
-        radial-gradient(ellipse at 84% 73%, #2D6B3F 0px, #2D6B3F 3px, transparent 4px),
-        radial-gradient(ellipse at 83% 77%, #2D6B3F 0px, #2D6B3F 2px, transparent 3px),
-        radial-gradient(ellipse at 80% 74%, #2D6B3F 0px, #2D6B3F 1.5px, transparent 2.5px),
-        /* River — winding blue-gray line across the map */
-        linear-gradient(155deg, transparent 32%, rgba(46, 88, 148, 0.2) 32.3%, rgba(46, 88, 148, 0.25) 32.6%, rgba(46, 88, 148, 0.2) 32.9%, transparent 33.2%),
-        linear-gradient(165deg, transparent 48%, rgba(46, 88, 148, 0.15) 48.2%, rgba(46, 88, 148, 0.2) 48.5%, rgba(46, 88, 148, 0.15) 48.8%, transparent 49%),
-        /* Hill contour lines */
-        radial-gradient(ellipse at 30% 60%, transparent 80px, rgba(139, 90, 43, 0.35) 81px, transparent 83px),
-        radial-gradient(ellipse at 30% 60%, transparent 110px, rgba(139, 90, 43, 0.2) 111px, transparent 113px),
-        radial-gradient(ellipse at 30% 60%, transparent 140px, rgba(139, 90, 43, 0.12) 141px, transparent 143px),
-        radial-gradient(ellipse at 70% 35%, transparent 60px, rgba(139, 90, 43, 0.3) 61px, transparent 63px),
-        radial-gradient(ellipse at 70% 35%, transparent 90px, rgba(139, 90, 43, 0.18) 91px, transparent 93px),
-        /* Small hills */
-        radial-gradient(ellipse at 55% 80%, transparent 40px, rgba(139, 90, 43, 0.18) 41px, transparent 43px),
-        radial-gradient(ellipse at 20% 15%, transparent 30px, rgba(139, 90, 43, 0.12) 31px, transparent 33px);
-}
-
-/* Classic: double ink-rule header */
-#screen.theme-classic header {
-    border-bottom: none;
-    background-image: linear-gradient(to right, var(--vis-panel-border), var(--vis-panel-border));
-    background-size: 100% 1px;
-    background-position: bottom;
-    background-repeat: no-repeat;
-    padding-bottom: 10px;
-    position: relative;
-}
-
-#screen.theme-classic header::after {
-    content: '';
-    position: absolute;
-    bottom: 3px;
-    left: 16px;
-    right: 16px;
-    height: 1px;
-    background: var(--vis-panel-border);
-    opacity: 0.5;
-}
-
-/* Classic: rubricated topic title — vermillion accent on ink background */
-#screen.theme-classic .topic-label {
-    color: #C34A14; /* Pentiment vermillion */
-    font-size: 20px;
-    font-weight: bold;
-}
-
-/* Classic: small caps labels — readable dark ink */
-#screen.theme-classic .system-label {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-    font-size: 15px;
-    color: var(--vis-text);
-}
-
-#screen.theme-classic .status-indicator {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-}
-
-/* Classic: settlement-style agent nodes — shield keep with crenellated wall base */
-
-/* Remove wall pseudo-element — the castle shape has its own crenellations */
-#screen.theme-classic .agent-node::before {
-    display: none;
-}
-
-/* Settlement — SVG icon rendered inside diamond, no clip-path needed */
-#screen.theme-classic .diamond {
-    clip-path: none;
-    border-radius: 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    z-index: 2;
-    overflow: visible;
-}
-
-/* No ::after decoration needed — the SVG icon IS the visual */
-#screen.theme-classic .diamond::after {
-    display: none;
-}
-
-/* Classic: agent labels — bigger and bolder for readability */
-#screen.theme-classic .agent-name {
-    font-size: 15px;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-#screen.theme-classic .agent-model {
-    font-family: 'IM Fell English', 'Georgia', serif;
-    font-style: italic;
-    font-size: 11px;
-}
-
-/* Vote banner — flag hanging from the settlement */
-#screen.theme-classic .diamond-vote {
-    position: absolute;
-    top: -4px;
-    right: -16px;
-    left: auto;
-    bottom: auto;
-    width: auto;
-    height: auto;
-    display: block;
-    align-items: initial;
-    justify-content: initial;
-    z-index: 20; /* above all castles but below tooltips (z:100) */
-}
-
-#screen.theme-classic .agent-vote {
-    font-family: 'Cinzel', 'Georgia', serif;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 1px;
-    padding: 4px 10px 10px;
-    display: block;
-    text-align: center;
-    min-width: 40px;
-    line-height: 1.2;
-    /* Banner/gonfalon shape */
-    clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
-    text-shadow: none;
-    box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Banner colors — manuscript pigment accents against ink castles */
-#screen.theme-classic .agent-vote.vote-approve {
-    background: #2E6F40; /* verdigris green */
-    color: #F5E6C8;
-}
-
-#screen.theme-classic .agent-vote.vote-deny {
-    background: #C34A14; /* vermillion — the Pentiment red */
-    color: #F5E6C8;
-}
-
-#screen.theme-classic .agent-vote.vote-pass {
-    background: transparent;
-    color: #6B5B45;
-    font-size: 11px;
-    clip-path: none;
-    padding: 2px 4px;
-}
-
-/* Classic: rubricated panel headers — vermillion rubric */
-#screen.theme-classic .panel-header {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-    color: #C34A14;
-    text-shadow: none;
-    letter-spacing: 3px;
-}
-
-#screen.theme-classic .footer-panel .panel-header::before {
-    content: '\00B6 '; /* pilcrow — scribal section mark */
-    color: #CFB53B;
-}
-
-/* Classic: crux items as marginal glosses */
-#screen.theme-classic .crux-item {
-    border-left: 2px solid rgba(207, 181, 59, 0.3);
-    padding-left: 8px;
-    margin-left: 4px;
-}
-
-/* Classic: gold-leaf illuminated metrics */
-#screen.theme-classic .metric-value {
-    font-family: 'Cinzel', 'Georgia', serif;
-    color: #AF803C;
-    text-shadow: 0 1px 0 rgba(207, 181, 59, 0.3);
-}
-
-#screen.theme-classic .metric {
-    background: linear-gradient(180deg, rgba(207, 181, 59, 0.03), rgba(207, 181, 59, 0.07));
-    padding: 4px;
-}
-
-/* Classic: audit log as scribal chronicle — ink tones */
-#screen.theme-classic .audit-entry .timestamp { color: #6B5B45; }
-#screen.theme-classic .audit-entry .method { color: #C34A14; font-style: italic; }
-#screen.theme-classic .audit-entry .agent { color: #1F3A6B; }
-
-/* Manicule pointing hand on most recent entry */
-#screen.theme-classic .audit-entry:first-child::before {
-    content: '\261E '; /* pointing hand */
-    color: #E34234;
-}
-
-/* Classic: hand-drawn road connections — ink-weight lines */
-#screen.theme-classic .connection-line { stroke-linecap: round; stroke-linejoin: round; }
-#screen.theme-classic .connection-agree { stroke: #2E6F40; stroke-width: 2; }
-#screen.theme-classic .connection-disagree { stroke: #C34A14; stroke-width: 1.5; stroke-dasharray: 4 4; }
-#screen.theme-classic .connection-neutral { stroke: #6B5B45; stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
-#screen.theme-classic .connection-bridging { stroke: #D6B04C; stroke-width: 3; }
-
-/* Road waypoint markers (added by JS) */
-#screen.theme-classic .road-waypoint {
-    fill: #8B5A2B;
-    opacity: 0.3;
-}
-
-/* Classic: center panel as ornate map cartouche */
-#screen.theme-classic .center-panel {
-    border: 2px solid #5A4A35;
-    outline: 1px solid rgba(90, 74, 53, 0.25);
-    outline-offset: 4px;
-    background: linear-gradient(180deg, #F1E0C3 0%, #E8D5B5 100%);
-    box-shadow: 3px 4px 12px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(139, 90, 43, 0.04);
-    position: relative;
-    max-width: 450px;
-    max-height: 240px;
-}
-
-/* Cartouche text — ink colors for consensus/bridging labels */
-#screen.theme-classic .panel-label-consensus { color: #2E6F40; font-weight: 600; }
-#screen.theme-classic .panel-label-bridging { color: #D6B04C; font-weight: 600; }
-#screen.theme-classic .panel-label-compromise { color: #1F3A6B; font-weight: 600; }
-#screen.theme-classic .panel-text { color: #1A1410; font-size: 11px; line-height: 1.5; }
-#screen.theme-classic .panel-header { font-size: 13px; }
-#screen.theme-classic .text-dim { color: #6B5B45; }
-
-/* Cartouche top ornament — fleuron line */
-#screen.theme-classic .center-panel::before {
-    content: '\2767\2014\2756\2014\2767';
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 13px;
-    color: #CFB53B;
-    background: var(--vis-bg);
-    padding: 0 6px;
-    white-space: nowrap;
-    letter-spacing: 2px;
-}
-
-/* Cartouche bottom ornament */
-#screen.theme-classic .center-panel::after {
-    content: '\2619';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    color: rgba(207, 181, 59, 0.6);
-    background: var(--vis-bg);
-    padding: 0 6px;
-}
-
-/* Classic: double-rule footer */
-#screen.theme-classic footer {
-    border-top: none;
-    position: relative;
-}
-
-#screen.theme-classic footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 16px;
-    right: 16px;
-    height: 1px;
-    background: var(--vis-panel-border);
-}
-
-#screen.theme-classic footer::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 16px;
-    right: 16px;
-    height: 1px;
-    background: var(--vis-panel-border);
-    opacity: 0.5;
-}
-
-#screen.theme-classic .footer-panel {
-    border-right-color: rgba(139, 90, 43, 0.3);
-}
-
-/* Classic: cluster territory washes — CK3 style jewel-tone fills behind ink castles */
-/* The castle stays ink-dark; the agent-node gets a low-opacity territory glow */
-#screen.theme-classic .cluster-0 .diamond { background: #3B2F20; }
-
-#screen.theme-classic .agent-node:has(.cluster-1) {
-    background: radial-gradient(ellipse, rgba(31, 58, 107, 0.12) 0%, transparent 70%);
-}
-#screen.theme-classic .cluster-1 .diamond::after { background: rgba(31, 58, 107, 0.4) !important; filter: blur(2px) !important; }
-
-#screen.theme-classic .agent-node:has(.cluster-2) {
-    background: radial-gradient(ellipse, rgba(123, 30, 58, 0.12) 0%, transparent 70%);
-}
-#screen.theme-classic .cluster-2 .diamond::after { background: rgba(123, 30, 58, 0.4) !important; filter: blur(2px) !important; }
-
-#screen.theme-classic .agent-node:has(.cluster-3) {
-    background: radial-gradient(ellipse, rgba(46, 111, 64, 0.12) 0%, transparent 70%);
-}
-#screen.theme-classic .cluster-3 .diamond::after { background: rgba(46, 111, 64, 0.4) !important; filter: blur(2px) !important; }
-
-#screen.theme-classic .agent-node:has(.cluster-4) {
-    background: radial-gradient(ellipse, rgba(214, 176, 76, 0.12) 0%, transparent 70%);
-}
-
-#screen.theme-classic .agent-node:has(.cluster-5) {
-    background: radial-gradient(ellipse, rgba(91, 46, 122, 0.12) 0%, transparent 70%);
-}
-
-/* Classic: decorative corner marks + compass rose */
-#screen.theme-classic .hud-corners { display: block; }
-
-#screen.theme-classic .hud-corner {
-    display: block;
-    width: auto;
-    height: auto;
-    border: none;
-    opacity: 0.15;
-    font-size: 18px;
-    color: #8B5A2B;
-}
-
-#screen.theme-classic .hud-corner.tl { top: 4px; left: 8px; }
-#screen.theme-classic .hud-corner.tl::before { content: '\2619'; display: block; } /* ☙ reversed fleuron */
-
-#screen.theme-classic .hud-corner.tr { top: 4px; right: 8px; }
-#screen.theme-classic .hud-corner.tr::before { content: '\2767'; display: block; } /* ❧ fleuron */
-
-#screen.theme-classic .hud-corner.bl { bottom: 4px; left: 8px; }
-#screen.theme-classic .hud-corner.bl::before { content: '\2767'; display: block; transform: scaleX(-1); }
-
-/* Compass rose — bottom right */
-#screen.theme-classic .hud-corner.br {
-    bottom: 8px;
-    right: 8px;
-    opacity: 0.12;
-    font-size: 40px;
-}
-#screen.theme-classic .hud-corner.br::before { content: '\2726'; display: block; }
-#screen.theme-classic .hud-corner.br::after {
-    content: 'N';
-    position: absolute;
-    top: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'IM Fell English SC', serif;
-    font-size: 10px;
-    letter-spacing: 0;
-}
-
-/* Classic: fleuron divider */
-#screen.theme-classic .nav-label::before {
-    content: '\2767 ';
-    color: #CFB53B;
-}
-
-/* Classic: cycle bar gold fill */
-#screen.theme-classic .cycle-progress {
-    background: linear-gradient(90deg, #AF803C, #CFB53B);
-}
-
-/* Classic: nav tabs */
-#screen.theme-classic .delib-tab:hover { color: #8B1A1A; border-color: #8B1A1A; }
-#screen.theme-classic .delib-tab.active { color: #8B1A1A; border-color: #8B1A1A; background: rgba(139, 26, 26, 0.04); }
-#screen.theme-classic .delib-tab.analyzing { color: #120A8F; border-color: #120A8F; }
-
-/* Classic: analysis bar */
-#screen.theme-classic .analysis-label {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-}
-
-/* Classic: tooltip */
-#screen.theme-classic .tooltip-header {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-    color: #8B1A1A;
-}
-
-#screen.theme-classic .tooltip-footer { font-style: italic; }
-
-/* Classic: login form */
-#screen.theme-classic .login-title { color: #8B1A1A; }
-#screen.theme-classic .login-subtitle { font-style: italic; }
-#screen.theme-classic .login-button {
-    font-family: 'IM Fell English SC', serif;
-    font-variant: small-caps;
-    letter-spacing: 3px;
-}
-#screen.theme-classic .login-button:hover { color: #8B1A1A; border-color: #8B1A1A; }
-
-/* Classic: multi-view regions as aged parchment cards */
-#screen.theme-classic .multi-region {
-    background: linear-gradient(180deg, #F5E6C8 0%, #EDE0C4 100%);
-    border: 1.5px solid #8B5A2B;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-#screen.theme-classic .multi-region.focused {
-    border-color: #6B1520;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
-}
-
-#screen.theme-classic .multi-region-title {
-    background: rgba(139, 90, 43, 0.06);
-    border-bottom: 1px solid rgba(139, 90, 43, 0.15);
-}
-
-/* Classic: multi-view — readable text, not blackletter at small sizes */
-#screen.theme-classic .multi-region-topic {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-    color: #6B1520;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-}
-
-#screen.theme-classic .multi-agent-name {
-    font-family: 'IM Fell English', 'Georgia', serif;
-    font-size: 8px;
-}
-
-#screen.theme-classic .multi-region-meta {
-    font-family: 'IM Fell English', 'Georgia', serif;
-}
-
-#screen.theme-classic .multi-region-status {
-    font-family: 'IM Fell English SC', 'Georgia', serif;
-    font-variant: small-caps;
-    color: #8B5A2B;
-    border-top: 1px solid rgba(139, 90, 43, 0.2);
-    font-size: 9px;
-    letter-spacing: 1px;
-}
-/* Mini castle in multi-view — SVG icon rendered by JS, hide pseudo-element */
-#screen.theme-classic .multi-agent::before {
-    display: none;
-}
-
-/* Classic: empty state */
-#screen.theme-classic .empty-state { font-style: italic; letter-spacing: 1px; }
-
 
 /* =============================================================================
    MINIMAL THEME — Clean, modern, no effects
@@ -1156,371 +596,942 @@ body.boot-minimal .boot-overlay .boot-text {
     100% { opacity: 1; }
 }
 
+/* Colors follow Geist/shadcn token scale:
+   gray-100 #f7f7f7, gray-200 #e5e5e5, gray-300 #d4d4d4,
+   gray-400 #a3a3a3, gray-500 #737373, gray-600 #525252,
+   gray-900 #171717, blue #0070f3 */
 #screen.theme-minimal {
-    --vis-amber: #2563eb;
-    --vis-amber-dim: #64748b; /* slate-500 for readable secondary text on white */
-    --vis-amber-glow: rgba(37, 99, 235, 0.15);
-    --vis-green: #16a34a;
+    --vis-amber: #0070f3;           /* Vercel blue — primary accent */
+    --vis-amber-dim: #737373;       /* Geist gray-500 */
+    --vis-amber-glow: rgba(0, 112, 243, 0.12);
+    --vis-green: #17b169;
     --vis-green-dim: #22c55e;
-    --vis-red: #dc2626;
+    --vis-red: #ee0000;             /* Geist error red */
     --vis-red-dim: #ef4444;
-    --vis-blue: #3b82f6;
-    --vis-cyan: #0891b2;
-    --vis-magenta: #a855f7;
-    --vis-yellow: #eab308;
+    --vis-blue: #0070f3;
+    --vis-cyan: #0091ff;
+    --vis-magenta: #7c3aed;
+    --vis-yellow: #f5a623;          /* Geist warning */
     --vis-bg: #ffffff;
-    --vis-panel: #f8fafc;
-    --vis-panel-border: #e2e8f0;
-    --vis-text: #1e293b;
-    --vis-text-dim: #94a3b8;
-    --vis-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --vis-font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --vis-panel: #f7f7f7;           /* Geist gray-100 */
+    --vis-panel-border: #e5e5e5;    /* Geist gray-200 */
+    --vis-text: #171717;            /* Geist gray-900 */
+    --vis-text-dim: #737373;        /* Geist gray-500 */
+    --vis-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --vis-font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 
     background: #ffffff;
+    text-transform: none;
 }
 
-/* Minimal: clean background */
-#screen.theme-minimal main { background: #fafafa; }
+/* Minimal: slightly warm off-white to contrast with pure white cards */
+#screen.theme-minimal main { background: #f5f5f5; }
 
 /* Minimal: header — thin border, no shadow (Linear-style) */
 #screen.theme-minimal header {
     background: #ffffff;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #e5e5e5;
     box-shadow: none;
 }
 
-/* Minimal: typography — Inter-like system font, clean weights */
+/* Minimal: typography — same sensibility as the landing page */
 #screen.theme-minimal .topic-label {
-    font-weight: 500;
-    font-size: 16px;
-    letter-spacing: -0.01em;
-    color: #0f172a;
+    font-weight: 300;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+    color: #171717;
 }
 
 #screen.theme-minimal .system-label {
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0;
-    color: #0f172a;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #a3a3a3;
+    text-transform: uppercase;
 }
 
-/* Minimal: pill badges — soft backgrounds, no hard borders */
+/* Minimal: status badges — soft semantic backgrounds, rounded rect (not pill) */
 #screen.theme-minimal .status-indicator {
-    border-radius: 999px;
-    padding: 2px 10px;
+    border-radius: 4px;
+    padding: 2px 8px;
     font-size: 11px;
     font-weight: 500;
     border: none;
 }
 
-#screen.theme-minimal .status-indicator.online { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-#screen.theme-minimal .status-indicator.offline { background: #fee2e2; color: #b91c1c; }
-#screen.theme-minimal .status-indicator.analyzing { background: #e0f2fe; color: #0369a1; }
+#screen.theme-minimal .status-indicator.online { background: #f0fdf4; color: #17b169; border: 1px solid #bbf7d0; }
+#screen.theme-minimal .status-indicator.offline { background: #fee2e2; color: #ee0000; }
+#screen.theme-minimal .status-indicator.analyzing { background: #e8f0fe; color: #0070f3; }
 
-/* Minimal: circle agent nodes — white card with subtle shadow */
-#screen.theme-minimal .diamond {
-    border-radius: 50%;
-    border: 1.5px solid #e5e7eb;
+/* Minimal: agent-node IS the card (shadcn Card / React Flow BaseNode pattern).
+   The diamond, vote, and label all sit inside the agent-node card. */
+#screen.theme-minimal .agent-node {
+    width: auto !important;
+    height: auto !important;
+    flex-direction: column;
+    align-items: center;
     background: #ffffff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e5e5;      /* Geist gray-200 */
+    border-radius: 8px;             /* shadcn --radius-lg */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    padding: 12px 20px;
+    gap: 2px;
+    min-width: 110px;
+    transition: box-shadow 0.15s, border-color 0.15s;
 }
 
-#screen.theme-minimal .diamond::after { border: none; }
+/* Hover: ring-1 effect (React Flow hover pattern) */
+#screen.theme-minimal .agent-node:hover {
+    filter: none;
+    border-color: #d4d4d4;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
+}
 
-/* Minimal: vote text — refined, not screaming */
+/* Diamond becomes invisible container inside the card */
+#screen.theme-minimal .diamond {
+    position: static;
+    width: auto !important;
+    height: auto !important;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    display: none;                   /* hide completely — vote is a sibling */
+    clip-path: none;
+    transform: none;
+    overflow: visible;
+}
+
+#screen.theme-minimal .diamond::after { display: none; }
+#screen.theme-minimal .diamond::before { display: none; }
+
+/* Minimal: vote text — large and prominent inside the card */
 #screen.theme-minimal .agent-vote {
     font-weight: 600;
     font-size: 22px;
     letter-spacing: -0.02em;
+    line-height: 1.2;
 }
 
-#screen.theme-minimal .vote-approve { color: #059669; }
-#screen.theme-minimal .vote-deny { color: #dc2626; }
-#screen.theme-minimal .vote-pass { color: #cbd5e1; font-size: 18px; }
+#screen.theme-minimal .vote-approve { color: #17b169; }
+#screen.theme-minimal .vote-deny { color: #ee0000; }
+#screen.theme-minimal .vote-pass { color: #a3a3a3; font-size: 16px; }
 
-/* Minimal: agent labels — clean, no uppercase */
+/* Minimal: diamond-vote — normal flow inside card */
+#screen.theme-minimal .diamond-vote {
+    position: static;
+    transform: none;
+    pointer-events: auto;
+}
+
+/* Minimal: agent labels — flow inside card, below vote */
+#screen.theme-minimal .agent-label {
+    position: static;
+    transform: none;
+    margin-top: 2px;
+    white-space: normal;
+}
+
 #screen.theme-minimal .agent-name {
+    font-family: var(--vis-font);
     font-weight: 500;
     font-size: 12px;
     letter-spacing: 0;
-    color: #374151;
+    color: #171717;                 /* Geist gray-900 */
 }
 
 #screen.theme-minimal .agent-model {
-    color: #9ca3af;
+    color: #737373;                 /* Geist gray-500 */
     font-size: 10px;
+    letter-spacing: 0;
 }
 
-/* Minimal: conviction — border weight only, no fill change */
-#screen.theme-minimal .diamond.conviction-high { border-color: var(--vis-amber); border-width: 2px; }
-#screen.theme-minimal .diamond.conviction-med { border-color: #d1d5db; }
-#screen.theme-minimal .diamond.conviction-low { border-color: #e5e7eb; border-style: dashed; }
+/* Minimal: conviction — applied to agent-node card (not diamond) */
+#screen.theme-minimal .agent-node:has(.conviction-high) {
+    border-color: #0070f3;
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.15);
+}
+#screen.theme-minimal .agent-node:has(.conviction-low) {
+    border-style: dashed;
+}
 
-/* Minimal: clusters — soft colors */
-#screen.theme-minimal .cluster-0 { border-color: #2563eb !important; }
-#screen.theme-minimal .cluster-1 { border-color: #0891b2 !important; }
-#screen.theme-minimal .cluster-2 { border-color: #a855f7 !important; }
-#screen.theme-minimal .cluster-3 { border-color: #16a34a !important; }
+/* Minimal: clusters — left accent bar on agent-node card */
+#screen.theme-minimal .agent-node:has(.cluster-0) { border-left: 3px solid #0070f3; }
+#screen.theme-minimal .agent-node:has(.cluster-1) { border-left: 3px solid #0091ff; }
+#screen.theme-minimal .agent-node:has(.cluster-2) { border-left: 3px solid #7c3aed; }
+#screen.theme-minimal .agent-node:has(.cluster-3) { border-left: 3px solid #17b169; }
 
-/* Minimal: panel header — uppercase micro label (Vercel-style) */
+/* Minimal: panel header — spaced caps (matches landing subtitle style) */
 #screen.theme-minimal .panel-header {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
-    letter-spacing: 0.05em;
-    color: #6b7280;
+    letter-spacing: 0.1em;
+    color: #a3a3a3;
     text-transform: uppercase;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #e5e5e5;
 }
 
-/* Minimal: center panel — floating card */
+/* Minimal: center panel — shadcn Card */
 #screen.theme-minimal .center-panel {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
     background: #ffffff;
+    min-width: 360px;
+    max-width: 600px;
+    padding: 0;
+    top: 42%;
+}
+
+
+#screen.theme-minimal .panel-content {
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-y: auto;
+    max-height: 55vh;
+}
+
+/* In graph view, panel-content fills the flex container — no fixed max-height */
+#screen.theme-minimal .graph-view .panel-content {
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#screen.theme-minimal .panel-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #0070f3;
+    letter-spacing: 0.08em;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+#screen.theme-minimal .panel-label:first-child { margin-top: 0; }
+
+#screen.theme-minimal .panel-text {
+    font-size: 14px;
+    color: #171717;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+/* Chat thread — bilateral negotiation messages */
+#screen.theme-minimal .chat-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 8px;
+}
+
+#screen.theme-minimal .chat-bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+#screen.theme-minimal .chat-left {
+    align-self: flex-start;
+    background: #f7f7f7;
+    border-bottom-left-radius: 4px;
+}
+
+#screen.theme-minimal .chat-right {
+    align-self: flex-end;
+    background: #e8f0fe;
+    border-bottom-right-radius: 4px;
+}
+
+#screen.theme-minimal .chat-name {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #a3a3a3;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+#screen.theme-minimal .chat-right .chat-name { color: #0070f3; }
+
+#screen.theme-minimal .chat-text {
+    color: #171717;
+}
+
+#screen.theme-minimal .chat-para {
+    margin: 0 0 6px 0;
+}
+
+#screen.theme-minimal .chat-para:last-child {
+    margin-bottom: 0;
+}
+
+/* Newest message fades in */
+#screen.theme-minimal .chat-new {
+    animation: chatFadeIn 0.4s ease-out;
+}
+
+@keyframes chatFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typing cursor on the text being revealed */
+#screen.theme-minimal .chat-new .chat-text::after {
+    content: '▊';
+    color: #0070f3;
+    animation: cursorBlink 0.8s step-end infinite;
+    font-size: 12px;
+    margin-left: 1px;
+}
+
+@keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Collapsed older messages — compact one-liners */
+#screen.theme-minimal .chat-collapsed {
+    font-size: 11px;
+    color: #a3a3a3;
+    padding: 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#screen.theme-minimal .chat-collapsed.chat-right { text-align: right; }
+
+#screen.theme-minimal .chat-collapsed .chat-name {
+    font-weight: 600;
+    color: #737373;
+    font-size: 11px;
+    display: inline;
+    margin-bottom: 0;
+}
+
+#screen.theme-minimal .chat-collapsed .chat-preview {
+    color: #a3a3a3;
+}
+
+/* Thinking indicator between messages */
+#screen.theme-minimal .chat-thinking {
+    align-self: center;
+    padding: 8px 20px;
+    background: #f7f7f7;
+    border-radius: 16px;
+    margin: 4px 0;
+}
+
+#screen.theme-minimal .thinking-dots {
+    display: inline-flex;
+    gap: 4px;
+    font-size: 0;
+}
+
+#screen.theme-minimal .thinking-dots::before,
+#screen.theme-minimal .thinking-dots::after,
+#screen.theme-minimal .thinking-dots {
+    content: '';
+}
+
+#screen.theme-minimal .thinking-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+
+#screen.theme-minimal .thinking-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #0070f3;
+    animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+#screen.theme-minimal .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+#screen.theme-minimal .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0.4); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Agent name mentions highlighted in chat text */
+#screen.theme-minimal .agent-mention {
+    font-weight: 600;
+    color: #525252;
+}
+
+/* Analysis items — bulleted list for scannability */
+#screen.theme-minimal .analysis-item {
+    list-style: none;
+    position: relative;
+    padding-left: 14px;
+    margin: 6px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #171717;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+#screen.theme-minimal .analysis-item-text {
+    display: block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
+/* Only show bullet when the text span has content (not during typing before text appears) */
+#screen.theme-minimal .analysis-item:has(.analysis-item-text:not(:empty))::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #0070f3;
+    opacity: 0.5;
+}
+
+#screen.theme-minimal .chat-end-marker {
+    text-align: center;
+    padding: 12px 0;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #a3a3a3;
+    border-top: 1px solid #e5e5e5;
+    margin-top: 8px;
+}
+
+#screen.theme-minimal .chat-divider {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 8px 0;
 }
 
 /* Minimal: analysis pipeline — pill chips */
 #screen.theme-minimal .analysis-bar {
     background: #ffffff;
-    border-top: 1px solid #f0f0f0;
-    border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 #screen.theme-minimal .analysis-label {
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.05em;
-    color: #0369a1;
+    color: #0070f3;
 }
 
 #screen.theme-minimal .pipeline-stage {
-    border-radius: 999px;
+    border-radius: 4px;
     font-size: 10px;
     padding: 3px 8px;
-    border: 1px solid #e5e7eb;
-    color: #9ca3af;
+    border: 1px solid #e5e5e5;
+    color: #a3a3a3;
 }
 
 #screen.theme-minimal .pipeline-stage.active {
-    background: #e0f2fe;
-    border-color: #7dd3fc;
-    color: #0369a1;
+    background: #e8f0fe;
+    border-color: #0070f3;
+    color: #0070f3;
 }
 
 #screen.theme-minimal .pipeline-stage.done {
     background: #dcfce7;
-    border-color: #86efac;
-    color: #15803d;
+    border-color: #17b169;
+    color: #17b169;
 }
 
 /* Minimal: nav tabs — pill buttons */
 #screen.theme-minimal .delib-tab {
-    border-radius: 999px;
+    border-radius: 6px;             /* shadcn --radius-md */
     font-size: 12px;
-    padding: 4px 14px;
-    border: 1px solid #e5e7eb;
-    color: #6b7280;
+    padding: 4px 12px;
+    border: 1px solid #e5e5e5;
+    color: #737373;
     font-weight: 400;
 }
 
 #screen.theme-minimal .delib-tab:hover {
-    background: #f9fafb;
-    color: #374151;
+    background: #f7f7f7;
+    color: #525252;
 }
 
 #screen.theme-minimal .delib-tab.active {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1d4ed8;
+    background: #e8f0fe;
+    border-color: #0070f3;
+    color: #0070f3;
     font-weight: 500;
 }
 
 #screen.theme-minimal .delib-tab.analyzing {
-    border-color: #7dd3fc;
-    color: #0369a1;
+    border-color: #0070f3;
+    color: #0070f3;
 }
 
-/* Minimal: tooltip — floating card with soft shadow */
+/* Minimal: tooltip — shadcn Popover pattern */
 #screen.theme-minimal .agent-tooltip {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     background: #ffffff;
 }
 
 #screen.theme-minimal .tooltip-header {
     font-size: 11px;
     font-weight: 500;
-    color: #6b7280;
+    color: #737373;
     letter-spacing: 0.03em;
     text-transform: uppercase;
 }
 
-#screen.theme-minimal .tooltip-body { color: #374151; font-size: 13px; }
-#screen.theme-minimal .tooltip-footer { color: #9ca3af; font-size: 10px; }
+#screen.theme-minimal .tooltip-body { color: #525252; font-size: 13px; }
+#screen.theme-minimal .tooltip-footer { color: #a3a3a3; font-size: 10px; }
 
-/* Minimal: footer — clean dividers, readable text */
+/* Minimal: footer — taller for readability */
 #screen.theme-minimal footer {
     background: #ffffff;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid #e5e5e5;
+    height: 220px;
 }
 
-#screen.theme-minimal .panel-scroll { font-size: 12px; }
+#screen.theme-minimal .panel-scroll { font-size: 14px; line-height: 1.5; }
 
 #screen.theme-minimal .footer-panel {
-    border-right: 1px solid #f0f0f0;
+    border-right: 1px solid #e5e5e5;
+    overflow-y: auto;
 }
 
-/* Minimal: metrics — clean typography */
-#screen.theme-minimal .metric-value {
-    font-weight: 600;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    color: #0f172a;
+/* Minimal: scrubber — compact */
+#screen.theme-minimal .scrubber-bar {
+    background: #ffffff;
+    border-top: 1px solid #e5e5e5;
+    height: 28px;
+    padding: 2px 16px;
 }
 
-#screen.theme-minimal .metric-label {
-    font-size: 10px;
-    color: #9ca3af;
-    letter-spacing: 0.05em;
+/* Minimal: metrics — turn flow, per-agent stats, network context */
+#screen.theme-minimal .metrics-grid {
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+#screen.theme-minimal .metrics-section-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: #a3a3a3;
     text-transform: uppercase;
+    margin-bottom: 3px;
 }
 
-/* Minimal: crux items */
+/* Turn-taking flow — alternating colored blocks */
+#screen.theme-minimal .metrics-flow-track {
+    display: flex;
+    gap: 2px;
+    height: 12px;
+    align-items: stretch;
+}
+
+#screen.theme-minimal .metrics-flow-block {
+    flex: 1;
+    min-width: 4px;
+    border-radius: 2px;
+    transition: flex 0.3s ease;
+}
+
+/* Agent colors set dynamically via inline style */
+#screen.theme-minimal .metrics-flow-block { opacity: 0.5; }
+
+/* Per-agent stats */
+#screen.theme-minimal .metrics-agent-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#screen.theme-minimal .metrics-agent-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+    border-left: 3px solid transparent;
+    padding-left: 6px;
+}
+
+/* Agent colors set dynamically via inline style */
+
+#screen.theme-minimal .metrics-agent-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #171717;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    min-width: 60px;
+}
+
+#screen.theme-minimal .metrics-agent-detail {
+    font-size: 11px;
+    color: #737373;
+}
+
+/* Network context */
+#screen.theme-minimal .metrics-network {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 4px;
+}
+
+#screen.theme-minimal .metrics-network-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 1px 0;
+}
+
+#screen.theme-minimal .metrics-network-detail {
+    font-size: 10px;
+    color: #a3a3a3;
+}
+
+/* Minimal: crux items — readable with clear visual hierarchy */
+#screen.theme-minimal .crux-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
 #screen.theme-minimal .crux-claim {
-    color: #1e293b;
+    color: #171717;
     font-weight: 400;
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.55;
+    transition: max-height 0.3s ease;
 }
 
-#screen.theme-minimal .crux-meta { font-size: 11px; color: #9ca3af; }
+#screen.theme-minimal .crux-claim.crux-collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 
-/* Minimal: audit log — readable size */
-#screen.theme-minimal .audit-entry { color: #6b7280; border-bottom-color: #f5f5f5; font-size: 12px; }
-#screen.theme-minimal .audit-entry .timestamp { color: #9ca3af; }
-#screen.theme-minimal .audit-entry .method { color: #2563eb; font-weight: 500; }
-#screen.theme-minimal .audit-entry .agent { color: #0f172a; }
+#screen.theme-minimal .crux-item:hover .crux-claim.crux-collapsed {
+    color: #0070f3;
+}
 
-/* Minimal: connections — light, geometric */
-#screen.theme-minimal .connection-agree { stroke: #22c55e; stroke-width: 1.5; }
-#screen.theme-minimal .connection-disagree { stroke: #f87171; stroke-width: 1.5; }
-#screen.theme-minimal .connection-neutral { stroke: #e5e7eb; }
-#screen.theme-minimal .connection-bridging { stroke: #fbbf24; stroke-width: 2; }
+#screen.theme-minimal .crux-meta {
+    font-size: 10px;
+    color: #a3a3a3;
+    letter-spacing: 0.02em;
+    margin-top: 2px;
+}
+
+#screen.theme-minimal .audit-desc {
+    color: #525252;
+    font-size: 12px;
+}
+
+/* Minimal: audit log — spaced entries for scannability */
+#screen.theme-minimal .audit-entry {
+    color: #737373;
+    border-bottom: 1px solid #fafafa;
+    font-size: 12px;
+    padding: 3px 0;
+    line-height: 1.4;
+}
+#screen.theme-minimal .audit-entry .timestamp { color: #a3a3a3; font-size: 10px; }
+#screen.theme-minimal .audit-entry .method { color: #0070f3; font-weight: 500; }
+#screen.theme-minimal .audit-entry .agent { color: #171717; font-weight: 500; }
+
+/* Minimal: connections — visible but clean, not overwhelming */
+#screen.theme-minimal .connection-agree { stroke: #22c55e; stroke-width: 1.5; opacity: 0.35; }
+#screen.theme-minimal .connection-disagree { stroke: #ef4444; stroke-width: 1.5; opacity: 0.35; stroke-dasharray: 6 4; }
+#screen.theme-minimal .connection-neutral { stroke: #d4d4d4; stroke-width: 1; opacity: 0.2; }
+#screen.theme-minimal .connection-bridging { stroke: #0070f3; stroke-width: 2; opacity: 0.5; }
 
 /* Minimal: scrollbar */
-#screen.theme-minimal ::-webkit-scrollbar-thumb { border-radius: 999px; background: #e5e7eb; }
-#screen.theme-minimal ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+#screen.theme-minimal ::-webkit-scrollbar-thumb { border-radius: 9999px; background: #e5e5e5; }
+#screen.theme-minimal ::-webkit-scrollbar-thumb:hover { background: #d4d4d4; }
 
 /* Minimal: login form */
 #screen.theme-minimal .login-title { font-weight: 600; letter-spacing: -0.02em; }
-#screen.theme-minimal .login-input { border-radius: 8px; border: 1px solid #d1d5db; }
-#screen.theme-minimal .login-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08); }
-#screen.theme-minimal .login-button { border-radius: 8px; font-weight: 500; }
-#screen.theme-minimal .login-button:hover { background: #eff6ff; }
+#screen.theme-minimal .login-input { border-radius: 6px; border: 1px solid #d4d4d4; }
+#screen.theme-minimal .login-input:focus { border-color: #0070f3; box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.12); }
+#screen.theme-minimal .login-button { border-radius: 6px; font-weight: 500; }
+#screen.theme-minimal .login-button:hover { background: #f7f7f7; }
 
-/* Minimal: multi-view */
-/* Minimal: multi-view cards */
+/* Minimal: multi-view cards — shadcn Card with ring shadow */
 #screen.theme-minimal .multi-region {
-    border-radius: 12px;
+    border-radius: 8px;
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 #screen.theme-minimal .multi-region:hover {
-    border-color: #d1d5db;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-color: #d4d4d4;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 #screen.theme-minimal .multi-region.focused {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
+    border-color: #0070f3;
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.15);
+}
+
+#screen.theme-minimal .multi-region.scrub-active {
+    border-color: #0070f3;
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.12);
 }
 
 #screen.theme-minimal .multi-region-title {
-    border-bottom: 1px solid #f0f0f0;
-    padding: 6px 10px;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 8px 12px;
 }
 
 #screen.theme-minimal .multi-region-topic {
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-    letter-spacing: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #171717;
+    letter-spacing: -0.01em;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #screen.theme-minimal .multi-region-meta {
-    font-size: 9px;
-    color: #9ca3af;
+    font-size: 10px;
+    color: #a3a3a3;
     font-weight: 400;
+    white-space: nowrap;
 }
 
 #screen.theme-minimal .multi-region-status {
     font-size: 10px;
     font-weight: 500;
-    color: #6b7280;
-    border-top: 1px solid #f0f0f0;
-    padding: 4px 10px;
+    color: #737373;
+    border-top: 1px solid #e5e5e5;
+    padding: 4px 12px;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 #screen.theme-minimal .multi-region-status.analyzing {
-    color: #0369a1;
-    background: rgba(224, 242, 254, 0.5);
+    color: #0070f3;
+    background: rgba(0, 112, 243, 0.04);
 }
 
+/* Minimal: multi-view agent mini-nodes — small rounded rects with visible bg */
 #screen.theme-minimal .multi-agent::before {
-    border-radius: 50%;
+    border-radius: 4px;             /* shadcn --radius-sm */
     transform: none;
-    border: 1.5px solid #d1d5db;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #d4d4d4;
     background: #ffffff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
-#screen.theme-minimal .multi-agent.cluster-1::before { border-color: #0891b2; }
-#screen.theme-minimal .multi-agent.cluster-2::before { border-color: #a855f7; }
-#screen.theme-minimal .multi-agent.cluster-3::before { border-color: #16a34a; }
+#screen.theme-minimal .multi-agent.cluster-1::before { border-color: #0091ff; }
+#screen.theme-minimal .multi-agent.cluster-2::before { border-color: #7c3aed; }
+#screen.theme-minimal .multi-agent.cluster-3::before { border-color: #17b169; }
 
 #screen.theme-minimal .multi-agent-name {
-    font-size: 8px;
-    color: #9ca3af;
-    font-weight: 400;
+    font-size: 9px;
+    color: #737373;
+    font-weight: 500;
 }
 
 #screen.theme-minimal .multi-agent-vote {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
 }
 
-/* Minimal: multi-view connections */
+/* Minimal: multi-view connections — barely visible, let the nodes speak */
 #screen.theme-minimal .multi-region-connections .connection-line {
-    stroke-width: 1;
-    opacity: 0.4;
+    stroke-width: 0.75;
+    opacity: 0.2;
 }
 
-/* Minimal: scrubber — subtle dots */
-#screen.theme-minimal .scrubber-bar { background: #ffffff; border-top: 1px solid #f0f0f0; }
-#screen.theme-minimal .scrubber-btn { border-radius: 4px; font-size: 11px; }
-#screen.theme-minimal .scrubber-label { color: #9ca3af; }
+/* Minimal: scrubber — clean, compact */
+
+#screen.theme-minimal .scrubber-btn {
+    border-radius: 6px;
+    font-size: 11px;
+    border-color: #e5e5e5;
+    color: #525252;
+}
+
+#screen.theme-minimal .scrubber-btn:hover {
+    background: #f7f7f7;
+    border-color: #d4d4d4;
+}
+
+#screen.theme-minimal .scrubber-track {
+    height: 16px;
+    border-bottom: none;
+    background: #fafafa;
+    border-radius: 4px;
+}
+
+#screen.theme-minimal .scrubber-dot {
+    width: 3px;
+    height: 3px;
+    border-width: 0;
+    background: #d4d4d4;
+    border-radius: 1px;
+}
+
+#screen.theme-minimal .scrubber-dot.active {
+    background: #0070f3;
+    width: 5px;
+    height: 5px;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+#screen.theme-minimal .scrubber-dot-position { background: #0070f3; opacity: 0.4; }
+#screen.theme-minimal .scrubber-dot-position.active { opacity: 1; }
+#screen.theme-minimal .scrubber-dot-vote { background: #0070f3; opacity: 0.25; }
+#screen.theme-minimal .scrubber-dot-vote.active { opacity: 1; }
+#screen.theme-minimal .scrubber-dot-analysis { background: #525252; opacity: 0.3; }
+#screen.theme-minimal .scrubber-dot-analysis.active { opacity: 1; }
+#screen.theme-minimal .scrubber-dot-other { background: #e5e5e5; }
+
+#screen.theme-minimal .scrubber-label {
+    color: #737373;
+    font-size: 11px;
+    letter-spacing: 0;
+}
+
+#screen.theme-minimal .scrubber-speed,
+#screen.theme-minimal .scrubber-filter {
+    font-size: 10px;
+    color: #737373;
+}
+
+#screen.theme-minimal .scrubber-live {
+    color: #17b169;
+    border-color: #17b169;
+}
+
+#screen.theme-minimal .scrubber-playhead {
+    background: #0070f3;
+}
+
+#screen.theme-minimal .scrubber-playhead::before {
+    background: #0070f3;
+    width: 8px;
+    height: 8px;
+}
 
 /* Minimal: empty state */
-#screen.theme-minimal .empty-state { color: #d1d5db; font-weight: 400; letter-spacing: 0; font-size: 16px; }
-#screen.theme-minimal .empty-message { color: #d1d5db; }
+#screen.theme-minimal .empty-state { color: #d4d4d4; font-weight: 400; letter-spacing: 0; font-size: 16px; }
+#screen.theme-minimal .empty-message { color: #d4d4d4; }
 
-/* Minimal: landing page polish */
-#screen.theme-minimal .landing-title { font-weight: 300; font-size: 40px; letter-spacing: -0.02em; }
-#screen.theme-minimal .landing-subtitle { letter-spacing: 0.1em; font-size: 11px; }
+/* Minimal: landing page */
+#screen.theme-minimal .landing-title { font-weight: 300; font-size: 40px; letter-spacing: -0.04em; }
+#screen.theme-minimal .landing-subtitle { letter-spacing: 0.1em; font-size: 11px; color: #a3a3a3; }
 #screen.theme-minimal .landing-section-label { font-weight: 500; }
-#screen.theme-minimal .landing-select { border-radius: 8px; }
-#screen.theme-minimal .landing-go-btn { border-radius: 8px; }
-#screen.theme-minimal .landing-input { border-radius: 8px; }
+#screen.theme-minimal .landing-select { border-radius: 6px; }
+#screen.theme-minimal .landing-go-btn { border-radius: 6px; }
+#screen.theme-minimal .landing-input { border-radius: 6px; }
 
 /* Minimal: integrity warning */
-#screen.theme-minimal .integrity-warning .diamond {
-    border-color: #dc2626 !important;
-    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1) !important;
+#screen.theme-minimal .integrity-warning {
+    border-color: #ee0000 !important;
+    box-shadow: 0 0 0 2px rgba(238, 0, 0, 0.12) !important;
+}
+
+/* Minimal: graph view */
+#screen.theme-minimal .graph-node-icon {
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    border: 1.5px solid #d4d4d4;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: #525252;
+    letter-spacing: -0.02em;
+}
+
+#screen.theme-minimal .graph-node:hover .graph-node-icon {
+    border-color: #0070f3;
+    box-shadow: 0 0 0 3px rgba(0,112,243,0.12), 0 1px 3px rgba(0,0,0,0.06);
+}
+
+#screen.theme-minimal .graph-node-active .graph-node-icon {
+    border-color: #0070f3;
+    box-shadow: 0 0 0 3px rgba(0,112,243,0.2), 0 2px 8px rgba(0,112,243,0.15);
+    width: 58px;
+    height: 58px;
+    font-size: 22px;
+    color: #0070f3;
+}
+
+#screen.theme-minimal .graph-node-name {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #171717;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px #f5f5f5, 0 0 16px #f5f5f5, 0 0 24px #f5f5f5;
+}
+
+#screen.theme-minimal .graph-node-stats {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 9px;
+    color: #737373;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 6px #f5f5f5, 0 0 12px #f5f5f5;
+}
+
+#screen.theme-minimal .graph-edge-div {
+    background: #d4d4d4;
+}
+
+#screen.theme-minimal .graph-edge-div.graph-edge-active {
+    background: #0070f3 !important;
+    opacity: 0.35 !important;
+    height: 3px !important;
+}
+
+#screen.theme-minimal .graph-edge-div.graph-edge-empty {
+    background: #e5e5e5;
+}
+
+#screen.theme-minimal .graph-edge-count-div {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #d4d4d4;
+    font-size: 9px;
+    font-weight: 400;
+}
+
+#screen.theme-minimal .graph-view #center-panel {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+    /* Override the single-view center panel positioning */
+    top: 6%;
+    max-height: none;
 }
 
 

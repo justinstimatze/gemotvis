@@ -1,6 +1,12 @@
 /* Adaptive Layout System for Different Agent Counts */
 
 /* ===== BILATERAL (2 agents) ===== */
+/* Bilateral: connection line is the main visual — make it prominent */
+.layout-bilateral .connection-line {
+    stroke-width: 3 !important;
+    opacity: 0.6 !important;
+}
+
 .layout-bilateral .agent-node:nth-child(1) {
     left: 30%;
     top: 45%;
@@ -205,3 +211,30 @@
 .layout-grid .connection-layer {
     display: none;
 }
+
+/* ===== MINIMAL THEME LAYOUT OVERRIDES ===== */
+/* Card sizing — agent-node IS the card in minimal theme */
+
+#screen.theme-minimal .layout-bilateral .agent-node {
+    padding: 20px 28px;
+    min-width: 160px;
+}
+#screen.theme-minimal .layout-bilateral .agent-vote { font-size: 28px; }
+#screen.theme-minimal .layout-bilateral .agent-name { font-size: 15px; }
+
+/* Pull bilateral agents closer so center panel has room */
+#screen.theme-minimal .layout-bilateral .agent-node:nth-child(1) { left: 22%; }
+#screen.theme-minimal .layout-bilateral .agent-node:nth-child(2) { left: 78%; }
+
+#screen.theme-minimal .layout-triangle .agent-node { padding: 14px 20px; min-width: 120px; }
+#screen.theme-minimal .layout-triangle .agent-vote { font-size: 24px; }
+#screen.theme-minimal .layout-triangle .agent-name { font-size: 12px; }
+
+#screen.theme-minimal .layout-polygon .agent-node { padding: 10px 14px; min-width: 90px; }
+#screen.theme-minimal .layout-polygon .agent-vote { font-size: 18px; }
+#screen.theme-minimal .layout-polygon .agent-name { font-size: 11px; }
+
+#screen.theme-minimal .layout-grid .agent-node { padding: 8px 10px; min-width: 70px; }
+#screen.theme-minimal .layout-grid .agent-vote { font-size: 14px; }
+#screen.theme-minimal .layout-grid .agent-name { font-size: 9px; }
+#screen.theme-minimal .layout-grid .agent-model { font-size: 8px; }

@@ -12,25 +12,25 @@
 /* ===== DESIGN TOKENS ===== */
 
 :root {
-    /* Classic manuscript palette — KCD/Pentiment ink tones */
-    --vis-amber: #5A4A35;          /* ink medium (roads, borders) */
-    --vis-amber-dim: #6B5B45;      /* ink light (secondary text) */
-    --vis-amber-glow: rgba(59, 47, 32, 0.15);
-    --vis-green: #2E6F40;          /* verdigris */
-    --vis-green-dim: #3A8A55;      /* verdigris light */
-    --vis-red: #C34A14;            /* vermillion (Pentiment red) */
-    --vis-red-dim: #8B2500;        /* oxblood */
-    --vis-blue: #1F3A6B;           /* lapis lazuli */
-    --vis-cyan: #1F3A6B;           /* lapis (same as blue for classic) */
-    --vis-magenta: #5B2E7A;        /* tyrian purple */
-    --vis-yellow: #D6B04C;         /* gold leaf */
-    --vis-bg: #E8D5B5;            /* KCD parchment */
-    --vis-panel: #F1E0C3;         /* Pentiment beige */
-    --vis-panel-border: #5A4A35;   /* ink medium */
-    --vis-text: #1A1410;           /* ink black (fresh) */
-    --vis-text-dim: #5A4A35;       /* ink medium */
-    --vis-font: 'IM Fell English', 'Georgia', 'Palatino Linotype', serif;
-    --vis-font-display: 'UnifrakturMaguntia', 'MedievalSharp', cursive;
+    /* Minimal palette — Geist/Vercel design system */
+    --vis-amber: #0070f3;          /* primary accent (Vercel blue) */
+    --vis-amber-dim: #737373;      /* secondary text */
+    --vis-amber-glow: rgba(0, 112, 243, 0.1);
+    --vis-green: #17b169;          /* success / agree */
+    --vis-green-dim: #22c55e;      /* success light */
+    --vis-red: #ef4444;            /* error / deny */
+    --vis-red-dim: #dc2626;        /* error dark */
+    --vis-blue: #0070f3;           /* info */
+    --vis-cyan: #0091ff;           /* info alt */
+    --vis-magenta: #7c3aed;        /* purple accent */
+    --vis-yellow: #f5a623;         /* warning / analysis */
+    --vis-bg: #f5f5f5;            /* page background */
+    --vis-panel: #ffffff;          /* card/panel background */
+    --vis-panel-border: #e5e5e5;   /* border */
+    --vis-text: #171717;           /* primary text */
+    --vis-text-dim: #737373;       /* secondary text */
+    --vis-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --vis-font-display: 'Inter', -apple-system, sans-serif;
 
     /* Effect tokens — themes can override or set to 'none' */
     --glow-sm: none;
@@ -157,17 +157,22 @@ header {
     background: var(--vis-panel);
     flex-shrink: 0;
     z-index: 10;
+    position: relative;
 }
 
 .header-left, .header-right {
     display: flex;
     gap: 16px;
     align-items: center;
+    z-index: 1;
 }
 
 .header-center {
-    flex: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
+    pointer-events: none;
 }
 
 .system-label {
@@ -221,6 +226,21 @@ header {
     flex-shrink: 0;
     align-items: center;
     overflow-x: auto;
+    flex-wrap: nowrap;
+    /* Scroll fade indicators */
+    mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+}
+
+/* Remove fade when scrolled to start */
+#delib-nav:not(:hover) { scrollbar-width: none; }
+#delib-nav::-webkit-scrollbar { height: 2px; }
+#delib-nav::-webkit-scrollbar-thumb { background: var(--vis-panel-border); border-radius: 999px; }
+
+#delib-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
 }
 
 .nav-label {
@@ -711,6 +731,31 @@ header {
     border-color: var(--vis-green);
 }
 
+/* Playhead — vertical line at current scrub position */
+.scrubber-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--vis-amber);
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 1px;
+}
+
+.scrubber-playhead::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: var(--vis-amber);
+    border-radius: 50%;
+}
+
 /* ===== FOOTER ===== */
 
 footer {
@@ -773,7 +818,7 @@ footer {
     position: absolute;
     top: 0; left: 0;
     height: 100%;
-    background: linear-gradient(90deg, var(--vis-amber), var(--vis-red));
+    background: linear-gradient(90deg, var(--vis-amber), var(--vis-yellow));
     transition: width 0.5s;
 }
 
@@ -1069,6 +1114,208 @@ footer {
     overflow: hidden;
 }
 
+/* ===== GRAPH VIEW ===== */
+/* Unified graph: agent nodes connected by bilateral edges */
+
+.graph-canvas {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.graph-view {
+    overflow: hidden;
+}
+
+/* Graph edges: CSS div lines that transition smoothly with nodes */
+.graph-edge-div {
+    position: absolute;
+    background: var(--vis-text-dim);
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 0;
+    transform-origin: center center;
+    /* No CSS transitions — edges track nodes via JS animation loop */
+    transition: opacity 0.4s ease, height 0.3s ease;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.graph-edge-div.graph-edge-empty {
+    background: var(--vis-panel-border);
+}
+
+.graph-edge-div.graph-edge-active {
+    background: var(--vis-amber) !important;
+    opacity: 0.35 !important;
+}
+
+.graph-edge-count-div {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--angle, 0deg)));
+    font-size: 9px;
+    color: var(--vis-text-dim);
+    pointer-events: none;
+    opacity: 0.4;
+    font-family: var(--vis-font);
+}
+
+.graph-node {
+    position: absolute;
+    /* Offset so the icon center (not the whole element center) aligns with the position */
+    transform: translate(-50%, -35%);
+    text-align: center;
+    z-index: 2;
+    cursor: pointer;
+    transition: left 3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                top 3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.4s ease, opacity 0.6s ease;
+}
+
+.graph-node:hover {
+    transform: translate(-50%, -35%) scale(1.08);
+}
+
+.graph-node-active {
+    z-index: 3;
+    transform: translate(-50%, -35%) scale(1.15);
+}
+
+.graph-node-active .graph-node-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+}
+
+.graph-node-active .graph-node-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Ready indicator — shown before autoplay starts */
+.graph-ready-indicator {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 5;
+    transition: opacity 0.6s ease;
+}
+
+.graph-ready-indicator.fading {
+    opacity: 0;
+}
+
+.graph-ready-text {
+    font-family: var(--vis-font);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--vis-text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.graph-ready-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.graph-node-quiet {
+    opacity: 0.4;
+}
+
+/* When an edge is active, fade non-participating nodes as they drift off */
+.graph-canvas:has(.graph-edge-active) .graph-node:not(.graph-node-active) {
+    opacity: 0.3;
+}
+
+/* Dim but keep non-active edges visible so graph stays connected */
+.graph-canvas:has(.graph-edge-active) .graph-edge-div:not(.graph-edge-active) {
+    opacity: 0.5 !important;
+    height: 1px !important;
+}
+.graph-canvas:has(.graph-edge-active) .graph-edge-count-div {
+    opacity: 0 !important;
+}
+
+.graph-node-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto;
+    border: 2px solid var(--vis-amber);
+    background: var(--vis-panel);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--vis-text-dim);
+    font-family: var(--vis-font);
+}
+
+.graph-node-active .graph-node-icon {
+    border-color: var(--vis-amber);
+    box-shadow: 0 0 12px var(--vis-amber-glow);
+}
+
+.graph-node:hover .graph-node-icon {
+    border-color: var(--vis-amber);
+}
+
+.graph-node-name {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--vis-text);
+    margin-top: 6px;
+    text-transform: capitalize;
+    font-family: var(--vis-font);
+    font-weight: 600;
+    /* Float above edges */
+    position: relative;
+    z-index: 3;
+    text-shadow: 0 0 6px var(--vis-bg), 0 0 12px var(--vis-bg);
+}
+
+.graph-node-stats {
+    display: block;
+    font-size: 9px;
+    color: var(--vis-text-dim);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    font-family: var(--vis-font);
+    position: relative;
+    z-index: 3;
+    text-shadow: 0 0 4px var(--vis-bg);
+}
+
+/* Graph view: center panel — directly under the anchored nodes, hard-capped above footer */
+.graph-view #center-panel {
+    position: absolute;
+    z-index: 10;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 6%;
+    bottom: 260px; /* footer (220px) + scrubber (28px) + margin */
+    max-width: 520px;
+    min-width: 340px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.graph-view .panel-content {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
 .multi-canvas {
     position: absolute;
     inset: 0;
@@ -1105,6 +1352,17 @@ footer {
     animation: activityPulse 1s ease-out;
     border-color: var(--vis-amber);
 }
+
+/* Highlight the card that owns the current scrub event */
+.multi-region.scrub-active {
+    border-color: var(--vis-amber);
+    box-shadow: 0 0 0 2px var(--vis-amber-glow);
+}
+
+
+/* Activity level — higher activity cards look denser */
+.multi-region.activity-high { border-width: 2px; }
+.multi-region.activity-low { opacity: 0.75; }
 
 .multi-region-title {
     display: flex;

@@ -2,18 +2,16 @@
 // Main application controller
 
 const VOTE_LABELS_MAGI = { 1: '承認', '-1': '否定', 0: '保留' };
-const VOTE_LABELS_CLASSIC = { 1: 'YEA', '-1': 'NAY', 0: '—' };
 const VOTE_LABELS_MINIMAL = { 1: 'YES', '-1': 'NO', 0: '—' };
-let VOTE_LABELS = VOTE_LABELS_CLASSIC; // set by applyTheme()
+let VOTE_LABELS = VOTE_LABELS_MINIMAL; // set by applyTheme()
 const VOTE_CLASSES = { 1: 'vote-approve', '-1': 'vote-deny', 0: 'vote-pass' };
 
 const STATUS_LABELS = {
     magi: { online: 'ONLINE', offline: 'OFFLINE', closed: 'CLOSED', analyzing: 'ANALYZING' },
-    classic: { online: 'Active', offline: 'Waiting', closed: 'Concluded', analyzing: 'Deliberating' },
     minimal: { online: 'Connected', offline: 'Disconnected', closed: 'Closed', analyzing: 'Analyzing' },
     gastown: { online: 'OPERATIONAL', offline: 'OFFLINE', closed: 'SEALED', analyzing: 'PROCESSING' },
 };
-let STATUS = STATUS_LABELS.classic; // set by applyTheme()
+let STATUS = STATUS_LABELS.minimal; // set by applyTheme()
 
 const PIPELINE_STAGES = ['taxonomy', 'extracting', 'deduplicating', 'crux_detection', 'summarizing', 'complete'];
 
@@ -28,8 +26,9 @@ let state = {
     cycleInterval: 0,    // ms, from server config
     mode: 'live',        // 'demo' | 'replay' | 'live'
     multiView: false,    // true when watching multiple deliberations spatially
-    focusedDelibID: null, // which deliberation the camera is focused on (null = overview)
-    lastActivity: {},     // delibID -> timestamp of last event
+    focusedDelibID: null,    // which deliberation the camera is focused on (null = overview)
+    scrubActiveDelibID: null, // which card owns the current scrub event (highlight, no zoom)
+    lastActivity: {},        // delibID -> timestamp of last event
 };
 
 let eventSource = null;
@@ -39,10 +38,11 @@ let directSSEFetchTimer = null;
 let previousVotes = {}; // agentID -> vote value, for detecting changes
 let knownAgents = new Set(); // for detecting new agents
 let focusTimer = null; // timer to return to overview after idle
+let typingTimer = null; // current word-reveal animation
 
 // Scrubber state
-const SCRUBBER_SPEEDS = [1200, 600, 300]; // ms per step: 1x, 2x, 4x
-const SCRUBBER_SPEED_LABELS = ['1x', '2x', '4x'];
+const SCRUBBER_SPEEDS = [12000, 7000, 4000, 2000]; // ms per new-message pause
+const SCRUBBER_SPEED_LABELS = ['1x', '2x', '3x', '5x'];
 const scrubber = {
     enabled: false,
     playing: false,
@@ -52,6 +52,7 @@ const scrubber = {
     playTimer: null,
     speedIdx: 0,
     typeFilter: null, // null = all, or 'position'|'vote'|'analysis'
+    autoplayStarted: false, // true after first multi-view autoplay
 };
 
 // ===== Safe DOM Helpers =====
@@ -217,20 +218,54 @@ async function loadConfig() {
 
 // ===== Timeline Scrubber =====
 
+// Filter deliberation state to show only events the scrubber has revealed.
+//
+// Ops are sorted chronologically with sequence numbers. For the focused delib,
+// we count how many of its ops the global scrubber has stepped through.
+// For background delibs, we use timestamp-based cutoff (coarse but sufficient).
 function filterToTime(ds, cutoffTime) {
-    const cutoff = new Date(cutoffTime).getTime();
-    const positions = (ds.positions || []).filter(p => new Date(p.created_at).getTime() <= cutoff);
-    const votes = (ds.votes || []).filter(v => new Date(v.created_at).getTime() <= cutoff);
+    const ops = ds.audit_log?.operations || []; // already sorted chronologically with sequence
+    const delibID = ds.deliberation?.deliberation_id;
+
+    let filteredOps;
+    const isFocused = delibID && (graphState.activeEdge === delibID ||
+        state.focusedDelibID === delibID || state.activeDelibID === delibID);
+
+    if (scrubber.enabled && scrubber.eventIndex != null && isFocused) {
+        // Focused: count how many of this delib's events the scrubber has passed
+        let count = 0;
+        for (let i = 0; i <= scrubber.eventIndex; i++) {
+            if (scrubber.events[i]?.delibID === delibID) count++;
+        }
+        filteredOps = ops.slice(0, count);
+    } else if (scrubber.enabled && scrubber.eventIndex != null) {
+        // Background: use timestamp cutoff
+        const cutoff = new Date(cutoffTime).getTime();
+        filteredOps = ops.filter(op => new Date(op.timestamp).getTime() <= cutoff);
+    } else {
+        filteredOps = ops;
+    }
+
+    // Count revealed events by type
+    let posOpsCount = 0, voteOpsCount = 0, hasAnalysisOp = false;
+    filteredOps.forEach(op => {
+        const m = (op.method || '').replace('gemot/', '');
+        if (m.includes('submit_position')) posOpsCount++;
+        else if (m.includes('vote')) voteOpsCount++;
+        else if (m.includes('analy') || m.includes('get_analysis_result')) hasAnalysisOp = true;
+    });
+
+    // Positions and votes are already sorted chronologically in the fixed data
+    const positions = (ds.positions || []).slice(0, posOpsCount);
+    const votes = (ds.votes || []).slice(0, voteOpsCount);
+
     const visibleAgentIDs = new Set(positions.map(p => p.agent_id));
     const agents = (ds.agents || []).filter(a => visibleAgentIDs.has(a.id));
-    const ops = ds.audit_log?.operations || [];
-    const hasAnalysis = ops.some(op =>
-        (op.method === 'gemot/analyze' || op.method === 'gemot/get_analysis_result') &&
-        new Date(op.timestamp).getTime() <= cutoff
-    );
-    const analysis = hasAnalysis ? ds.analysis : null;
+
+    // Show analysis only after its op has been revealed
+    const analysis = hasAnalysisOp ? ds.analysis : null;
     const filteredAgents = analysis ? agents : agents.map(a => ({ ...a, cluster_id: undefined }));
-    const filteredOps = ops.filter(op => new Date(op.timestamp).getTime() <= cutoff);
+
     return {
         deliberation: ds.deliberation,
         positions,
@@ -244,9 +279,9 @@ function filterToTime(ds, cutoffTime) {
 function buildTimelineEvents(ds) {
     const ops = ds.audit_log?.operations || [];
     return ops.map((op, i) => {
-        const method = op.method || '';
+        const method = (op.method || '').replace('gemot/', ''); // normalize: strip prefix if present
         let type = 'other';
-        let label = method.replace('gemot/', '');
+        let label = method;
         if (method.includes('submit_position')) {
             type = 'position';
             label = `${shortAgentID(op.agent_id || '')} submits position`;
@@ -269,9 +304,9 @@ function buildGlobalTimeline(delibs) {
         const shortTopic = topic.length > 30 ? topic.slice(0, 28) + '..' : topic;
         const ops = ds.audit_log?.operations || [];
         ops.forEach((op, i) => {
-            const method = op.method || '';
+            const method = (op.method || '').replace('gemot/', '');
             let type = 'other';
-            let action = method.replace('gemot/', '');
+            let action = method;
             if (method.includes('submit_position')) {
                 type = 'position';
                 action = `${shortAgentID(op.agent_id || '')} submits position`;
@@ -336,6 +371,20 @@ function renderScrubber(ds) {
         dots.appendChild(dot);
     });
 
+    // Playhead line (vertical indicator at current position)
+    let playhead = dots.parentElement.querySelector('.scrubber-playhead');
+    if (scrubber.eventIndex != null && allEvents.length > 1) {
+        const pct = (scrubber.eventIndex / (allEvents.length - 1)) * 100;
+        if (!playhead) {
+            playhead = el('div', { className: 'scrubber-playhead' });
+            dots.parentElement.appendChild(playhead);
+        }
+        playhead.style.cssText = `left: ${pct}%`;
+        playhead.classList.remove('hidden');
+    } else if (playhead) {
+        playhead.classList.add('hidden');
+    }
+
     const idx = scrubber.eventIndex;
     if (idx != null && allEvents[idx]) {
         const t = new Date(allEvents[idx].time);
@@ -354,12 +403,34 @@ function scrubTo(index, fromPlay) {
     scrubber.enabled = true;
     scrubber.eventIndex = index;
     if (!fromPlay) state.cyclePaused = true;
+    if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
 
-    // In multi-view: focus on the event's deliberation
+    // Update URL for deep linking (throttled to avoid history spam)
+    if (!fromPlay || index % 10 === 0) {
+        const url = new URL(window.location);
+        url.searchParams.set('t', index);
+        history.replaceState(null, '', url);
+    }
+
     if (state.multiView && scrubber.events[index]?.delibID) {
         stopDemoLoop();
         clearTimeout(focusTimer);
-        state.focusedDelibID = scrubber.events[index].delibID;
+        state.scrubActiveDelibID = scrubber.events[index].delibID;
+
+        // In graph mode: don't zoom to single-view, just track active edge
+        const graph = buildGraphFromDelibs(state.deliberations);
+        if (graph) {
+            // Graph mode: set activeEdge for bilateral events, clear for group events
+            const evtDelib = state.deliberations[scrubber.events[index].delibID];
+            if (evtDelib && (evtDelib.agents || []).length === 2) {
+                graphState.activeEdge = scrubber.events[index].delibID;
+            }
+            // Don't set focusedDelibID — stay in graph view
+        } else if (fromPlay) {
+            // Card mode: zoom to the active deliberation (filmstrip replay)
+            state.focusedDelibID = scrubber.events[index].delibID;
+        }
+        // Manual dot-click: stay in overview (synchronized view)
     }
     render();
 }
@@ -367,6 +438,7 @@ function scrubTo(index, fromPlay) {
 function scrubToLive() {
     scrubber.enabled = false;
     scrubber.eventIndex = null;
+    state.scrubActiveDelibID = null;
     stopScrubberPlay();
     render();
 }
@@ -376,15 +448,73 @@ function toggleScrubberPlay() {
 }
 
 function startScrubberPlay() {
-    if (scrubber.playTimer) clearInterval(scrubber.playTimer);
+    if (scrubber.playTimer) clearTimeout(scrubber.playTimer);
     scrubber.playing = true;
     scrubber.enabled = true;
     if (scrubber.eventIndex == null) scrubber.eventIndex = 0;
-    scrubber.playTimer = setInterval(() => {
-        const next = (scrubber.eventIndex || 0) + 1;
+
+    function advance() {
+        let next = (scrubber.eventIndex || 0) + 1;
         if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
-        scrubTo(next, true); // fromPlay=true, don't pause cycling
-    }, SCRUBBER_SPEEDS[scrubber.speedIdx]);
+
+        // Skip non-visual events (create_deliberation, set_template, etc.)
+        // but keep ALL position and vote events including group deliberations
+        while (next < scrubber.events.length) {
+            const e = scrubber.events[next];
+            if (e.type === 'position' || e.type === 'vote') break;
+            next++;
+        }
+        if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
+
+        const evt = scrubber.events[next];
+        scrubTo(next, true);
+
+        let delay = SCRUBBER_SPEEDS[scrubber.speedIdx];
+
+        // Find the next visual event to check if we're about to switch deliberations
+        let nextVisual = next + 1;
+        while (nextVisual < scrubber.events.length) {
+            const ne = scrubber.events[nextVisual];
+            if (ne.type === 'position' || ne.type === 'vote') break;
+            nextVisual++;
+        }
+        const nextVisEvent = scrubber.events[nextVisual];
+        const switchingEdge = nextVisEvent && nextVisEvent.delibID !== evt.delibID;
+
+        if (switchingEdge) {
+            delay += SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.5;
+            const edgeAtSwitch = graphState.activeEdge; // capture for closure
+
+            // Show thinking dots + end marker after typing finishes
+            setTimeout(() => {
+                if (graphState.activeEdge !== edgeAtSwitch) return; // edge already switched
+                const thread = document.querySelector('.chat-thread');
+                const content = document.getElementById('center-content');
+                if (thread && scrubber.playing) {
+                    const indicator = el('div', { className: 'chat-thinking' },
+                        el('span', { className: 'thinking-dots' },
+                            el('span', { className: 'thinking-dot' }),
+                            el('span', { className: 'thinking-dot' }),
+                            el('span', { className: 'thinking-dot' })));
+                    thread.appendChild(indicator);
+                    if (content) content.scrollTop = content.scrollHeight;
+                }
+                if (content && !content.querySelector('.chat-end-marker')) {
+                    setTimeout(() => {
+                        if (graphState.activeEdge !== edgeAtSwitch) return; // stale
+                        if (content.isConnected && scrubber.playing) {
+                            content.appendChild(el('div', { className: 'chat-end-marker' }, 'End of negotiation'));
+                            content.scrollTop = content.scrollHeight;
+                        }
+                    }, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.3);
+                }
+            }, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7);
+        }
+
+        scrubber.playTimer = setTimeout(advance, delay);
+    }
+
+    scrubber.playTimer = setTimeout(advance, SCRUBBER_SPEEDS[scrubber.speedIdx]);
     updatePlayButton();
 }
 
@@ -401,15 +531,16 @@ function cycleScrubberSpeed() {
     if (btn) btn.textContent = SCRUBBER_SPEED_LABELS[scrubber.speedIdx];
     // Restart playback at new speed if currently playing
     if (scrubber.playing) {
-        clearInterval(scrubber.playTimer);
+        clearTimeout(scrubber.playTimer);
         startScrubberPlay();
     }
 }
 
 function stopScrubberPlay() {
     scrubber.playing = false;
-    clearInterval(scrubber.playTimer);
+    clearTimeout(scrubber.playTimer);
     scrubber.playTimer = null;
+    if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
     updatePlayButton();
 }
 
@@ -418,114 +549,7 @@ function updatePlayButton() {
     if (btn) btn.textContent = scrubber.playing ? '\u23F8' : '\u25B6';
 }
 
-// ===== Terrain Decoration (classic theme) =====
 
-let terrainRendered = false;
-
-function renderTerrain() {
-    if (terrainRendered || activeTheme !== 'classic') return;
-    terrainRendered = true;
-
-    const main = document.getElementById('main');
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'terrain-layer');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
-    svg.setAttribute('viewBox', '0 0 1300 700');
-
-    const ink = '#3B2F20';
-
-    // Dense forest clusters — prominent like a real medieval map
-    const treeClusters = [
-        // Left edge forests
-        { x: 30, y: 130, count: 7, spread: 22 },
-        { x: 50, y: 480, count: 6, spread: 24 },
-        { x: 120, y: 310, count: 5, spread: 20 },
-        // Right edge forests
-        { x: 1140, y: 100, count: 8, spread: 22 },
-        { x: 1160, y: 440, count: 6, spread: 24 },
-        { x: 1100, y: 580, count: 5, spread: 20 },
-        // Top/bottom scatter
-        { x: 500, y: 80, count: 4, spread: 18 },
-        { x: 800, y: 620, count: 5, spread: 20 },
-        { x: 350, y: 600, count: 6, spread: 22 },
-        { x: 950, y: 90, count: 4, spread: 20 },
-        // Interior small groves
-        { x: 450, y: 400, count: 3, spread: 16 },
-        { x: 750, y: 200, count: 3, spread: 16 },
-    ];
-
-    treeClusters.forEach(cluster => {
-        for (let i = 0; i < cluster.count; i++) {
-            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-            use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#gi-tree');
-            const ox = cluster.x + (i % 4) * cluster.spread - cluster.spread * 0.5;
-            const oy = cluster.y + Math.floor(i / 4) * cluster.spread * 0.7 + (i % 2) * 6;
-            const size = 20 + (i % 3) * 5;
-            use.setAttribute('x', ox);
-            use.setAttribute('y', oy);
-            use.setAttribute('width', size);
-            use.setAttribute('height', size);
-            use.setAttribute('fill', ink);
-            use.setAttribute('opacity', '0.18');
-            svg.appendChild(use);
-        }
-    });
-
-    // Hill/peak symbols — more and bolder
-    const hills = [
-        { x: 200, y: 520, w: 70, h: 40 },
-        { x: 850, y: 100, w: 80, h: 45 },
-        { x: 600, y: 600, w: 60, h: 35 },
-        { x: 1050, y: 300, w: 70, h: 40 },
-        { x: 100, y: 80, w: 55, h: 30 },
-        { x: 700, y: 50, w: 50, h: 28 },
-    ];
-
-    hills.forEach(h => {
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#gi-peaks');
-        use.setAttribute('x', h.x);
-        use.setAttribute('y', h.y);
-        use.setAttribute('width', h.w);
-        use.setAttribute('height', h.h);
-        use.setAttribute('fill', ink);
-        use.setAttribute('opacity', '0.12');
-        svg.appendChild(use);
-    });
-
-    // River — bold wavy blue-grey path with tributary
-    const river = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    river.setAttribute('d', 'M-10,180 C100,160 180,260 320,230 S480,310 620,270 S800,340 900,290 S1050,360 1150,310 S1250,370 1320,340');
-    river.setAttribute('fill', 'none');
-    river.setAttribute('stroke', '#6A7F90');
-    river.setAttribute('stroke-width', '5');
-    river.setAttribute('opacity', '0.3');
-    river.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(river);
-
-    // River highlight (lighter inner line)
-    const riverHL = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    riverHL.setAttribute('d', 'M-10,180 C100,160 180,260 320,230 S480,310 620,270 S800,340 900,290 S1050,360 1150,310 S1250,370 1320,340');
-    riverHL.setAttribute('fill', 'none');
-    riverHL.setAttribute('stroke', '#8A9FAF');
-    riverHL.setAttribute('stroke-width', '2');
-    riverHL.setAttribute('opacity', '0.2');
-    riverHL.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(riverHL);
-
-    // Tributary stream joining from upper-right
-    const trib = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    trib.setAttribute('d', 'M1100,60 C1050,100 980,150 900,290');
-    trib.setAttribute('fill', 'none');
-    trib.setAttribute('stroke', '#6A7F90');
-    trib.setAttribute('stroke-width', '2.5');
-    trib.setAttribute('opacity', '0.2');
-    trib.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(trib);
-
-    main.insertBefore(svg, main.firstChild);
-}
 
 // ===== Rendering =====
 
@@ -533,19 +557,20 @@ function render() {
     const delibs = state.deliberations;
     const ids = Object.keys(delibs);
 
-    // Multi-view: render all deliberations spatially when in multi-watch mode
+    // Multi-view: render all deliberations as a unified graph
     if (state.multiView && ids.length > 1) {
         document.getElementById('delib-nav')?.classList.add('hidden');
         document.getElementById('empty-state')?.classList.add('hidden');
 
-        // Update header for multi-view
+        const graph = buildGraphFromDelibs(delibs);
         const focused = state.focusedDelibID && delibs[state.focusedDelibID];
-        const topicEl = document.querySelector('.topic-label');
 
+        // Remove stale overview button if it exists
+        document.getElementById('overview-btn')?.remove();
+
+        // Zoomed into a specific deliberation for full single-view
         if (focused) {
-            // ZOOMED IN: render as full single-view for the focused deliberation
-            // Hide multi-canvas, show single-view elements
-            document.getElementById('multi-canvas')?.classList.add('hidden');
+            document.getElementById('graph-canvas')?.classList.add('hidden');
             document.getElementById('agents')?.classList.remove('hidden');
             document.getElementById('connections')?.classList.remove('hidden');
             document.getElementById('footer')?.classList.remove('hidden');
@@ -553,14 +578,12 @@ function render() {
             document.getElementById('scrubber-bar')?.classList.remove('hidden');
             document.getElementById('main').className = '';
 
-            // Apply scrubber time filter if active
             let display = focused;
             if (scrubber.enabled && scrubber.eventIndex != null) {
                 const evt = scrubber.events[scrubber.eventIndex];
                 if (evt?.time) display = filterToTime(focused, evt.time);
             }
 
-            renderTerrain();
             renderHeader(display);
             renderAnalysisBar(display);
             renderAgents(display);
@@ -569,36 +592,82 @@ function render() {
             renderCruxPanel(display);
             renderMetrics(display);
             renderAuditLog(display);
-            renderScrubber(null); // global timeline
+            renderScrubber(null);
             return;
         }
 
-        // OVERVIEW: show multi-view grid
-        document.getElementById('agents')?.classList.add('hidden');
-        document.getElementById('connections')?.classList.add('hidden');
-        document.getElementById('center-panel')?.classList.add('hidden');
-        document.getElementById('multi-canvas')?.classList.remove('hidden');
-
-        topicEl.textContent = `${ids.length} Deliberations`;
-        document.getElementById('footer')?.classList.add('hidden');
-        document.getElementById('analysis-bar')?.classList.add('hidden');
+        // Graph overview
         document.getElementById('scrubber-bar')?.classList.remove('hidden');
         renderScrubber(null);
-        const roundEl = document.getElementById('round-display');
-        if (roundEl) roundEl.textContent = '';
-        const templateEl = document.getElementById('template-display');
-        if (templateEl) templateEl.textContent = '';
 
-        renderMultiView();
-        if (!demoLoopTimer && state.cycleInterval > 0) {
-            startDemoLoop();
+        // During autoplay, track which deliberation is active
+        if (scrubber.playing && scrubber.eventIndex != null) {
+            const evt = scrubber.events[scrubber.eventIndex];
+            if (evt?.delibID) {
+                const newEdge = evt.delibID;
+                const prevEdge = graphState.activeEdge;
+                if (newEdge !== prevEdge) {
+                    // Force full center panel rebuild on delib switch
+                    renderCenterPanel._delibID = null;
+                    renderCenterPanel._posCount = 0;
+                    renderCenterPanel._hadAnalysis = false;
+                    renderCenterPanel._thread = null;
+                    if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
+                    const cp = document.getElementById('center-content');
+                    if (cp) clearChildren(cp);
+                    document.getElementById('center-panel')?.classList.add('hidden');
+                }
+                graphState.activeEdge = newEdge;
+            }
+        }
+
+        renderGraphView(graph);
+
+        if (!scrubber.playing && !scrubber.autoplayStarted && scrubber.events.length > 2) {
+            scrubber.autoplayStarted = true;
+
+            // Restore deep link position if ?t= param exists
+            const tParam = new URLSearchParams(window.location.search).get('t');
+            if (tParam != null) {
+                const idx = Math.min(parseInt(tParam, 10) || 0, scrubber.events.length - 1);
+                scrubTo(idx, true);
+                startScrubberPlay();
+                return;
+            }
+
+            // Show a "beginning" indicator before autoplay launches
+            const gc = document.getElementById('graph-canvas');
+            if (gc) {
+                let readyEl = gc.querySelector('.graph-ready-indicator');
+                if (!readyEl) {
+                    readyEl = el('div', { className: 'graph-ready-indicator' },
+                        el('div', { className: 'graph-ready-text' }, 'Replaying deliberation'),
+                        el('div', { className: 'graph-ready-dots' },
+                            el('span', { className: 'thinking-dot' }),
+                            el('span', { className: 'thinking-dot' }),
+                            el('span', { className: 'thinking-dot' })),
+                    );
+                    gc.appendChild(readyEl);
+                }
+
+                // Start playback after a pause, keep indicator visible well into playback
+                setTimeout(() => {
+                    startScrubberPlay();
+                }, 3000);
+                setTimeout(() => {
+                    if (readyEl.isConnected) readyEl.classList.add('fading');
+                    setTimeout(() => { if (readyEl.isConnected) readyEl.remove(); }, 1200);
+                }, 12000);
+            } else {
+                startScrubberPlay();
+            }
         }
         return;
     }
 
     // Leaving multi-view: restore single-view DOM
-    const multiCanvas = document.getElementById('multi-canvas');
-    if (multiCanvas) multiCanvas.remove();
+    const graphCanvas = document.getElementById('graph-canvas');
+    if (graphCanvas) graphCanvas.remove();
     document.getElementById('main').className = '';
     document.getElementById('footer')?.classList.remove('hidden');
     document.getElementById('analysis-bar')?.classList.remove('hidden');
@@ -617,9 +686,6 @@ function render() {
     if (emptyEl) emptyEl.classList.add('hidden');
     document.getElementById('agents')?.classList.remove('hidden');
     document.getElementById('connections')?.classList.remove('hidden');
-
-    // Render terrain decorations (classic theme, once)
-    renderTerrain();
 
     // Apply scrubber time filter if active
     let display = active;
@@ -653,10 +719,15 @@ function renderDelibNav(ids, delibs) {
 
     ids.forEach(id => {
         const d = delibs[id].deliberation;
+        const agents = delibs[id].agents || [];
+        // Compact label: show agent names for small groups, topic for larger ones
+        const label = agents.length > 0 && agents.length <= 3
+            ? agents.map(a => shortAgentID(a.id)).join('–')
+            : truncate(d.topic || id, 25);
         const btn = el('button', {
             className: `delib-tab ${id === state.activeDelibID ? 'active' : ''} ${d.status === 'analyzing' ? 'analyzing' : ''}`,
             dataset: { id },
-        }, truncate(d.topic || id, 30));
+        }, label);
         btn.onclick = () => {
             switchToDelib(id);
             state.cyclePaused = true; // manual click pauses auto-cycle
@@ -816,28 +887,16 @@ function renderAgents(ds) {
             className: `agent-node ${trustClass} ${warningClass}${animClass}`,
             style,
         },
-            el('div', { className: `diamond ${convClass} ${clusterClass}` },
-                // Classic theme: render SVG settlement icon inside diamond
-                activeTheme === 'classic' ? (() => {
-                    const icons = ['gi-castle', 'gi-village'];
-                    const iconId = icons[i % icons.length];
-                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                    svg.setAttribute('viewBox', '0 0 512 512');
-                    svg.style.cssText = 'width:100%;height:100%;position:absolute;inset:0;';
-                    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-                    use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + iconId);
-                    use.setAttribute('fill', '#3B2F20');
-                    use.setAttribute('fill-rule', 'evenodd');
-                    svg.appendChild(use);
-                    return svg;
-                })() : null,
-            ),
+            el('div', { className: `diamond ${convClass} ${clusterClass}` }),
             el('div', { className: 'diamond-vote' },
-                el('span', { className: `agent-vote ${voteClass}` }, voteLabel),
+                // Only show vote if votes exist in this deliberation
+                (ds.votes && ds.votes.length > 0)
+                    ? el('span', { className: `agent-vote ${voteClass}` }, voteLabel)
+                    : null,
             ),
             el('div', { className: 'agent-label' },
                 el('span', { className: 'agent-name' }, name),
-                el('span', { className: 'agent-model' }, agent.model_family || '?'),
+                agent.model_family ? el('span', { className: 'agent-model' }, agent.model_family) : null,
             ),
             tooltip,
         );
@@ -851,28 +910,6 @@ function renderAgents(ds) {
 
         container.appendChild(node);
     });
-}
-
-// Create a slightly wavy SVG path between two points (hand-drawn road effect).
-// Seed makes the waviness stable across re-renders for the same agent pair.
-function createRoadPath(x1, y1, x2, y2, seed) {
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    // Perpendicular unit vector
-    const px = -dy / len, py = dx / len;
-    // Seeded pseudo-random offsets (deterministic per pair)
-    const r1 = ((seed * 7919 + 1) % 97) / 97 - 0.5; // -0.5..0.5
-    const r2 = ((seed * 6271 + 3) % 89) / 89 - 0.5;
-    const wobble = Math.min(len * 0.4, 80); // dramatically winding medieval roads
-    // Two control points at 1/3 and 2/3 along the line, offset perpendicular
-    const cx1 = x1 + dx * 0.33 + px * r1 * wobble;
-    const cy1 = y1 + dy * 0.33 + py * r1 * wobble;
-    const cx2 = x1 + dx * 0.66 + px * r2 * wobble;
-    const cy2 = y1 + dy * 0.66 + py * r2 * wobble;
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
-    return path;
 }
 
 function renderConnections(ds) {
@@ -916,21 +953,7 @@ function renderConnections(ds) {
             const y1 = positions[i].y * rect.height;
             const x2 = positions[j].x * rect.width;
             const y2 = positions[j].y * rect.height;
-            if (activeTheme === 'classic') {
-                // Wavy bezier road path with waypoint dot
-                const road = createRoadPath(x1, y1, x2, y2, i * n + j);
-                road.setAttribute('class', `connection-line connection-${rel}`);
-                svg.appendChild(road);
-
-                if (rel !== 'neutral') {
-                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    dot.setAttribute('cx', (x1 + x2) / 2);
-                    dot.setAttribute('cy', (y1 + y2) / 2);
-                    dot.setAttribute('r', '2.5');
-                    dot.setAttribute('class', 'road-waypoint');
-                    svg.appendChild(dot);
-                }
-            } else if (activeTheme === 'gastown') {
+            if (activeTheme === 'gastown') {
                 // Industrial pipe: thick outer + thin inner highlight
                 const pipe = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 pipe.setAttribute('x1', x1); pipe.setAttribute('y1', y1);
@@ -971,53 +994,202 @@ function renderConnections(ds) {
 function renderCenterPanel(ds) {
     const panel = document.getElementById('center-panel');
     const content = document.getElementById('center-content');
+    const panelHeader = panel.querySelector('.panel-header');
     const analysis = ds.analysis;
 
-    if (!analysis) {
+    const positions = ds.positions || [];
+    const agents = ds.agents || [];
+    const agentIDs = agents.map(a => a.id);
+
+    // Set header based on content being shown
+    if (panelHeader) {
+        if (positions.length > 0 && !analysis) {
+            panelHeader.textContent = 'Negotiation';
+        } else if (positions.length > 0 && analysis) {
+            panelHeader.textContent = 'Negotiation & Analysis';
+        } else if (analysis) {
+            panelHeader.textContent = 'Analysis';
+        } else {
+            panelHeader.textContent = '';
+        }
+    }
+
+    if (!analysis && positions.length === 0) {
         panel.classList.add('hidden');
         return;
     }
 
-    const consensus = analysis.consensus_statements || [];
-    const bridging = analysis.bridging_statements || [];
+    // Incremental rendering: track what's already in the DOM and only add new content.
+    // This prevents destroying in-progress typing animations.
+    const delibID = ds.deliberation?.deliberation_id;
+    const prevDelib = renderCenterPanel._delibID;
+    const prevPosCount = renderCenterPanel._posCount || 0;
+    const prevHadAnalysis = renderCenterPanel._hadAnalysis || false;
 
-    if (consensus.length === 0 && bridging.length === 0 && !analysis.compromise_proposal) {
-        panel.classList.add('hidden');
+    // Full rebuild if switching deliberation
+    if (delibID !== prevDelib) {
+        clearChildren(content);
+        renderCenterPanel._posCount = 0;
+        renderCenterPanel._hadAnalysis = false;
+        renderCenterPanel._thread = null;
+    }
+    renderCenterPanel._delibID = delibID;
+
+    // If typing is in progress and nothing new to add, skip entirely
+    // (don't touch panel visibility — let previous state stand)
+    if (typingTimer && positions.length === prevPosCount && (!!analysis === prevHadAnalysis)) {
         return;
     }
 
     panel.classList.remove('hidden');
-    clearChildren(content);
+
+    if (positions.length > 0) {
+        // Get or create chat thread
+        let thread = renderCenterPanel._thread;
+        if (!thread || !thread.isConnected) {
+            thread = el('div', { className: 'chat-thread' });
+            content.appendChild(thread);
+            renderCenterPanel._thread = thread;
+        }
+
+        // Remove previous "chat-new" class and end marker
+        thread.querySelector('.chat-new')?.classList.remove('chat-new');
+        content.querySelector('.chat-end-marker')?.remove();
+
+        // Only render NEW positions (after prevPosCount)
+        const newPositions = positions.slice(prevPosCount);
+        newPositions.forEach((p, idx) => {
+            const isLeft = agentIDs.indexOf(p.agent_id) <= 0;
+            const isNewest = (prevPosCount + idx) === positions.length - 1;
+
+            const textNode = el('div', { className: 'chat-text' });
+            if (!isNewest || !scrubber.playing) {
+                const text = p.content;
+                const paragraphs = text.split(/\n\n+/);
+                if (paragraphs.length > 1) {
+                    paragraphs.forEach(para => {
+                        if (para.trim()) {
+                            const pEl = el('p', { className: 'chat-para' });
+                            pEl.appendChild(renderTextWithMentions(para.trim(), agentIDs));
+                            textNode.appendChild(pEl);
+                        }
+                    });
+                } else {
+                    textNode.appendChild(renderTextWithMentions(text, agentIDs));
+                }
+            }
+
+            const bubble = el('div', {
+                className: `chat-bubble ${isLeft ? 'chat-left' : 'chat-right'} ${isNewest ? 'chat-new' : ''}`,
+            },
+                el('div', { className: 'chat-name' }, shortAgentID(p.agent_id)),
+                textNode,
+            );
+            thread.appendChild(bubble);
+
+            if (isNewest && scrubber.playing) {
+                requestAnimationFrame(() => typeReveal(textNode, p.content));
+            }
+        });
+
+        renderCenterPanel._posCount = positions.length;
+        requestAnimationFrame(() => { content.scrollTop = content.scrollHeight; });
+    }
+
+    // Show "end of negotiation" marker only when all positions were already rendered
+    // on a PREVIOUS call (meaning the last message typing has completed)
+    if (!analysis && positions.length > 0) {
+        const totalPos = (ds.positions || []).length;
+        const allRevealed = positions.length >= totalPos && totalPos > 0;
+        const lastMsgAlreadyRendered = prevPosCount >= totalPos;
+        if (allRevealed && lastMsgAlreadyRendered && !typingTimer) {
+            if (!content.querySelector('.chat-end-marker')) {
+                content.appendChild(el('div', { className: 'chat-end-marker' }, 'End of negotiation'));
+            }
+        }
+        return;
+    }
+    if (!analysis) return;
+
+    // Skip if analysis already rendered for this delib
+    if (prevHadAnalysis) return;
+    renderCenterPanel._hadAnalysis = true;
+
+    // Remove end marker before adding analysis
+    content.querySelector('.chat-end-marker')?.remove();
+
+    // Separator
+    if (positions.length > 0) {
+        content.appendChild(el('hr', { className: 'chat-divider' }));
+    }
+
+    const consensus = analysis.consensus_statements || [];
+    const bridging = analysis.bridging_statements || [];
+    const cruxes = analysis.cruxes || [];
+
+    if (consensus.length === 0 && bridging.length === 0 && !analysis.compromise_proposal && cruxes.length === 0) {
+        if (positions.length === 0) { panel.classList.add('hidden'); return; }
+        // Chat thread already rendered, just auto-scroll
+        requestAnimationFrame(() => { content.scrollTop = content.scrollHeight; });
+        return;
+    }
+
+    panel.classList.remove('hidden');
+
+    // Collect all analysis items to render, then type-reveal them sequentially
+    const analysisItems = [];
 
     if (consensus.length > 0) {
-        content.appendChild(el('div', { className: 'panel-label panel-label-consensus' }, 'CONSENSUS'));
-        consensus.forEach(c => {
-            content.appendChild(el('div', { className: 'panel-text' }, truncate(c.content, 120)));
-        });
+        analysisItems.push({ label: 'CONSENSUS', labelClass: 'panel-label-consensus' });
+        consensus.forEach(c => analysisItems.push({ text: c.content }));
     }
     if (bridging.length > 0) {
-        content.appendChild(el('div', { className: 'panel-label panel-label-bridging' }, 'BRIDGING'));
+        analysisItems.push({ label: 'BRIDGING', labelClass: 'panel-label-bridging' });
         bridging.forEach(b => {
-            const pct = b.bridging_score != null ? `${(b.bridging_score * 100).toFixed(0)}%` : '';
-            const score = el('span', { className: 'text-dim' }, pct ? ` (${pct})` : '');
-            const div = el('div', { className: 'panel-text' }, truncate(b.content, 100));
-            div.appendChild(score);
-            content.appendChild(div);
+            const pct = b.bridging_score != null ? ` (${(b.bridging_score * 100).toFixed(0)}%)` : '';
+            analysisItems.push({ text: b.content + pct });
         });
     }
     if (analysis.compromise_proposal) {
-        content.appendChild(el('div', { className: 'panel-label panel-label-compromise' }, 'COMPROMISE'));
-        content.appendChild(el('div', { className: 'panel-text' }, truncate(analysis.compromise_proposal, 200)));
+        analysisItems.push({ label: 'COMPROMISE', labelClass: 'panel-label-compromise' });
+        analysisItems.push({ text: analysis.compromise_proposal });
     }
+    if (analysisItems.length === 0 && cruxes.length > 0) {
+        analysisItems.push({ label: `${cruxes.length} CRUXES` });
+        cruxes.forEach(c => {
+            analysisItems.push({ text: c.claim || c.crux_claim || '' });
+        });
+    }
+
+    analysisItems.forEach((item, idx) => {
+        if (item.label) {
+            content.appendChild(el('div', { className: `panel-label ${item.labelClass || ''}` }, item.label));
+        }
+        if (item.text) {
+            const li = el('li', { className: 'analysis-item' });
+            const textEl = el('span', { className: 'analysis-item-text' });
+            li.appendChild(textEl);
+            content.appendChild(li);
+            if (scrubber.playing) {
+                const delay = idx * 800;
+                setTimeout(() => {
+                    if (textEl.isConnected) typeReveal(textEl, item.text);
+                }, delay);
+            } else {
+                textEl.textContent = item.text;
+            }
+        }
+    });
 }
 
 function renderCruxPanel(ds) {
     const list = document.getElementById('crux-list');
-    const cruxes = ds.analysis?.cruxes || [];
+    const analysis = ds.analysis;
+    const cruxes = analysis?.cruxes || [];
     clearChildren(list);
 
     if (cruxes.length === 0) {
-        list.appendChild(el('div', { className: 'empty-message' }, 'NO CRUXES DETECTED'));
+        list.appendChild(el('div', { className: 'empty-message' }, 'NO CRUXES YET'));
         return;
     }
 
@@ -1038,10 +1210,14 @@ function renderCruxPanel(ds) {
         meta.children[1].appendChild(controversyBar);
         meta.children[1].appendChild(document.createTextNode(` ${((c.controversy_score || 0) * 100).toFixed(0)}%`));
 
+        const claimText = c.crux_claim || c.claim || '';
+        const claimEl = el('div', { className: 'crux-claim crux-collapsed' }, claimText);
         const item = el('div', { className: 'crux-item' },
-            el('div', { className: 'crux-claim' }, truncate(c.crux_claim, 80)),
+            claimEl,
             meta,
         );
+        item.onclick = () => claimEl.classList.toggle('crux-collapsed');
+        item.style.cursor = 'pointer';
         list.appendChild(item);
     });
 }
@@ -1051,21 +1227,70 @@ function renderMetrics(ds) {
     const a = ds.analysis;
     clearChildren(grid);
 
-    const metrics = [
-        { value: String((ds.agents || []).length), label: 'AGENTS' },
-        { value: String((ds.positions || []).length), label: 'POSITIONS' },
-        { value: String((ds.votes || []).length), label: 'VOTES' },
-        { value: a ? String((a.cruxes || []).length) : '--', label: 'CRUXES' },
-        { value: a?.participation_rate != null ? `${(a.participation_rate * 100).toFixed(0)}%` : '--', label: 'PARTICIPATION' },
-        { value: a?.perspective_diversity != null ? `${(a.perspective_diversity * 100).toFixed(0)}%` : '--', label: 'DIVERSITY' },
-    ];
+    const positions = ds.positions || [];
+    const agents = ds.agents || [];
+    const delibs = state.deliberations;
+    const activeEdgeDelib = graphState.activeEdge;
 
-    metrics.forEach(m => {
-        grid.appendChild(el('div', { className: 'metric' },
-            el('div', { className: 'metric-value' }, m.value),
-            el('div', { className: 'metric-label' }, m.label),
-        ));
-    });
+    if (positions.length === 0 && !a) {
+        grid.appendChild(el('div', { className: 'empty-message' }, 'WAITING'));
+        return;
+    }
+
+    // Turn-taking flow — colored blocks showing who spoke in sequence
+    if (positions.length > 0 && agents.length > 0) {
+        const agentIDs = agents.map(ag => ag.id);
+        const flow = el('div', { className: 'metrics-flow' });
+        const flowLabel = el('div', { className: 'metrics-section-label' }, 'TURNS');
+        flow.appendChild(flowLabel);
+        const flowTrack = el('div', { className: 'metrics-flow-track' });
+        positions.forEach(p => {
+            const idx = agentIDs.indexOf(p.agent_id);
+            const block = el('div', { className: 'metrics-flow-block', style: `background:${agentColor(idx, agentIDs.length)}` });
+            block.title = shortAgentID(p.agent_id);
+            flowTrack.appendChild(block);
+        });
+        flow.appendChild(flowTrack);
+        grid.appendChild(flow);
+    }
+
+    // Per-agent stats: messages, avg word count
+    if (agents.length > 0 && positions.length > 0) {
+        const agentStats = agents.map(ag => {
+            const msgs = positions.filter(p => p.agent_id === ag.id);
+            const words = msgs.reduce((sum, p) => sum + (p.content || '').split(/\s+/).length, 0);
+            return { name: shortAgentID(ag.id), msgs: msgs.length, words, avgWords: msgs.length ? Math.round(words / msgs.length) : 0 };
+        });
+
+        const statsSection = el('div', { className: 'metrics-agent-stats' });
+        agentStats.forEach((s, i) => {
+            statsSection.appendChild(el('div', { className: 'metrics-agent-row', style: `border-left-color:${agentColor(i, agentStats.length)}` },
+                el('span', { className: 'metrics-agent-name' }, s.name),
+                el('span', { className: 'metrics-agent-detail' },
+                    `${s.msgs} msg · ${s.words} words · avg ${s.avgWords} w/msg`),
+            ));
+        });
+        grid.appendChild(statsSection);
+    }
+
+    // Network context: how many other bilaterals each agent participates in
+    if (activeEdgeDelib && agents.length > 0) {
+        const graph = buildGraphFromDelibs(delibs);
+        const ctx = el('div', { className: 'metrics-network' });
+        ctx.appendChild(el('div', { className: 'metrics-section-label' }, 'NETWORK'));
+        agents.forEach(ag => {
+            const otherEdges = graph.edges.filter(e =>
+                (e.a === ag.id || e.b === ag.id) && e.delibID !== activeEdgeDelib);
+            if (otherEdges.length > 0) {
+                const others = otherEdges.map(e => shortAgentID(e.a === ag.id ? e.b : e.a)).join(', ');
+                ctx.appendChild(el('div', { className: 'metrics-network-row' },
+                    el('span', { className: 'metrics-agent-name' }, shortAgentID(ag.id)),
+                    el('span', { className: 'metrics-network-detail' }, `also talking to ${others}`),
+                ));
+            }
+        });
+        grid.appendChild(ctx);
+    }
 }
 
 function renderAuditLog(ds) {
@@ -1080,14 +1305,30 @@ function renderAuditLog(ds) {
     }
 
     const isFirstRender = prevCount === 0;
-    ops.slice(0, 30).forEach((op, i) => {
-        // Cascade animation: new entries type in sequentially
+    ops.slice(0, 40).forEach((op, i) => {
         const cascadeClass = isFirstRender && i < 5 ? ` new cascade-${i + 1}` : '';
+        const method = (op.method || '').replace('gemot/', '');
+        const agent = op.agent_id ? shortAgentID(op.agent_id) : '';
+        // Verbose description for confidence
+        let desc;
+        if (method === 'submit_position' && agent) {
+            desc = `${agent} submitted a position`;
+        } else if (method === 'analyze') {
+            desc = 'Analysis engine processing deliberation';
+        } else if (method === 'get_analysis_result') {
+            desc = 'Analysis results retrieved';
+        } else if (method === 'vote' && agent) {
+            desc = `${agent} cast a vote`;
+        } else if (method === 'create_deliberation') {
+            desc = 'Deliberation created';
+        } else if (method === 'set_template') {
+            desc = 'Template configured';
+        } else {
+            desc = agent ? `${method} by ${agent}` : method;
+        }
         const entry = el('div', { className: `audit-entry${cascadeClass}` },
             el('span', { className: 'timestamp' }, formatTime(op.timestamp)),
-            el('span', { className: 'method' }, op.method || ''),
-            document.createTextNode(' '),
-            el('span', { className: 'agent' }, shortAgentID(op.agent_id || '')),
+            el('span', { className: 'audit-desc' }, desc),
         );
         log.appendChild(entry);
     });
@@ -1095,16 +1336,74 @@ function renderAuditLog(ds) {
 
 // ===== Helpers =====
 
+// Generate a distinct color for agent index i out of n total agents.
+// Uses evenly spaced hues with consistent saturation/lightness.
+function agentColor(i, n) {
+    const hue = (i * 360 / Math.max(n, 1) + 210) % 360; // start at blue, rotate
+    return `hsl(${hue}, 65%, 50%)`;
+}
+
 function shortAgentID(id) {
     if (!id) return '?';
     const parts = id.split(':');
-    const name = parts[parts.length - 1];
+    let name = parts[parts.length - 1];
+    // Strip common suffixes that add noise
+    name = name.replace(/-agent$/, '').replace(/_agent$/, '');
     return name.length > 18 ? name.slice(0, 16) + '..' : name;
+}
+
+// Render text with agent names highlighted (bold mentions).
+// Returns a DocumentFragment with text nodes and strong spans.
+function renderTextWithMentions(text, agentIDs) {
+    const names = agentIDs.map(id => shortAgentID(id)).filter(n => n.length > 2);
+    if (names.length === 0) return document.createTextNode(text);
+
+    const escaped = names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'gi');
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        }
+        const strong = document.createElement('strong');
+        strong.className = 'agent-mention';
+        strong.textContent = match[0];
+        frag.appendChild(strong);
+        lastIndex = pattern.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+    return frag;
 }
 
 function truncate(s, n) {
     if (!s) return '';
     return s.length > n ? s.slice(0, n) + '...' : s;
+}
+
+// Word-by-word typing reveal on an element. Fills text progressively.
+// Speed adapts to fit within the scrubber interval.
+function typeReveal(textEl, fullText) {
+    if (typingTimer) clearInterval(typingTimer);
+    const words = fullText.split(/(\s+)/); // preserve whitespace
+    let shown = 0;
+    textEl.textContent = '';
+    const speed = Math.max(15, Math.min(40, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7 / words.length));
+    typingTimer = setInterval(() => {
+        shown++;
+        textEl.textContent = words.slice(0, shown).join('');
+        // Auto-scroll parent panel to keep new text visible
+        const panel = textEl.closest('.panel-content');
+        if (panel) panel.scrollTop = panel.scrollHeight;
+        if (shown >= words.length) {
+            clearInterval(typingTimer);
+            typingTimer = null;
+        }
+    }, speed);
 }
 
 function formatTime(ts) {
@@ -1178,219 +1477,451 @@ function buildPairwiseRelationship(ds) {
     return pairScores;
 }
 
-// ===== Multi-View Spatial Viewport =====
+// ===== Graph View =====
+// All multi-view deliberations render as a unified graph.
+// Bilaterals become edges, group delibs become clustered node groups,
+// unrelated delibs become islands in the same canvas.
+
+// Build graph from all deliberations.
+// Returns { nodes: [agentID...], edges: [{a, b, delibID}...], groupDelibID: string|null, groups: [{delibID, agents}...] }
+function buildGraphFromDelibs(delibs) {
+    const ids = Object.keys(delibs);
+    const allAgents = new Set();
+    const edges = [];
+    const groups = []; // deliberations with 3+ agents (rendered as node clusters)
+    let groupDelibID = null;
+
+    for (const id of ids) {
+        const agents = (delibs[id]?.agents || []).map(a => a.id);
+        agents.forEach(a => allAgents.add(a));
+
+        if (agents.length === 2) {
+            edges.push({ a: agents[0], b: agents[1], delibID: id });
+        } else if (agents.length >= 3) {
+            groups.push({ delibID: id, agents });
+        }
+        // Single-agent deliberations: agent appears as an isolated node
+    }
+
+    // Find a group deliberation whose agents are a superset of bilateral agents
+    const bilateralAgents = new Set();
+    edges.forEach(e => { bilateralAgents.add(e.a); bilateralAgents.add(e.b); });
+    for (const g of groups) {
+        const gSet = new Set(g.agents);
+        if ([...bilateralAgents].every(a => gSet.has(a))) {
+            groupDelibID = g.delibID;
+            break;
+        }
+    }
+
+    return {
+        nodes: [...allAgents].sort(),
+        edges,
+        groupDelibID,
+        groups,
+    };
+}
+
+// State for graph view
+let graphState = {
+    activeEdge: null,    // delibID of the currently focused bilateral
+    activeNode: null,    // agentID if viewing the group delib from a node's perspective
+    hoverEdge: null,     // delibID being hovered
+};
+
+// Fixed positions for 7 Diplomacy powers (roughly matches a Europe map layout)
+const DIPLOMACY_POSITIONS = {
+    'england-agent':  { x: 22, y: 16 },
+    'france-agent':   { x: 24, y: 52 },
+    'germany-agent':  { x: 44, y: 24 },
+    'italy-agent':    { x: 46, y: 64 },
+    'austria-agent':  { x: 60, y: 42 },
+    'russia-agent':   { x: 80, y: 24 },
+    'turkey-agent':   { x: 82, y: 60 },
+};
+
+function getGraphNodePositions(graph) {
+    const nodes = graph.nodes;
+    const edges = graph.edges;
+
+    // Check if all nodes match known Diplomacy powers
+    const allDiplomacy = nodes.every(n => DIPLOMACY_POSITIONS[n]);
+    if (allDiplomacy) return nodes.map(n => ({ id: n, ...DIPLOMACY_POSITIONS[n] }));
+
+    // Check if agents have explicit x,y coordinates
+    const delibs = state.deliberations;
+    for (const ds of Object.values(delibs)) {
+        const agents = ds.agents || [];
+        if (agents.some(a => a.x != null && a.y != null)) {
+            const posMap = {};
+            agents.forEach(a => { if (a.x != null && a.y != null) posMap[a.id] = { x: a.x, y: a.y }; });
+            if (nodes.every(n => posMap[n])) {
+                return nodes.map(n => ({ id: n, ...posMap[n] }));
+            }
+        }
+    }
+
+    // Find connected components (islands) via union-find
+    const parent = {};
+    nodes.forEach(n => { parent[n] = n; });
+    function find(x) { return parent[x] === x ? x : (parent[x] = find(parent[x])); }
+    function union(a, b) { parent[find(a)] = find(b); }
+
+    edges.forEach(e => union(e.a, e.b));
+    // Also connect agents within the same group deliberation
+    (graph.groups || []).forEach(g => {
+        for (let i = 1; i < g.agents.length; i++) {
+            if (parent[g.agents[i]] !== undefined) union(g.agents[0], g.agents[i]);
+        }
+    });
+
+    // Group nodes by component
+    const components = {};
+    nodes.forEach(n => {
+        const root = find(n);
+        if (!components[root]) components[root] = [];
+        components[root].push(n);
+    });
+    const islands = Object.values(components).sort((a, b) => b.length - a.length);
+
+    // Single island: use centered polygon
+    if (islands.length === 1) {
+        return nodes.map((id, i) => {
+            const pos = polygonPosition(i, nodes.length);
+            return { id, ...pos };
+        });
+    }
+
+    // Multiple islands: lay out each in its own region
+    // Divide canvas into columns for each island
+    const result = [];
+    const cols = Math.min(islands.length, 4);
+    const rows = Math.ceil(islands.length / cols);
+
+    islands.forEach((island, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        // Region bounds for this island
+        const regionW = 100 / cols;
+        const regionH = 100 / rows;
+        const cx = regionW * (col + 0.5);
+        const cy = regionH * (row + 0.5);
+        const radius = Math.min(regionW, regionH) * 0.35;
+
+        island.forEach((id, i) => {
+            if (island.length === 1) {
+                result.push({ id, x: cx, y: cy });
+            } else {
+                const angle = (2 * Math.PI * i / island.length) - Math.PI / 2;
+                result.push({
+                    id,
+                    x: cx + radius * Math.cos(angle) * 0.9,
+                    y: cy + radius * Math.sin(angle) * 0.85,
+                });
+            }
+        });
+    });
+
+    return result;
+}
+
+// Compute focused layout: active pair anchored left/right at a comfortable height,
+// rest of graph keeps its horizontal positions but shifts upward off-screen.
+// The graph stays connected — edges follow the nodes — creating a sense of the
+// full network reconfiguring with the active edge pulled into view.
+function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
+    if (!activeAgentA || !activeAgentB) return basePositions;
+
+    // Active pair: anchored with room above for graph remnants to peek in
+    const anchorY = 22;
+    const focusA = { x: 12, y: anchorY };
+    const focusB = { x: 88, y: anchorY };
+
+    const baseA = basePositions.find(n => n.id === activeAgentA);
+    const baseB = basePositions.find(n => n.id === activeAgentB);
+    if (!baseA || !baseB) return basePositions;
+
+    // Compute how much to shift the active edge's midpoint to our anchor point
+    const baseMidY = (baseA.y + baseB.y) / 2;
+    const shiftY = baseMidY - anchorY;
+
+    const result = basePositions.map(n => {
+        if (n.id === activeAgentA) return { ...n, x: focusA.x, y: focusA.y };
+        if (n.id === activeAgentB) return { ...n, x: focusB.x, y: focusB.y };
+
+        // Keep horizontal position, shift vertically upward above the active pair.
+        const relY = n.y - baseMidY;
+        const newY = anchorY + relY - shiftY * 0.5;
+        return { ...n, x: n.x, y: Math.min(newY, anchorY - 8) };
+    });
+
+    // Push apart overlapping inactive nodes — need at least 16% horizontal separation
+    // so labels don't collide
+    const inactive = result.filter(n => n.id !== activeAgentA && n.id !== activeAgentB);
+    inactive.sort((a, b) => a.x - b.x);
+    for (let i = 1; i < inactive.length; i++) {
+        const prev = inactive[i - 1];
+        const curr = inactive[i];
+        const dx = Math.abs(curr.x - prev.x);
+        if (dx < 16) {
+            // Shift current node right to make room
+            curr.x = prev.x + 16;
+        }
+    }
+
+    return result;
+}
+
+let _prevGraphActiveEdge = null;
+let _edgeRefreshTimer = null;
+
+function renderGraphView(graph) {
+    const delibs = state.deliberations;
+    const main = document.getElementById('main');
+    main.className = `graph-view${graphState.activeEdge ? ' graph-edge-focused' : ''}`;
+
+    // When the active edge changes, the graph reconfigures. Hide edge divs
+    // during the node transition, then refresh edges after nodes settle.
+    const edgeChanged = graphState.activeEdge !== _prevGraphActiveEdge;
+    _prevGraphActiveEdge = graphState.activeEdge;
+
+    // When the graph reconfigures, continuously re-render edges to track moving nodes
+    if (edgeChanged) {
+        clearTimeout(_edgeRefreshTimer);
+        let frames = 0;
+        const totalFrames = 90; // ~3s at 30fps
+        function trackNodes() {
+            if (frames++ >= totalFrames) return;
+            renderGraphView._edgeOnly = true;
+            renderGraphView(graph);
+            renderGraphView._edgeOnly = false;
+            _edgeRefreshTimer = setTimeout(trackNodes, 33);
+        }
+        // Start tracking after a brief delay (let the CSS transition begin)
+        _edgeRefreshTimer = setTimeout(trackNodes, 50);
+    }
+
+    // Hide single-view elements
+    document.getElementById('agents')?.classList.add('hidden');
+    document.getElementById('connections')?.classList.add('hidden');
+
+    let canvas = document.getElementById('graph-canvas');
+    const isFirstRender = !canvas;
+    if (!canvas) {
+        canvas = el('div', { className: 'graph-canvas', id: 'graph-canvas' });
+        main.appendChild(canvas);
+    }
+
+    // Determine scrub time for synchronized filtering
+    const scrubTime = (scrubber.enabled && scrubber.eventIndex != null)
+        ? scrubber.events[scrubber.eventIndex]?.time : null;
+    const scrubDelibID = scrubber.events[scrubber.eventIndex]?.delibID;
+
+    // Compute node positions: base layout, then shift if an edge is focused
+    const basePositions = getGraphNodePositions(graph);
+    let activeAgentA = null, activeAgentB = null;
+    if (graphState.activeEdge) {
+        const activeEdge = graph.edges.find(e => e.delibID === graphState.activeEdge);
+        if (activeEdge) { activeAgentA = activeEdge.a; activeAgentB = activeEdge.b; }
+    }
+    const nodePositions = graphState.activeEdge
+        ? computeFocusedLayout(basePositions, activeAgentA, activeAgentB)
+        : basePositions;
+    const posMap = {};
+    nodePositions.forEach(n => { posMap[n.id] = n; });
+
+    // ---- Edges: CSS div lines ----
+    {
+    const cw = canvas.offsetWidth || 1;
+    const ch = canvas.offsetHeight || 1;
+    const canvasRect = canvas.getBoundingClientRect();
+
+    // For edge positioning, read actual rendered node positions (handles mid-transition)
+    const liveNodePos = {};
+    canvas.querySelectorAll('.graph-node').forEach(n => {
+        const r = n.getBoundingClientRect();
+        // Icon center is approximately at the center-top of the node element
+        const iconSize = 64; // approximate
+        liveNodePos[n.dataset.agentId] = {
+            px: r.left + r.width / 2 - canvasRect.left,
+            py: r.top + iconSize / 2 - canvasRect.top,
+        };
+    });
+
+    graph.edges.forEach(edge => {
+        const rawDs = delibs[edge.delibID];
+        if (!rawDs) return;
+        const ds = scrubTime ? filterToTime(rawDs, scrubTime) : rawDs;
+        const posCount = (ds.positions || []).length;
+        const isActive = graphState.activeEdge === edge.delibID;
+        const isScrubTarget = scrubDelibID === edge.delibID;
+
+        const pa = liveNodePos[edge.a];
+        const pb = liveNodePos[edge.b];
+        if (!pa || !pb) return;
+
+        const thickness = Math.min(0.8 + posCount * 0.04, 2);
+        const opacity = posCount === 0 ? 0.06 : Math.min(0.08 + posCount * 0.003, 0.25);
+
+        // Use actual rendered pixel positions for edge geometry
+        const mx = (pa.px + pb.px) / 2;
+        const my = (pa.py + pb.py) / 2;
+        const dxPx = pb.px - pa.px;
+        const dyPx = pb.py - pa.py;
+        const len = Math.sqrt(dxPx * dxPx + dyPx * dyPx);
+        const angle = Math.atan2(dyPx, dxPx) * 180 / Math.PI;
+
+        let edgeClass = 'graph-edge-div';
+        if (isActive || isScrubTarget) edgeClass += ' graph-edge-active';
+        if (posCount === 0) edgeClass += ' graph-edge-empty';
+
+        const edgeId = `edge-${edge.delibID}`;
+        let edgeEl = canvas.querySelector(`[data-edge-id="${edgeId}"]`);
+        if (!edgeEl) {
+            edgeEl = el('div', { className: edgeClass, dataset: { edgeId: edgeId, delibId: edge.delibID } });
+            canvas.insertBefore(edgeEl, canvas.firstChild);
+        } else {
+            edgeEl.className = edgeClass;
+        }
+
+        // Position at midpoint using percentages, size in pixels
+        edgeEl.style.left = `${mx}px`;
+        edgeEl.style.top = `${my}px`;
+        edgeEl.style.width = `${len}px`;
+        edgeEl.style.height = `${thickness}px`;
+        edgeEl.style.opacity = opacity;
+        edgeEl.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+
+        // Count label (overview only)
+        let countEl = edgeEl.querySelector('.graph-edge-count-div');
+        if (posCount > 0 && !graphState.activeEdge) {
+            if (!countEl) {
+                countEl = el('span', { className: 'graph-edge-count-div' });
+                edgeEl.appendChild(countEl);
+            }
+            countEl.textContent = posCount;
+        } else if (countEl) {
+            countEl.remove();
+        }
+    });
+    } // end edge rendering skip check
+
+    // Edge-only mode: skip node and panel rendering (used during transition tracking)
+    if (renderGraphView._edgeOnly) return;
+
+    // ---- Agent nodes: create on first render, then update positions in place ----
+    nodePositions.forEach(nodePos => {
+        const agentID = nodePos.id;
+        const name = shortAgentID(agentID);
+
+        let totalMessages = 0;
+        let activeGemots = 0;
+        graph.edges.forEach(edge => {
+            if (edge.a === agentID || edge.b === agentID) {
+                const ds = scrubTime ? filterToTime(delibs[edge.delibID], scrubTime) : delibs[edge.delibID];
+                const pc = (ds?.positions || []).length;
+                totalMessages += pc;
+                if (pc > 0) activeGemots++;
+            }
+        });
+
+        const isEdgeAgent = graphState.activeEdge && graph.edges.some(e =>
+            e.delibID === graphState.activeEdge && (e.a === agentID || e.b === agentID));
+
+        // Try to find existing node to update in place (smooth transition)
+        let node = canvas.querySelector(`.graph-node[data-agent-id="${agentID}"]`);
+        if (node) {
+            // Update position (CSS transition handles animation)
+            node.style.left = `${nodePos.x}%`;
+            node.style.top = `${nodePos.y}%`;
+            node.className = `graph-node ${isEdgeAgent ? 'graph-node-active' : ''} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`;
+            // Update stats
+            const statsEl = node.querySelector('.graph-node-stats');
+            if (activeGemots > 0) {
+                if (statsEl) statsEl.textContent = `${totalMessages} msg · ${activeGemots} gemots`;
+                else node.appendChild(el('div', { className: 'graph-node-stats' }, `${totalMessages} msg · ${activeGemots} gemots`));
+            } else if (statsEl) {
+                statsEl.remove();
+            }
+        } else {
+            // First render: create node
+            node = el('div', {
+                className: `graph-node ${isEdgeAgent ? 'graph-node-active' : ''} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`,
+                style: `left:${nodePos.x}%; top:${nodePos.y}%;`,
+                dataset: { agentId: agentID },
+            },
+                el('div', { className: 'graph-node-icon' }, name.charAt(0).toUpperCase()),
+                el('div', { className: 'graph-node-name' }, name),
+                activeGemots > 0 ? el('div', { className: 'graph-node-stats' }, `${totalMessages} msg · ${activeGemots} gemots`) : null,
+            );
+            canvas.appendChild(node);
+        }
+    });
+
+    // Center panel: show for the active deliberation (bilateral or group)
+    const centerPanel = document.getElementById('center-panel');
+    const topicEl = document.querySelector('.topic-label');
+
+    if (graphState.activeEdge && delibs[graphState.activeEdge]) {
+        const rawDs = delibs[graphState.activeEdge];
+        const ds = scrubTime ? filterToTime(rawDs, scrubTime) : rawDs;
+
+        const hasContent = (ds.positions || []).length > 0 || ds.analysis;
+        if (!hasContent) {
+            centerPanel.classList.add('hidden');
+        }
+        renderCenterPanel(ds);
+
+        if (topicEl) {
+            const rawAgents = (rawDs.agents || []).map(a => shortAgentID(a.id));
+            if (rawAgents.length <= 3) {
+                topicEl.textContent = rawAgents.join(' \u2194 ');
+            } else {
+                topicEl.textContent = rawDs.deliberation?.topic || 'Group Deliberation';
+            }
+        }
+
+        // Footer: cruxes only appear after the analyze op has been revealed
+        // (cruxes are output of analysis, not available before it runs)
+        document.getElementById('footer')?.classList.remove('hidden');
+        document.getElementById('analysis-bar')?.classList.remove('hidden');
+        renderAnalysisBar(ds);
+        renderCruxPanel(ds);
+        renderMetrics(ds);
+        renderAuditLog(ds);
+    } else {
+        // Graph overview: no panel, no footer — just the graph
+        centerPanel.classList.add('hidden');
+        document.getElementById('footer')?.classList.add('hidden');
+        document.getElementById('analysis-bar')?.classList.add('hidden');
+        if (topicEl) topicEl.textContent = `${graph.nodes.length} Agents \u00b7 ${graph.edges.length} Gemots`;
+    }
+
+    const roundEl = document.getElementById('round-display');
+    if (roundEl) roundEl.textContent = '';
+    const templateEl = document.getElementById('template-display');
+    if (templateEl) templateEl.textContent = '';
+
+    // On first render, nodes have no layout yet — schedule an edge re-render after paint
+    if (isFirstRender) {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                renderGraphView._edgeOnly = true;
+                renderGraphView(graph);
+                renderGraphView._edgeOnly = false;
+            });
+        });
+    }
+}
+
+// ===== Multi-View =====
 
 const OVERVIEW_RETURN_DELAY = 8000; // ms before returning to overview
 const FOCUS_TRANSITION_MS = 800;
 
-// Compute layout positions for multiple deliberations on the canvas.
-// Returns { [delibID]: { x, y, w, h } } in percentage coordinates.
-function computeCanvasLayout(delibIDs) {
-    const n = delibIDs.length;
-    if (n <= 1) return {};
-
-    const regions = {};
-
-    // Grid layout: compute rows/cols
-    const cols = Math.ceil(Math.sqrt(n));
-    const rows = Math.ceil(n / cols);
-    const cellW = 100 / cols;
-    const cellH = 100 / rows;
-    const pad = 2; // padding in percent
-
-    delibIDs.forEach((id, i) => {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        regions[id] = {
-            x: col * cellW + pad,
-            y: row * cellH + pad,
-            w: cellW - pad * 2,
-            h: cellH - pad * 2,
-        };
-    });
-
-    return regions;
-}
-
-// Render all deliberations simultaneously on a spatial canvas.
-function renderMultiView() {
-    const delibs = state.deliberations;
-    const ids = Object.keys(delibs);
-    if (ids.length <= 1) return;
-
-    const main = document.getElementById('main');
-    main.className = 'multi-view';
-
-    // Hide single-view elements, show multi-view canvas
-    document.getElementById('agents')?.classList.add('hidden');
-    document.getElementById('connections')?.classList.add('hidden');
-    document.getElementById('center-panel')?.classList.add('hidden');
-    document.getElementById('scrubber-bar')?.classList.add('hidden');
-
-    let canvas = document.getElementById('multi-canvas');
-    if (!canvas) {
-        canvas = el('div', { className: 'multi-canvas', id: 'multi-canvas' });
-        main.appendChild(canvas);
-    }
-
-    const regions = computeCanvasLayout(ids);
-    clearChildren(canvas);
-
-    ids.forEach(id => {
-        const ds = delibs[id];
-        const region = regions[id];
-        if (!ds || !region) return;
-
-        const d = ds.deliberation;
-        const agents = ds.agents || [];
-        const n = agents.length;
-        const voteMap = buildVoteMap(ds);
-        const isActive = state.focusedDelibID === id;
-        const hasRecentActivity = state.lastActivity[id] && (Date.now() - state.lastActivity[id] < 5000);
-
-        // Region container
-        const regionEl = el('div', {
-            className: `multi-region ${isActive ? 'focused' : ''} ${hasRecentActivity ? 'active-pulse' : ''}`,
-            style: `left:${region.x}%; top:${region.y}%; width:${region.w}%; height:${region.h}%;`,
-            dataset: { delibId: id },
-        });
-
-        // Title bar
-        regionEl.appendChild(el('div', { className: 'multi-region-title' },
-            el('span', { className: 'multi-region-topic' }, truncate(d.topic, 40)),
-            el('span', { className: 'multi-region-meta' },
-                `${n} AGENTS · R${d.round_number} · ${(d.template || d.type || '').toUpperCase()}`),
-        ));
-
-        // Mini agent visualization
-        const agentArea = el('div', { className: 'multi-region-agents' });
-
-        // SVG connections
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('class', 'multi-region-connections');
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('preserveAspectRatio', 'none');
-
-        // Compute positions for agents within this region
-        const agentPositions = [];
-        const hasGeoPositions = agents.some(a => a.x != null && a.y != null);
-
-        agents.forEach((agent, i) => {
-            let ax, ay;
-            if (hasGeoPositions && agent.x != null && agent.y != null) {
-                ax = agent.x;
-                ay = agent.y;
-            } else if (n === 2) {
-                ax = i === 0 ? 30 : 70;
-                ay = 50;
-            } else if (n === 3) {
-                const positions3 = [{ x: 50, y: 20 }, { x: 25, y: 70 }, { x: 75, y: 70 }];
-                ax = positions3[i].x;
-                ay = positions3[i].y;
-            } else {
-                const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-                ax = 50 + 30 * Math.cos(angle);
-                ay = 50 + 30 * Math.sin(angle);
-            }
-            agentPositions.push({ x: ax, y: ay });
-
-            const vote = voteMap[agent.id];
-            const voteClass = vote !== undefined ? VOTE_CLASSES[vote] : 'vote-pass';
-            const clusterClass = agent.cluster_id != null
-                ? CLUSTER_COLORS[agent.cluster_id % CLUSTER_COLORS.length] : '';
-
-            const miniIcon = (activeTheme === 'classic') ? (() => {
-                const icons = ['gi-castle', 'gi-village'];
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('viewBox', '0 0 512 512');
-                svg.style.cssText = 'width:28px;height:28px;display:block;margin:0 auto;';
-                const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-                use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + icons[i % icons.length]);
-                use.setAttribute('fill', '#3B2F20');
-                use.setAttribute('fill-rule', 'evenodd');
-                svg.appendChild(use);
-                return svg;
-            })() : null;
-
-            const node = el('div', {
-                className: `multi-agent ${clusterClass}`,
-                style: `left:${ax}%; top:${ay}%;`,
-                title: agent.id,
-            },
-                miniIcon,
-                el('span', { className: `multi-agent-vote ${voteClass}` },
-                    vote !== undefined ? VOTE_LABELS[vote] : '--'),
-                el('span', { className: 'multi-agent-name' }, shortAgentID(agent.id)),
-            );
-            agentArea.appendChild(node);
-        });
-
-        // Draw connections
-        const pairScores = buildPairwiseRelationship(ds);
-        for (let i = 0; i < agents.length; i++) {
-            for (let j = i + 1; j < agents.length; j++) {
-                const key = `${agents[i].id}|${agents[j].id}`;
-                const rel = pairScores[key] || 'neutral';
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', agentPositions[i].x);
-                line.setAttribute('y1', agentPositions[i].y);
-                line.setAttribute('x2', agentPositions[j].x);
-                line.setAttribute('y2', agentPositions[j].y);
-                line.setAttribute('class', `connection-line connection-${rel}`);
-                svg.appendChild(line);
-            }
-        }
-
-        agentArea.appendChild(svg);
-        regionEl.appendChild(agentArea);
-
-        // Status indicator
-        if (d.status === 'analyzing') {
-            regionEl.appendChild(el('div', { className: 'multi-region-status analyzing' }, STATUS.analyzing));
-        }
-
-        // Crux count
-        const cruxCount = (ds.analysis?.cruxes || []).length;
-        if (cruxCount > 0) {
-            regionEl.appendChild(el('div', { className: 'multi-region-status' }, `${cruxCount} ${cruxCount === 1 ? 'CRUX' : 'CRUXES'}`));
-        }
-
-        // Click handled via delegation on #main (see below)
-
-        canvas.appendChild(regionEl);
-    });
-
-    // Apply camera after rendering
-    updateCamera();
-}
-
-function applyCameraFocus(canvas, region) {
-    const parent = canvas.parentElement;
-    const pw = parent.clientWidth;
-    const ph = parent.clientHeight;
-
-    // Region in pixel coords
-    const rx = (region.x / 100) * pw;
-    const ry = (region.y / 100) * ph;
-    const rw = (region.w / 100) * pw;
-    const rh = (region.h / 100) * ph;
-
-    // Scale to fill ~85% of viewport
-    const scale = Math.min(pw / rw, ph / rh) * 0.85;
-
-    // Translate so region center aligns with viewport center
-    const rcx = rx + rw / 2;
-    const rcy = ry + rh / 2;
-    const tx = pw / 2 - rcx * scale;
-    const ty = ph / 2 - rcy * scale;
-
-    canvas.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-}
-
 function focusOnDelib(delibID) {
     state.focusedDelibID = delibID;
 
-    // Flash the scan sweep
     const screen = document.getElementById('screen');
     screen.dataset.state = 'focusing';
     setTimeout(() => {
@@ -1398,138 +1929,33 @@ function focusOnDelib(delibID) {
         screen.dataset.state = active?.deliberation?.status === 'analyzing' ? 'analyzing' : 'normal';
     }, FOCUS_TRANSITION_MS);
 
-    // Render as full single-view for the focused deliberation
     render();
 
-    // Set timer to return to overview
     clearTimeout(focusTimer);
     focusTimer = setTimeout(zoomToOverview, OVERVIEW_RETURN_DELAY);
 }
 
 function zoomToOverview() {
     state.focusedDelibID = null;
-    // Clear focused highlight from all regions
-    document.querySelectorAll('.multi-region.focused').forEach(r => r.classList.remove('focused'));
-    // Hide single-view elements, show multi-canvas
+    graphState.activeEdge = null;
+    graphState.activeNode = null;
     document.getElementById('agents')?.classList.add('hidden');
     document.getElementById('connections')?.classList.add('hidden');
     document.getElementById('center-panel')?.classList.add('hidden');
     document.getElementById('footer')?.classList.add('hidden');
     document.getElementById('analysis-bar')?.classList.add('hidden');
-    document.getElementById('multi-canvas')?.classList.remove('hidden');
-    document.getElementById('main').className = 'multi-view';
-    const topicEl = document.querySelector('.topic-label');
-    if (topicEl) topicEl.textContent = `${Object.keys(state.deliberations).length} Deliberations`;
-    const roundEl = document.getElementById('round-display');
-    if (roundEl) roundEl.textContent = '';
-    const templateEl = document.getElementById('template-display');
-    if (templateEl) templateEl.textContent = '';
+    document.getElementById('main').className = 'graph-view';
+    render();
 }
 
-// Update detail panels for the focused deliberation without a full render()
-function renderFocusedDetails() {
-    const ds = state.focusedDelibID && state.deliberations[state.focusedDelibID];
-    if (!ds) return;
-
-    // Apply scrubber time filter if active
-    let display = ds;
-    if (scrubber.enabled && scrubber.eventIndex != null) {
-        const evt = scrubber.events[scrubber.eventIndex];
-        if (evt?.time) display = filterToTime(ds, evt.time);
-    }
-
-    document.getElementById('footer')?.classList.remove('hidden');
-    document.getElementById('analysis-bar')?.classList.remove('hidden');
-    document.getElementById('scrubber-bar')?.classList.remove('hidden');
-    renderHeader(display);
-    renderAnalysisBar(display);
-    renderCruxPanel(display);
-    renderMetrics(display);
-    renderAuditLog(display);
-    renderScrubber(ds); // scrubber always gets full state for timeline dots
-}
-
-function updateCamera() {
-    const canvas = document.getElementById('multi-canvas');
-    if (!canvas) return;
-
-    const ids = Object.keys(state.deliberations);
-    const regions = computeCanvasLayout(ids);
-
-    canvas.querySelectorAll('.multi-region').forEach(r => {
-        const id = r.dataset.delibId;
-        r.classList.toggle('focused', id === state.focusedDelibID);
-    });
-
-    if (state.focusedDelibID && regions[state.focusedDelibID]) {
-        applyCameraFocus(canvas, regions[state.focusedDelibID]);
-    } else {
-        canvas.style.transform = '';
-    }
-}
-
-// Called when an SSE event indicates activity in a deliberation
 function onActivity(delibID) {
     if (!state.multiView) return;
     state.lastActivity[delibID] = Date.now();
-
-    // Don't auto-focus if:
-    // - user is scrubbing the timeline
-    // - user manually paused (clicked a region)
-    // - we're in a live group (no demo cycle) — let user control navigation
-    if (state.cyclePaused || scrubber.enabled || state.cycleInterval === 0) return;
-
-    // Only auto-focus in demo mode (ambient display)
-    stopDemoLoop();
-    focusOnDelib(delibID);
 }
 
-// ===== Demo Loop (multi-view) =====
-// Cycles focus through each deliberation, then overview, in a loop.
-// Used for ambient display / conference demo mode.
-
-let demoLoopTimer = null;
-let demoLoopIndex = 0;
-
-function startDemoLoop() {
-    if (!state.multiView || state.cycleInterval <= 0) return;
-
-    const ids = Object.keys(state.deliberations);
-    if (ids.length <= 1) return;
-
-    // Sequence: overview, delib1, overview, delib2, overview, delib3, ...
-    // Each step gets cycleInterval ms
-    function step() {
-        if (state.cyclePaused) return;
-
-        const ids = Object.keys(state.deliberations);
-        const totalSteps = ids.length * 2; // zoom + overview for each
-        const stepInCycle = demoLoopIndex % totalSteps;
-
-        if (stepInCycle % 2 === 0) {
-            // Zoom into a deliberation
-            const delibIdx = Math.floor(stepInCycle / 2);
-            focusOnDelib(ids[delibIdx]);
-            // Override the auto-zoom-out timer — the loop handles timing
-            clearTimeout(focusTimer);
-        } else {
-            // Return to overview
-            zoomToOverview();
-        }
-
-        demoLoopIndex++;
-        demoLoopTimer = setTimeout(step, state.cycleInterval);
-    }
-
-    // Start with overview, first step after one interval
-    zoomToOverview();
-    demoLoopTimer = setTimeout(step, state.cycleInterval);
-}
-
-function stopDemoLoop() {
-    clearTimeout(demoLoopTimer);
-    demoLoopTimer = null;
-}
+// Stubs for removed demo loop (referenced in scrubber/click handlers)
+function stopDemoLoop() {}
+function startDemoLoop() {}
 
 function updateConnectionStatus() {
     const status = document.getElementById('connection-status');
@@ -1701,32 +2127,28 @@ function connectDashboard() {
 
 // ===== Theme =====
 
-const VALID_THEMES = ['classic', 'magi', 'minimal', 'gastown'];
+const VALID_THEMES = ['magi', 'minimal', 'gastown'];
 
 function applyTheme() {
     const params = new URLSearchParams(window.location.search);
     const theme = params.get('theme');
     const screen = document.getElementById('screen');
-    const active = (theme && VALID_THEMES.includes(theme)) ? theme : 'classic';
+    const active = (theme && VALID_THEMES.includes(theme)) ? theme : 'minimal';
 
-    // Apply theme class to #screen and body (body class for boot overlay styling)
     screen.classList.add(`theme-${active}`);
     document.body.classList.add(`boot-${active}`);
 
-    // Match body background to theme to prevent edge color mismatch
-    const bgMap = { classic: '#E8D5B5', magi: '#050505', minimal: '#ffffff', gastown: '#e8dcc8' };
-    document.body.style.background = bgMap[active] || '#ffffff';
+    const bgMap = { magi: '#050505', minimal: '#f5f5f5', gastown: '#e8dcc8' };
+    document.body.style.background = bgMap[active] || '#f5f5f5';
 
-    VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI
-                : active === 'minimal' ? VOTE_LABELS_MINIMAL
-                : VOTE_LABELS_CLASSIC; // classic and gastown both use YEA/NAY
-    STATUS = STATUS_LABELS[active] || STATUS_LABELS.classic;
+    VOTE_LABELS = active === 'magi' ? VOTE_LABELS_MAGI : VOTE_LABELS_MINIMAL;
+    STATUS = STATUS_LABELS[active] || STATUS_LABELS.minimal;
 
     // Load web fonts per theme
-    if (active === 'classic' || !theme) {
+    if (active === 'minimal') {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Cinzel:wght@400;700;900&display=swap';
+        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
         document.head.appendChild(link);
     } else if (active === 'gastown') {
         const link = document.createElement('link');
@@ -1747,11 +2169,6 @@ function applyTheme() {
                 'SSE LINK: ESTABLISHED',
                 'GEMOT READY',
             ],
-            classic: [
-                '\u2726',
-                'Gemot',
-                'Deliberation Monitor',
-            ],
             minimal: [
                 'Gemot',
             ],
@@ -1761,7 +2178,7 @@ function applyTheme() {
                 'DELIBERATION ENGINE ONLINE',
             ],
         };
-        const lines = BOOT_CONTENT[active] || BOOT_CONTENT.classic;
+        const lines = BOOT_CONTENT[active] || BOOT_CONTENT.minimal;
         lines.forEach(text => {
             const div = document.createElement('div');
             div.className = 'boot-text';
@@ -1793,7 +2210,7 @@ if (activeTheme !== 'magi') {
 // ===== Init =====
 
 // Remove boot overlay after animation completes
-const bootDelay = activeTheme === 'magi' ? 3200 : activeTheme === 'classic' ? 2200 : activeTheme === 'gastown' ? 2000 : 1200;
+const bootDelay = activeTheme === 'magi' ? 3200 : activeTheme === 'gastown' ? 2000 : 1200;
 setTimeout(() => {
     const boot = document.getElementById('boot');
     if (boot) boot.classList.add('done');
@@ -1850,9 +2267,8 @@ function showLanding() {
     document.getElementById('landing-overlay')?.remove();
 
     const themes = [
-        { id: 'classic', label: 'Classic', desc: 'Medieval map' },
-        { id: 'magi', label: 'MAGI', desc: 'CRT / EVA' },
         { id: 'minimal', label: 'Minimal', desc: 'Clean modern' },
+        { id: 'magi', label: 'MAGI', desc: 'CRT / EVA' },
         { id: 'gastown', label: 'Gastown', desc: 'Steampunk' },
     ];
 
@@ -1874,7 +2290,6 @@ function showLanding() {
         const preview = document.getElementById('theme-preview');
         if (preview && selected) {
             const descs = {
-                classic: 'Ink-drawn settlements on parchment with forests, rivers, and winding roads',
                 magi: 'Evangelion CRT terminal with scanlines, kanji votes, and amber glow',
                 minimal: 'Clean modern dashboard inspired by Linear and Vercel',
                 gastown: 'Steampunk control room with brass pipes and industrial warmth',
@@ -1888,7 +2303,7 @@ function showLanding() {
         onclick: () => {
             const url = new URL(window.location);
             const theme = themeSelect.value;
-            if (theme === 'classic') url.searchParams.delete('theme');
+            if (theme === 'minimal') url.searchParams.delete('theme');
             else url.searchParams.set('theme', theme);
             url.searchParams.set('demo', '1');
             window.location.href = url.toString();
@@ -2084,23 +2499,60 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Delegated click handler for multi-view regions (survives DOM rebuilds)
+// Delegated click handler for multi-view regions and graph edges (survives DOM rebuilds)
 document.getElementById('main').addEventListener('click', (e) => {
-    const region = e.target.closest('.multi-region');
-    if (region && state.multiView) {
-        const delibId = region.dataset.delibId;
+    // Graph edge click (hit area or visible line)
+    const edgeEl = e.target.closest('.graph-edge-div');
+    if (edgeEl && state.multiView) {
+        const delibId = edgeEl.getAttribute('data-delib-id');
         if (delibId) {
-            // Pause demo loop on manual click
-            state.cyclePaused = true;
-            stopDemoLoop();
-            focusOnDelib(delibId);
-
-            // Resume demo loop after 60s of no interaction
-            clearTimeout(cycleProgressTimer);
-            cycleProgressTimer = setTimeout(() => {
-                state.cyclePaused = false;
-                startDemoLoop();
-            }, 60000);
+            if (graphState.activeEdge === delibId) {
+                // Double-click: zoom into full single-view for this bilateral
+                state.cyclePaused = true;
+                stopScrubberPlay();
+                focusOnDelib(delibId);
+            } else {
+                // Single click: show chat for this edge
+                graphState.activeEdge = delibId;
+                state.cyclePaused = true;
+                stopScrubberPlay();
+                render();
+            }
+            return;
         }
+    }
+
+    // Graph node click: toggle group delib view
+    const nodeEl = e.target.closest('.graph-node');
+    if (nodeEl && state.multiView) {
+        const graph = buildGraphFromDelibs(state.deliberations);
+        if (graph?.groupDelibID) {
+            graphState.activeEdge = null;
+            graphState.activeNode = nodeEl.dataset.agentId;
+            // Show group delib in center panel
+            render();
+        }
+        return;
+    }
+
+});
+
+// Hover handler for graph edges
+document.getElementById('main').addEventListener('mouseover', (e) => {
+    const edgeEl = e.target.closest('.graph-edge-div');
+    if (edgeEl) {
+        graphState.hoverEdge = edgeEl.getAttribute('data-delib-id');
+        // Highlight matching visible edge
+        document.querySelectorAll('.graph-edge-div').forEach(el => {
+            el.classList.toggle('graph-edge-hover',
+                el.getAttribute('data-delib-id') === graphState.hoverEdge);
+        });
+    }
+});
+document.getElementById('main').addEventListener('mouseout', (e) => {
+    const edgeEl = e.target.closest('.graph-edge-div');
+    if (edgeEl) {
+        graphState.hoverEdge = null;
+        document.querySelectorAll('.graph-edge-div.graph-edge-hover').forEach(el => el.classList.remove('graph-edge-hover'));
     }
 });
