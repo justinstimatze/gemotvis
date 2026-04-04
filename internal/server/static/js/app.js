@@ -1780,11 +1780,32 @@ function renderGraphView(graph) {
         main.appendChild(canvas);
     }
 
-    // Show world map background when agents have lat/lon
-    if (state._showWorldMap) {
+    // Show world map background, zoomed to match agent lat/lon positions
+    if (state._showWorldMap && _latLonBounds) {
         if (!canvas.querySelector('.world-map-bg')) {
-            const mapEl = el('img', { className: 'world-map-bg', src: '/world.svg', 'aria-hidden': 'true' });
-            canvas.insertBefore(mapEl, canvas.firstChild);
+            // Fetch SVG and inline it so we can modify the viewBox
+            fetch('/world.svg').then(r => r.text()).then(svgText => {
+                const wrapper = el('div', { className: 'world-map-bg', 'aria-hidden': 'true' });
+                wrapper.innerHTML = svgText;
+                const svg = wrapper.querySelector('svg');
+                if (svg && _latLonBounds) {
+                    const b = _latLonBounds;
+                    // SVG coordinates: x=(lon+180)/360*800, y=(90-lat)/180*400
+                    const x1 = (b.minLon + 180) / 360 * 800;
+                    const x2 = (b.maxLon + 180) / 360 * 800;
+                    const y1 = (90 - b.maxLat) / 180 * 400;
+                    const y2 = (90 - b.minLat) / 180 * 400;
+                    svg.setAttribute('viewBox', `${x1} ${y1} ${x2 - x1} ${y2 - y1}`);
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    svg.style.width = '100%';
+                    svg.style.height = '100%';
+                    svg.querySelectorAll('path').forEach(p => {
+                        p.setAttribute('fill', 'currentColor');
+                        p.setAttribute('stroke', 'none');
+                    });
+                }
+                canvas.insertBefore(wrapper, canvas.firstChild);
+            });
         }
     } else {
         canvas.querySelector('.world-map-bg')?.remove();

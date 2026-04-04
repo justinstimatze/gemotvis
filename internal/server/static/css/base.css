@@ -1161,14 +1161,16 @@ footer {
 /* World map background for agents with lat/lon coordinates */
 .world-map-bg {
     position: absolute;
-    inset: 5% 5% 5% 5%;
-    width: 90%;
-    height: 90%;
-    object-fit: contain;
+    /* Match the agent positioning margins (8% margin in latLonToXY) */
+    left: 8%;
+    top: 8%;
+    width: 84%;
+    height: 84%;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.08;
-    filter: grayscale(1);
+    opacity: 0.1;
+    color: var(--vis-text-dim);
+    border: none;
 }
 
 /* Graph edges: CSS div lines that transition smoothly with nodes */
