@@ -497,16 +497,19 @@ function startScrubberPlay() {
                             el('span', { className: 'thinking-dot' }),
                             el('span', { className: 'thinking-dot' })));
                     thread.appendChild(indicator);
-                    if (content) content.scrollTop = content.scrollHeight;
+                    if (content && content.scrollHeight - content.scrollTop - content.clientHeight < 50) {
+                        content.scrollTop = content.scrollHeight;
+                    }
                 }
                 if (content && !content.querySelector('.chat-end-marker')) {
                     setTimeout(() => {
                         if (graphState.activeEdge !== edgeAtSwitch) return;
                         if (!content.isConnected || !scrubber.playing) return;
-                        // Only add if there are actual chat messages visible
                         if (!content.querySelector('.chat-bubble')) return;
                         content.appendChild(el('div', { className: 'chat-end-marker' }, 'End of negotiation'));
-                        content.scrollTop = content.scrollHeight;
+                        if (content.scrollHeight - content.scrollTop - content.clientHeight < 50) {
+                            content.scrollTop = content.scrollHeight;
+                        }
                     }, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.3);
                 }
             }, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7);
@@ -1094,7 +1097,11 @@ function renderCenterPanel(ds) {
         });
 
         renderCenterPanel._posCount = positions.length;
-        requestAnimationFrame(() => { content.scrollTop = content.scrollHeight; });
+        // Only auto-scroll if user hasn't scrolled up
+        requestAnimationFrame(() => {
+            const atBottom = content.scrollHeight - content.scrollTop - content.clientHeight < 50;
+            if (atBottom) content.scrollTop = content.scrollHeight;
+        });
     }
 
     // Show "end of negotiation" marker only when all positions were already rendered
@@ -1130,8 +1137,12 @@ function renderCenterPanel(ds) {
 
     if (consensus.length === 0 && bridging.length === 0 && !analysis.compromise_proposal && cruxes.length === 0) {
         if (positions.length === 0) { panel.classList.add('hidden'); return; }
-        // Chat thread already rendered, just auto-scroll
-        requestAnimationFrame(() => { content.scrollTop = content.scrollHeight; });
+        // Chat thread already rendered — only scroll if user is at bottom
+        requestAnimationFrame(() => {
+            if (content.scrollHeight - content.scrollTop - content.clientHeight < 50) {
+                content.scrollTop = content.scrollHeight;
+            }
+        });
         return;
     }
 
@@ -1426,20 +1437,24 @@ function truncate(s, n) {
 }
 
 // Word-by-word typing reveal with live agent name highlighting.
+// Only auto-scrolls if the user hasn't manually scrolled up.
 function typeReveal(textEl, fullText) {
     if (typingTimer) clearInterval(typingTimer);
     const words = fullText.split(/(\s+)/); // preserve whitespace
     let shown = 0;
     textEl.textContent = '';
+    const panel = textEl.closest('.panel-content');
     const speed = Math.max(15, Math.min(40, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7 / words.length));
     typingTimer = setInterval(() => {
         shown++;
-        // Re-render with mentions on each word addition
         const partial = words.slice(0, shown).join('');
         while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
         textEl.appendChild(renderTextWithMentions(partial, []));
-        const panel = textEl.closest('.panel-content');
-        if (panel) panel.scrollTop = panel.scrollHeight;
+        // Only auto-scroll if user is near the bottom (within 50px)
+        if (panel) {
+            const atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 50;
+            if (atBottom) panel.scrollTop = panel.scrollHeight;
+        }
         if (shown >= words.length) {
             clearInterval(typingTimer);
             typingTimer = null;
