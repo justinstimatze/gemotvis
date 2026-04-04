@@ -2485,6 +2485,214 @@ body.boot-gastown .boot-text:nth-child(3) {
 #screen.theme-gastown ::-webkit-scrollbar-thumb { background: #5d4037; }
 #screen.theme-gastown ::-webkit-scrollbar-thumb:hover { background: #cd7f32; }
 
+/* --- Gastown: Graph View --- */
+
+#screen.theme-gastown .graph-node-icon {
+    border-radius: 0;
+    width: 56px;
+    height: 56px;
+    transform: rotate(45deg);
+    border: 2px solid #cd7f32;
+    background: linear-gradient(135deg, #f5e6d3 0%, #e8dcc8 50%, #d4c4a8 100%);
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.15), inset 0 0 8px rgba(205,127,50,0.1);
+    font-family: 'Cinzel', 'Georgia', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #5d4037;
+}
+
+#screen.theme-gastown .graph-node-icon > * { transform: rotate(-45deg); }
+
+#screen.theme-gastown .graph-node:hover .graph-node-icon {
+    border-color: #b8860b;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2), inset 0 0 10px rgba(205,127,50,0.15);
+}
+
+#screen.theme-gastown .graph-node-active .graph-node-icon {
+    border-color: #8b5e3c;
+    background: linear-gradient(135deg, #cd7f32 0%, #b8860b 100%);
+    color: #f5e6d3;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+}
+
+#screen.theme-gastown .graph-node-name {
+    font-family: 'Cinzel', 'Georgia', serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #2c1810;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 16px;
+}
+
+#screen.theme-gastown .graph-node-active .graph-node-name { color: #8b5e3c; }
+
+#screen.theme-gastown .graph-node-stats {
+    font-family: 'Crimson Text', serif;
+    font-size: 9px;
+    color: #7a6652;
+    letter-spacing: 1px;
+}
+
+#screen.theme-gastown .graph-edge-div { background: #c4a882; }
+#screen.theme-gastown .graph-edge-div.graph-edge-active { background: #cd7f32 !important; opacity: 0.5 !important; }
+#screen.theme-gastown .graph-edge-div.graph-edge-empty { background: #d4c4a8; }
+#screen.theme-gastown .graph-edge-count-div { font-family: 'Crimson Text', serif; color: #7a6652; font-size: 9px; }
+
+#screen.theme-gastown .graph-view #center-panel {
+    background: #f5e6d3;
+    border: 2px solid #c4a882;
+    border-radius: 0;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.12);
+}
+
+#screen.theme-gastown .graph-view .panel-content { max-height: none; }
+
+/* --- Gastown: Chat --- */
+
+#screen.theme-gastown .chat-thread { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+
+#screen.theme-gastown .chat-bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    font-family: 'Crimson Text', serif;
+    border: 1px solid #c4a882;
+}
+
+#screen.theme-gastown .chat-left {
+    align-self: flex-start;
+    background: #efe3cf;
+    border-left: 3px solid #cd7f32;
+}
+
+#screen.theme-gastown .chat-right {
+    align-self: flex-end;
+    background: #e8dcc8;
+    border-right: 3px solid #8b5e3c;
+}
+
+#screen.theme-gastown .chat-name {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: #8b5e3c;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+#screen.theme-gastown .chat-right .chat-name { color: #5d4037; }
+#screen.theme-gastown .chat-text { color: #2c1810; }
+#screen.theme-gastown .chat-para { margin: 0 0 6px 0; }
+#screen.theme-gastown .chat-para:last-child { margin-bottom: 0; }
+#screen.theme-gastown .chat-new { animation: chatFadeIn 0.4s ease-out; }
+
+#screen.theme-gastown .chat-new .chat-text::after {
+    content: '▊';
+    color: #cd7f32;
+    animation: cursorBlink 0.8s step-end infinite;
+    font-size: 12px;
+}
+
+#screen.theme-gastown .chat-divider { border: none; border-top: 1px solid #c4a882; margin: 8px 0; }
+
+#screen.theme-gastown .chat-end-marker {
+    text-align: center;
+    padding: 12px 0;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #7a6652;
+    border-top: 1px solid #c4a882;
+    margin-top: 8px;
+}
+
+#screen.theme-gastown .agent-mention { font-weight: 700; color: #8b5e3c; }
+
+/* --- Gastown: Thinking --- */
+
+#screen.theme-gastown .chat-thinking { align-self: center; padding: 8px 20px; background: #efe3cf; border: 1px solid #c4a882; }
+#screen.theme-gastown .thinking-dots { display: flex; gap: 6px; align-items: center; justify-content: center; }
+#screen.theme-gastown .thinking-dot { width: 8px; height: 8px; border-radius: 0; background: #cd7f32; animation: dotBounce 1.4s ease-in-out infinite; }
+#screen.theme-gastown .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+#screen.theme-gastown .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* --- Gastown: Analysis Items --- */
+
+#screen.theme-gastown .analysis-item {
+    list-style: none; position: relative; padding-left: 14px; margin: 6px 0;
+    font-size: 13px; line-height: 1.5; color: #2c1810; font-family: 'Crimson Text', serif;
+    word-wrap: break-word; overflow-wrap: break-word;
+}
+#screen.theme-gastown .analysis-item-text { display: block; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
+#screen.theme-gastown .analysis-item:has(.analysis-item-text:not(:empty))::before {
+    content: '◆'; position: absolute; left: 0; top: 0; color: #cd7f32; font-size: 8px;
+}
+
+#screen.theme-gastown .panel-label { font-family: 'Cinzel', serif; letter-spacing: 2px; color: #8b5e3c; font-weight: 700; }
+#screen.theme-gastown .panel-label-consensus { color: #2e7d32; }
+#screen.theme-gastown .panel-label-bridging { color: #cd7f32; }
+#screen.theme-gastown .panel-label-compromise { color: #b87333; }
+#screen.theme-gastown .panel-text { color: #2c1810; font-family: 'Crimson Text', serif; font-size: 13px; }
+
+/* --- Gastown: Metrics --- */
+
+#screen.theme-gastown .metrics-grid { padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; font-family: 'Crimson Text', serif; }
+#screen.theme-gastown .metrics-section-label { font-family: 'Cinzel', serif; font-size: 9px; font-weight: 700; letter-spacing: 3px; color: #8b5e3c; margin-bottom: 3px; }
+#screen.theme-gastown .metrics-flow-track { display: flex; gap: 2px; height: 12px; }
+#screen.theme-gastown .metrics-flow-block { flex: 1; min-width: 4px; opacity: 0.6; }
+#screen.theme-gastown .metrics-agent-stats { display: flex; flex-direction: column; gap: 2px; }
+#screen.theme-gastown .metrics-agent-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; border-left: 3px solid #cd7f32; padding-left: 6px; }
+#screen.theme-gastown .metrics-agent-name { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #2c1810; text-transform: uppercase; letter-spacing: 1px; min-width: 60px; }
+#screen.theme-gastown .metrics-agent-detail { font-size: 10px; color: #5d4037; }
+#screen.theme-gastown .metrics-network { border-top: 1px solid #c4a882; padding-top: 4px; }
+#screen.theme-gastown .metrics-network-row { display: flex; gap: 8px; align-items: baseline; padding: 1px 0; }
+#screen.theme-gastown .metrics-network-detail { font-size: 9px; color: #7a6652; }
+#screen.theme-gastown .audit-desc { color: #5d4037; font-size: 11px; }
+
+/* --- Gastown: Scrubber --- */
+
+#screen.theme-gastown .scrubber-bar { background: #f5e6d3; border-top: 2px solid #c4a882; }
+#screen.theme-gastown .scrubber-btn { font-family: 'Cinzel', serif; font-size: 11px; border-color: #c4a882; color: #5d4037; }
+#screen.theme-gastown .scrubber-btn:hover { background: #efe3cf; border-color: #cd7f32; }
+#screen.theme-gastown .scrubber-track { border-bottom-color: #c4a882; background: #efe3cf; }
+#screen.theme-gastown .scrubber-dot { width: 3px; height: 3px; border-width: 0; background: #c4a882; border-radius: 0; }
+#screen.theme-gastown .scrubber-dot.active { background: #cd7f32; width: 5px; height: 5px; }
+#screen.theme-gastown .scrubber-dot-position { background: #cd7f32; opacity: 0.5; }
+#screen.theme-gastown .scrubber-dot-position.active { background: #8b5e3c; opacity: 1; }
+#screen.theme-gastown .scrubber-dot-vote { background: #2e7d32; opacity: 0.4; }
+#screen.theme-gastown .scrubber-dot-vote.active { background: #2e7d32; opacity: 1; }
+#screen.theme-gastown .scrubber-dot-analysis { background: #5d4037; opacity: 0.3; }
+#screen.theme-gastown .scrubber-dot-analysis.active { background: #5d4037; opacity: 1; }
+#screen.theme-gastown .scrubber-label { color: #5d4037; font-family: 'Crimson Text', serif; font-size: 11px; }
+#screen.theme-gastown .scrubber-playhead { background: #cd7f32; }
+#screen.theme-gastown .scrubber-playhead::before { background: #cd7f32; }
+#screen.theme-gastown .scrubber-live { color: #2e7d32; border-color: #2e7d32; }
+
+/* --- Gastown: Crux list --- */
+
+#screen.theme-gastown .crux-item { padding: 6px 0; border-bottom: 1px solid #d4c4a8; }
+#screen.theme-gastown .crux-claim.crux-collapsed { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#screen.theme-gastown .crux-item:hover .crux-claim.crux-collapsed { color: #cd7f32; }
+#screen.theme-gastown .crux-meta { font-family: 'Crimson Text', serif; }
+#screen.theme-gastown .crux-agree { color: #2e7d32; }
+#screen.theme-gastown .crux-disagree { color: #8b2500; }
+
+/* --- Gastown: Footer --- */
+
+#screen.theme-gastown footer { height: 220px; }
+#screen.theme-gastown .footer-panel { border-right: 1px solid #c4a882; }
+#screen.theme-gastown .footer-panel:last-child { border-right: none; }
+#screen.theme-gastown .panel-header { font-family: 'Cinzel', serif; letter-spacing: 3px; font-weight: 700; border-bottom-color: #c4a882; }
+
+#screen.theme-gastown .graph-ready-indicator .graph-ready-text { color: #8b5e3c; font-family: 'Cinzel', serif; letter-spacing: 3px; }
+#screen.theme-gastown .graph-ready-indicator .thinking-dot { border-radius: 0; background: #cd7f32; }
+
 /* Gastown: reduced motion */
 @media (prefers-reduced-motion: reduce) {
     #screen.theme-gastown .status-indicator.analyzing { animation: none; }
