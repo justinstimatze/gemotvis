@@ -2692,12 +2692,21 @@ body.boot-gastown .boot-text:nth-child(3) {
 #screen.theme-gastown .crux-agree { color: #2e7d32; }
 #screen.theme-gastown .crux-disagree { color: #8b2500; }
 
-/* --- Gastown: Footer --- */
+/* --- Gastown: Footer (dark brown background — needs light text) --- */
 
 #screen.theme-gastown footer { height: 220px; }
-#screen.theme-gastown .footer-panel { border-right: 1px solid #c4a882; }
+#screen.theme-gastown .footer-panel { border-right: 1px solid #5d4037; }
 #screen.theme-gastown .footer-panel:last-child { border-right: none; }
-#screen.theme-gastown .panel-header { font-family: 'Cinzel', serif; letter-spacing: 3px; font-weight: 700; color: #8b5e3c; border-bottom-color: #c4a882; font-size: 11px; }
+#screen.theme-gastown .panel-header { font-family: 'Cinzel', serif; letter-spacing: 3px; font-weight: 700; color: #cd7f32; border-bottom-color: #5d4037; font-size: 11px; }
+#screen.theme-gastown .metrics-section-label { color: #cd7f32; }
+#screen.theme-gastown .metrics-agent-name { color: #f5e6d3; }
+#screen.theme-gastown .metrics-agent-detail { color: #d4a574; }
+#screen.theme-gastown .metrics-agent-row { border-left-color: #cd7f32; }
+#screen.theme-gastown .metrics-network-detail { color: #d4a574; }
+#screen.theme-gastown .metrics-network { border-top-color: #5d4037; }
+#screen.theme-gastown .audit-desc { color: #d4a574; }
+#screen.theme-gastown .empty-message { color: #8b7355; }
+#screen.theme-gastown .crux-claim { color: #f5e6d3; }
 
 #screen.theme-gastown .graph-ready-indicator .graph-ready-text { color: #8b5e3c; font-family: 'Cinzel', serif; letter-spacing: 3px; }
 #screen.theme-gastown .graph-ready-indicator .thinking-dot { border-radius: 0; background: #cd7f32; }
