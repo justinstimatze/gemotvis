@@ -1041,7 +1041,10 @@ function renderCenterPanel(ds) {
 
     const positions = ds.positions || [];
     const agents = ds.agents || [];
-    const agentIDs = agents.map(a => a.id);
+    // Use the FULL agent list for left/right assignment (not the time-filtered subset)
+    const rawDelib = state.deliberations[ds.deliberation?.deliberation_id];
+    const allAgentIDs = rawDelib ? (rawDelib.agents || []).map(a => a.id) : agents.map(a => a.id);
+    const agentIDs = allAgentIDs;
 
     // Set header based on content being shown
     if (panelHeader) {
@@ -1101,7 +1104,8 @@ function renderCenterPanel(ds) {
         // Only render NEW positions (after prevPosCount)
         const newPositions = positions.slice(prevPosCount);
         newPositions.forEach((p, idx) => {
-            const isLeft = agentIDs.indexOf(p.agent_id) <= 0;
+            const agentIdx = agentIDs.indexOf(p.agent_id);
+            const isLeft = agentIdx % 2 === 0; // alternate: even=left, odd=right
             const isNewest = (prevPosCount + idx) === positions.length - 1;
 
             const textNode = el('div', { className: 'chat-text' });
@@ -1788,9 +1792,9 @@ function getGraphNodePositions(graph) {
 function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
     if (!activeAgentA || !activeAgentB) return basePositions;
 
-    // Active pair: left and right with breathing room from edges
-    const focusA = { x: 14, y: 40 };
-    const focusB = { x: 86, y: 40 };
+    // Active pair: left and right with breathing room from edges and center panel
+    const focusA = { x: 8, y: 40 };
+    const focusB = { x: 92, y: 40 };
 
     return basePositions.map(n => {
         if (n.id === activeAgentA) return { ...n, x: focusA.x, y: focusA.y };
@@ -1914,16 +1918,23 @@ function renderGraphView(graph) {
     const ch = canvas.offsetHeight || 1;
     const canvasRect = canvas.getBoundingClientRect();
 
-    // For edge positioning, read actual rendered node positions (handles mid-transition)
+    // For edge positioning, read actual icon center positions
     const liveNodePos = {};
     canvas.querySelectorAll('.graph-node').forEach(n => {
-        const r = n.getBoundingClientRect();
-        // Icon center is approximately at the center-top of the node element
-        const iconSize = 64; // approximate
-        liveNodePos[n.dataset.agentId] = {
-            px: r.left + r.width / 2 - canvasRect.left,
-            py: r.top + iconSize / 2 - canvasRect.top,
-        };
+        const icon = n.querySelector('.graph-node-icon');
+        if (icon) {
+            const ir = icon.getBoundingClientRect();
+            liveNodePos[n.dataset.agentId] = {
+                px: ir.left + ir.width / 2 - canvasRect.left,
+                py: ir.top + ir.height / 2 - canvasRect.top,
+            };
+        } else {
+            const r = n.getBoundingClientRect();
+            liveNodePos[n.dataset.agentId] = {
+                px: r.left + r.width / 2 - canvasRect.left,
+                py: r.top + r.height / 2 - canvasRect.top,
+            };
+        }
     });
 
     graph.edges.forEach(edge => {
