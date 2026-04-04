@@ -992,6 +992,140 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     letter-spacing: 3px;
 }
 
+/* --- MAGI: Graph canvas hex grid overlay --- */
+
+#screen.theme-magi .graph-canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        /* Fine hex-inspired diagonal cross-hatch */
+        repeating-linear-gradient(
+            60deg,
+            transparent, transparent 28px,
+            rgba(255, 140, 0, 0.02) 28px, rgba(255, 140, 0, 0.02) 29px
+        ),
+        repeating-linear-gradient(
+            -60deg,
+            transparent, transparent 28px,
+            rgba(255, 140, 0, 0.02) 28px, rgba(255, 140, 0, 0.02) 29px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            transparent, transparent 48px,
+            rgba(255, 140, 0, 0.015) 48px, rgba(255, 140, 0, 0.015) 49px
+        );
+}
+
+/* --- MAGI: Active edge scan sweep --- */
+
+@keyframes edgeScanSweep {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+#screen.theme-magi .graph-edge-div.graph-edge-active {
+    background: linear-gradient(
+        90deg,
+        #00ffff 0%, rgba(0, 255, 255, 0.1) 40%,
+        rgba(0, 255, 255, 0.8) 50%,
+        rgba(0, 255, 255, 0.1) 60%, #00ffff 100%
+    ) !important;
+    background-size: 200% 100%;
+    animation: edgeScanSweep 3s linear infinite;
+    opacity: 0.4 !important;
+}
+
+/* --- MAGI: Chat panel data noise border --- */
+
+#screen.theme-magi .graph-view #center-panel::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px;
+    right: -1px; bottom: -1px;
+    border: 1px solid #ff8c00;
+    pointer-events: none;
+    box-shadow:
+        0 0 15px rgba(255, 140, 0, 0.1),
+        inset 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Corner tick marks on the chat panel (NERV-style targeting brackets) */
+#screen.theme-magi .graph-view #center-panel::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px;
+    right: 4px; bottom: 4px;
+    border: 1px solid rgba(255, 140, 0, 0.15);
+    pointer-events: none;
+}
+
+/* --- MAGI: Footer panel instrument styling --- */
+
+#screen.theme-magi .footer-panel {
+    border-right-color: #332200;
+}
+
+#screen.theme-magi .panel-header {
+    color: #ff8c00;
+    text-shadow: 0 0 4px rgba(255, 140, 0, 0.4);
+    border-bottom-color: #332200;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+#screen.theme-magi .panel-scroll {
+    font-family: 'Courier New', monospace;
+}
+
+/* --- MAGI: Crux controversy bar --- */
+
+#screen.theme-magi .controversy-bar {
+    background: #1a1200;
+}
+
+#screen.theme-magi .controversy-fill {
+    background: linear-gradient(90deg, #ff8c00, #ff2020);
+    box-shadow: 0 0 4px rgba(255, 140, 0, 0.3);
+}
+
+#screen.theme-magi .crux-meta {
+    color: #cc7000;
+    font-family: 'Courier New', monospace;
+}
+
+#screen.theme-magi .crux-agree { color: #00ff41; text-shadow: 0 0 4px rgba(0, 255, 65, 0.4); }
+#screen.theme-magi .crux-disagree { color: #ff2020; text-shadow: 0 0 4px rgba(255, 32, 32, 0.4); }
+
+/* --- MAGI: Ready indicator styling --- */
+
+#screen.theme-magi .graph-ready-indicator .thinking-dot {
+    border-radius: 0;
+    background: #ff8c00;
+    box-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
+}
+
+/* --- MAGI: Panel label colors --- */
+
+#screen.theme-magi .panel-label {
+    color: #ff8c00;
+    text-shadow: 0 0 4px rgba(255, 140, 0, 0.4);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+#screen.theme-magi .panel-label-consensus { color: #00ff41; text-shadow: 0 0 4px rgba(0, 255, 65, 0.5); }
+#screen.theme-magi .panel-label-bridging { color: #ffcc00; text-shadow: 0 0 4px rgba(255, 204, 0, 0.5); }
+#screen.theme-magi .panel-label-compromise { color: #00ffff; text-shadow: 0 0 4px rgba(0, 255, 255, 0.5); }
+
+#screen.theme-magi .panel-text {
+    color: #ddd;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
 /* --- MAGI: reduced motion --- */
 
 @media (prefers-reduced-motion: reduce) {
