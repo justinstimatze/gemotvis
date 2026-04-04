@@ -165,9 +165,13 @@
 #screen.theme-magi .topic-label {
     color: #ffaa00;
     text-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
-    font-size: 18px;
+    font-size: clamp(11px, 1.5vw, 18px);
     font-weight: bold;
     letter-spacing: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
 }
 
 /* --- MAGI: status indicator glows — readable with subtle halo --- */
@@ -1201,9 +1205,13 @@ body.boot-minimal .boot-overlay .boot-text {
 /* Minimal: typography — same sensibility as the landing page */
 #screen.theme-minimal .topic-label {
     font-weight: 300;
-    font-size: 18px;
+    font-size: clamp(12px, 1.5vw, 18px);
     letter-spacing: -0.03em;
     color: #171717;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
 }
 
 #screen.theme-minimal .system-label {
@@ -2210,8 +2218,13 @@ body.boot-gastown .boot-text:nth-child(3) {
 
 #screen.theme-gastown .topic-label {
     font-family: 'Cinzel', serif;
+    font-size: clamp(12px, 1.5vw, 18px);
     letter-spacing: 2px;
     color: #f5e6d3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
 }
 
 /* Gastown: status badges (on dark header) */

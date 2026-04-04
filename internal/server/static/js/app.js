@@ -278,8 +278,9 @@ function filterToTime(ds, cutoffTime) {
 
 function buildTimelineEvents(ds) {
     const ops = ds.audit_log?.operations || [];
+    const delibID = ds.deliberation?.deliberation_id;
     return ops.map((op, i) => {
-        const method = (op.method || '').replace('gemot/', ''); // normalize: strip prefix if present
+        const method = (op.method || '').replace('gemot/', '');
         let type = 'other';
         let label = method;
         if (method.includes('submit_position')) {
@@ -292,7 +293,7 @@ function buildTimelineEvents(ds) {
             type = 'analysis';
             label = method.includes('complete') || method.includes('result') ? 'Analysis complete' : 'Analysis started';
         }
-        return { time: op.timestamp, label, type, index: i };
+        return { time: op.timestamp, label, type, delibID, index: i };
     }).sort((a, b) => new Date(a.time) - new Date(b.time));
 }
 
@@ -455,7 +456,19 @@ function startScrubberPlay() {
 
     function advance() {
         let next = (scrubber.eventIndex || 0) + 1;
-        if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
+        if (next >= scrubber.events.length) {
+            const loopEl = document.getElementById('scrubber-loop');
+            if (loopEl && loopEl.checked) {
+                scrubber.eventIndex = -1;
+                renderCenterPanel._delibID = null;
+                renderCenterPanel._posCount = 0;
+                renderCenterPanel._hadAnalysis = false;
+                renderCenterPanel._thread = null;
+                scrubber.playTimer = setTimeout(advance, 2000);
+                return;
+            }
+            stopScrubberPlay(); return;
+        }
 
         // Skip non-visual events (create_deliberation, set_template, etc.)
         // but keep ALL position and vote events including group deliberations
@@ -464,7 +477,19 @@ function startScrubberPlay() {
             if (e.type === 'position' || e.type === 'vote') break;
             next++;
         }
-        if (next >= scrubber.events.length) { stopScrubberPlay(); return; }
+        if (next >= scrubber.events.length) {
+            const loopEl = document.getElementById('scrubber-loop');
+            if (loopEl && loopEl.checked) {
+                scrubber.eventIndex = -1;
+                renderCenterPanel._delibID = null;
+                renderCenterPanel._posCount = 0;
+                renderCenterPanel._hadAnalysis = false;
+                renderCenterPanel._thread = null;
+                scrubber.playTimer = setTimeout(advance, 2000);
+                return;
+            }
+            stopScrubberPlay(); return;
+        }
 
         const evt = scrubber.events[next];
         scrubTo(next, true);
@@ -707,6 +732,18 @@ function render() {
     renderMetrics(display);
     renderAuditLog(display);
     renderScrubber(active); // always pass full state for timeline dots
+
+    // Autoplay in single-view replay mode — start immediately at position 0
+    if ((state.mode === 'demo' || state.mode === 'replay') &&
+        !scrubber.playing && !scrubber.autoplayStarted && scrubber.events.length > 2) {
+        scrubber.autoplayStarted = true;
+        // Set scrubber to beginning so next render shows filtered state
+        scrubber.enabled = true;
+        scrubber.eventIndex = 0;
+        setTimeout(() => startScrubberPlay(), 2000);
+        // Re-render with the filtered state
+        render();
+    }
 }
 
 function renderDelibNav(ids, delibs) {

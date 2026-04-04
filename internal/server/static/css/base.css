@@ -194,6 +194,20 @@ header {
     letter-spacing: 2px;
 }
 
+.scrubber-loop-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--vis-text-dim);
+    opacity: 0.7;
+}
+
+.scrubber-loop-label input { width: 0; height: 0; opacity: 0; position: absolute; }
+.scrubber-loop-label input:checked + span { opacity: 1; }
+.scrubber-loop-label input:not(:checked) + span { opacity: 0.3; }
+
 .theme-switcher {
     font-family: var(--vis-font);
     font-size: 10px;
@@ -539,7 +553,10 @@ header {
     pointer-events: none;
     transition: opacity 0.15s;
     text-transform: none;
-    transform: translateX(-50%) translateZ(100px); /* pop above everything in 3D */
+}
+
+.agent-node:hover {
+    z-index: 9998; /* raise entire node above center panel when showing tooltip */
 }
 
 .agent-node:hover > .agent-tooltip {
