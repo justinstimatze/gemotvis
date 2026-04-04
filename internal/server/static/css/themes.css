@@ -122,18 +122,10 @@
     97% { opacity: 1; }
 }
 
-/* --- MAGI: tactical grid background --- */
+/* --- MAGI: background (hex grid is on .graph-canvas::before) --- */
 
 #screen.theme-magi main {
-    background:
-        linear-gradient(rgba(255, 140, 0, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 140, 0, 0.03) 1px, transparent 1px),
-        linear-gradient(rgba(255, 140, 0, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 140, 0, 0.06) 1px, transparent 1px);
-    background-size:
-        20px 20px, 20px 20px,
-        100px 100px, 100px 100px;
-    background-position: center center;
+    background: #050505;
 }
 
 /* --- MAGI: HUD decorations --- */
@@ -171,8 +163,11 @@
 }
 
 #screen.theme-magi .topic-label {
-    text-shadow: 0 0 1px rgba(255, 140, 0, 0.4);
-    font-size: 16px;
+    color: #ffaa00;
+    text-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 3px;
 }
 
 /* --- MAGI: status indicator glows — readable with subtle halo --- */
@@ -996,10 +991,10 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.08;
-    /* Flat-top hexagonal tiling via SVG polygon. Tile = 60×34.64 (w = size*2, h = size*sqrt(3)) */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,15 58,37 30,50 2,37 2,15' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpolygon points='60,28 88,41 88,63 60,76 32,63 32,41' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpolygon points='0,28 28,41 28,63 0,76 -28,63 -28,41' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3C/svg%3E");
-    background-size: 60px 52px;
+    opacity: 0.15;
+    /* Pointy-top hex tiling: radius=20, tile=34.64×60, 3 hexes per tile for seamless repeat */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34.64' height='60'%3E%3Cpolygon points='34.6,10 34.6,30 17.3,40 0,30 0,10 17.3,0' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpolygon points='17.3,40 17.3,60 0,70 -17.3,60 -17.3,40 0,30' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpolygon points='52,40 52,60 34.6,70 17.3,60 17.3,40 34.6,30' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3C/svg%3E");
+    background-size: 34.64px 60px;
 }
 
 /* --- MAGI: Active edge scan sweep --- */
