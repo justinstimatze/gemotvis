@@ -34,8 +34,10 @@ type AgentInfo struct {
 	ModelFamily string   `json:"model_family"`
 	Conviction  float64  `json:"conviction"`
 	ClusterID   *int     `json:"cluster_id,omitempty"`
-	X           *float64 `json:"x,omitempty"` // 0-100, optional positioned layout
-	Y           *float64 `json:"y,omitempty"` // 0-100, optional positioned layout
+	X           *float64 `json:"x,omitempty"`   // 0-100, optional positioned layout
+	Y           *float64 `json:"y,omitempty"`   // 0-100, optional positioned layout
+	Lat         *float64 `json:"lat,omitempty"` // latitude for world map projection
+	Lon         *float64 `json:"lon,omitempty"` // longitude for world map projection
 }
 
 // Snapshot is the full state of all watched deliberations.

@@ -1569,6 +1569,19 @@ let graphState = {
     hoverEdge: null,     // delibID being hovered
 };
 
+// Lat/lon to percentage position using equirectangular projection.
+// Returns { x, y } as percentages (0-100) of the canvas.
+function latLonToXY(lat, lon) {
+    const x = ((lon + 180) / 360) * 100;
+    const y = ((90 - lat) / 180) * 100;
+    // Add padding so nodes don't sit at the very edges
+    const padX = 5, padY = 8;
+    return {
+        x: padX + x * (100 - 2 * padX) / 100,
+        y: padY + y * (100 - 2 * padY) / 100,
+    };
+}
+
 // Fixed positions for 7 Diplomacy powers (roughly matches a Europe map layout)
 const DIPLOMACY_POSITIONS = {
     'england-agent':  { x: 22, y: 16 },
@@ -1588,8 +1601,23 @@ function getGraphNodePositions(graph) {
     const allDiplomacy = nodes.every(n => DIPLOMACY_POSITIONS[n]);
     if (allDiplomacy) return nodes.map(n => ({ id: n, ...DIPLOMACY_POSITIONS[n] }));
 
-    // Check if agents have explicit x,y coordinates
+    // Check if agents have lat/lon — collect from ALL delibs, project to world map
     const delibs = state.deliberations;
+    const latLonMap = {};
+    for (const ds of Object.values(delibs)) {
+        (ds.agents || []).forEach(a => {
+            if (a.lat != null && a.lon != null && !latLonMap[a.id]) {
+                latLonMap[a.id] = latLonToXY(a.lat, a.lon);
+            }
+        });
+    }
+    if (nodes.every(n => latLonMap[n])) {
+        state._showWorldMap = true;
+        return nodes.map(n => ({ id: n, ...latLonMap[n] }));
+    }
+    state._showWorldMap = false;
+
+    // Check if agents have explicit x,y coordinates
     for (const ds of Object.values(delibs)) {
         const agents = ds.agents || [];
         if (agents.some(a => a.x != null && a.y != null)) {
@@ -1727,6 +1755,18 @@ function renderGraphView(graph) {
     if (!canvas) {
         canvas = el('div', { className: 'graph-canvas', id: 'graph-canvas' });
         main.appendChild(canvas);
+    }
+
+    // Show world map background when agents have lat/lon
+    if (state._showWorldMap && !canvas.querySelector('.world-map-bg')) {
+        const mapEl = el('img', {
+            className: 'world-map-bg',
+            src: '/world.svg',
+            'aria-hidden': 'true',
+        });
+        canvas.insertBefore(mapEl, canvas.firstChild);
+    } else if (!state._showWorldMap) {
+        canvas.querySelector('.world-map-bg')?.remove();
     }
 
     // Determine scrub time for synchronized filtering

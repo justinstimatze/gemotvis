@@ -1158,6 +1158,19 @@ footer {
     overflow: hidden;
 }
 
+/* World map background for agents with lat/lon coordinates */
+.world-map-bg {
+    position: absolute;
+    inset: 5% 5% 5% 5%;
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.08;
+    filter: grayscale(1);
+}
+
 /* Graph edges: CSS div lines that transition smoothly with nodes */
 .graph-edge-div {
     position: absolute;

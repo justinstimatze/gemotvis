@@ -2716,3 +2716,8 @@ body.boot-gastown .boot-text:nth-child(3) {
     #screen.theme-gastown .status-indicator.analyzing { animation: none; }
     body.boot-gastown .boot-overlay { display: none; }
 }
+
+/* --- World map theming --- */
+#screen.theme-minimal .world-map-bg { opacity: 0.06; filter: grayscale(1) brightness(0.8); }
+#screen.theme-magi .world-map-bg { opacity: 0.1; filter: grayscale(1) brightness(0.3) sepia(1) hue-rotate(10deg) saturate(5); }
+#screen.theme-gastown .world-map-bg { opacity: 0.08; filter: grayscale(1) sepia(0.6) brightness(0.7); }
