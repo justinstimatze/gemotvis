@@ -1547,4 +1547,73 @@ footer {
     .pipeline-stage.active, .analysis-label, .status-indicator.analyzing { animation: none; }
     .integrity-warning .diamond::after { animation: none; }
     #screen { animation: none; }
+    .graph-node { transition: none; }
+    .graph-edge-div { transition: none; }
+    .chat-new { animation: none; }
+    .thinking-dot { animation: none; }
+    .graph-ready-indicator { animation: none; }
+}
+
+/* ===== MOBILE / SMALL SCREENS ===== */
+
+@media (max-width: 768px) {
+    header { padding: 6px 10px; }
+    .header-center { position: static; transform: none; }
+    .topic-label { font-size: 14px !important; }
+
+    /* Stack footer panels vertically */
+    footer { height: auto; min-height: 120px; }
+    footer .footer-grid { grid-template-columns: 1fr; }
+    .footer-panel { border-right: none; border-bottom: 1px solid var(--vis-panel-border); }
+
+    /* Graph nodes smaller */
+    .graph-node-icon { width: 40px; height: 40px; font-size: 16px; }
+    .graph-node-name { font-size: 10px; }
+    .graph-node-stats { font-size: 8px; }
+
+    /* Center panel full width, nodes inset from edges */
+    .graph-view #center-panel {
+        left: 3%;
+        right: 3%;
+        transform: none;
+        max-width: none;
+        min-width: 0;
+        top: 15%;
+    }
+
+    /* Pull active nodes inward so they don't clip */
+    .graph-node-active { max-width: 80px; }
+
+    /* Scrubber taller touch targets */
+    .scrubber-bar { height: 40px; }
+    .scrubber-btn { min-width: 36px; min-height: 36px; }
+    .scrubber-dot { width: 6px; height: 6px; }
+
+    /* Landing page responsive */
+    .landing-content { padding: 20px; width: 90%; }
+}
+
+@media (max-width: 480px) {
+    .graph-node-icon { width: 32px; height: 32px; font-size: 14px; }
+    .graph-node-name { font-size: 9px; letter-spacing: 0.5px; }
+    .chat-bubble { font-size: 12px; max-width: 95%; }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Focus visible for keyboard navigation */
+.scrubber-btn:focus-visible,
+.delib-tab:focus-visible,
+.crux-item:focus-visible,
+.graph-node:focus-visible,
+.graph-edge-div:focus-visible {
+    outline: 2px solid var(--vis-amber);
+    outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+    .graph-edge-div { background: LinkText; }
+    .graph-node-icon { border-color: ButtonText; }
+    .chat-bubble { border-color: ButtonText; }
 }

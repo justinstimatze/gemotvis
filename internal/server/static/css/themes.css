@@ -658,14 +658,16 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 
 #screen.theme-magi .chat-left {
     align-self: flex-start;
-    background: #0a0800;
+    background: #1a1000;
     border-left: 2px solid #ff8c00;
+    box-shadow: inset 2px 0 8px rgba(255, 140, 0, 0.08);
 }
 
 #screen.theme-magi .chat-right {
     align-self: flex-end;
-    background: #000a0a;
+    background: #001a1a;
     border-right: 2px solid #00ffff;
+    box-shadow: inset -2px 0 8px rgba(0, 255, 255, 0.08);
 }
 
 #screen.theme-magi .chat-name {
@@ -920,7 +922,7 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     transform: translate(-50%, -50%);
 }
 
-#screen.theme-magi .scrubber-dot-position { background: #ff8c00; opacity: 0.5; }
+#screen.theme-magi .scrubber-dot-position { background: #ff8c00; opacity: 0.7; }
 #screen.theme-magi .scrubber-dot-position.active { background: #00ffff; opacity: 1; }
 #screen.theme-magi .scrubber-dot-vote { background: #00ff41; opacity: 0.4; }
 #screen.theme-magi .scrubber-dot-vote.active { background: #00ff41; opacity: 1; }
@@ -1043,15 +1045,21 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 /* --- MAGI: Footer panel instrument styling --- */
 
 #screen.theme-magi .footer-panel {
-    border-right-color: #332200;
+    border-right: 1px solid #664400;
+}
+
+#screen.theme-magi .footer-panel:last-child {
+    border-right: none;
 }
 
 #screen.theme-magi .panel-header {
-    color: #ff8c00;
-    text-shadow: 0 0 4px rgba(255, 140, 0, 0.4);
-    border-bottom-color: #332200;
+    color: #ffaa00;
+    text-shadow: 0 0 6px rgba(255, 140, 0, 0.5);
+    border-bottom: 1px solid #664400;
     font-family: 'Courier New', monospace;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    font-size: 11px;
+    font-weight: bold;
 }
 
 #screen.theme-magi .panel-scroll {

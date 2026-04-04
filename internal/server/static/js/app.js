@@ -1218,6 +1218,10 @@ function renderCruxPanel(ds) {
             meta,
         );
         item.onclick = () => claimEl.classList.toggle('crux-collapsed');
+        item.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); claimEl.classList.toggle('crux-collapsed'); } };
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-expanded', 'false');
         item.style.cursor = 'pointer';
         list.appendChild(item);
     });
