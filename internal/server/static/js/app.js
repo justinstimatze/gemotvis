@@ -1425,8 +1425,7 @@ function truncate(s, n) {
     return s.length > n ? s.slice(0, n) + '...' : s;
 }
 
-// Word-by-word typing reveal on an element. Fills text progressively.
-// Speed adapts to fit within the scrubber interval.
+// Word-by-word typing reveal with live agent name highlighting.
 function typeReveal(textEl, fullText) {
     if (typingTimer) clearInterval(typingTimer);
     const words = fullText.split(/(\s+)/); // preserve whitespace
@@ -1435,8 +1434,10 @@ function typeReveal(textEl, fullText) {
     const speed = Math.max(15, Math.min(40, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7 / words.length));
     typingTimer = setInterval(() => {
         shown++;
-        textEl.textContent = words.slice(0, shown).join('');
-        // Auto-scroll parent panel to keep new text visible
+        // Re-render with mentions on each word addition
+        const partial = words.slice(0, shown).join('');
+        while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
+        textEl.appendChild(renderTextWithMentions(partial, []));
         const panel = textEl.closest('.panel-content');
         if (panel) panel.scrollTop = panel.scrollHeight;
         if (shown >= words.length) {
@@ -1790,11 +1791,15 @@ function renderGraphView(graph) {
                 const svg = wrapper.querySelector('svg');
                 if (svg && _latLonBounds) {
                     const b = _latLonBounds;
-                    // SVG coordinates: x=(lon+180)/360*800, y=(90-lat)/180*400
-                    const x1 = (b.minLon + 180) / 360 * 800;
-                    const x2 = (b.maxLon + 180) / 360 * 800;
-                    const y1 = (90 - b.maxLat) / 180 * 400;
-                    const y2 = (90 - b.minLat) / 180 * 400;
+                    // Read SVG's native dimensions from its viewBox
+                    const vb = svg.getAttribute('viewBox')?.split(/\s+/).map(Number) || [0, 0, 1000, 500];
+                    const svgW = vb[2] + vb[0]; // total width
+                    const svgH = vb[3] + vb[1]; // total height
+                    // SVG coordinates: x=(lon+180)/360*svgW, y=(90-lat)/180*svgH
+                    const x1 = (b.minLon + 180) / 360 * svgW;
+                    const x2 = (b.maxLon + 180) / 360 * svgW;
+                    const y1 = (90 - b.maxLat) / 180 * svgH;
+                    const y2 = (90 - b.minLat) / 180 * svgH;
                     svg.setAttribute('viewBox', `${x1} ${y1} ${x2 - x1} ${y2 - y1}`);
                     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                     svg.style.width = '100%';
