@@ -1647,9 +1647,9 @@ function getGraphNodePositions(graph) {
 function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
     if (!activeAgentA || !activeAgentB) return basePositions;
 
-    // Active pair: left and right, vertically centered in the viewport
-    const focusA = { x: 8, y: 40 };
-    const focusB = { x: 92, y: 40 };
+    // Active pair: left and right with breathing room from edges
+    const focusA = { x: 14, y: 40 };
+    const focusB = { x: 86, y: 40 };
 
     return basePositions.map(n => {
         if (n.id === activeAgentA) return { ...n, x: focusA.x, y: focusA.y };
@@ -1662,6 +1662,7 @@ function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
 
 let _prevGraphActiveEdge = null;
 let _edgeRefreshTimer = null;
+let _edgeRafId = null;
 
 function renderGraphView(graph) {
     const delibs = state.deliberations;
@@ -1673,20 +1674,24 @@ function renderGraphView(graph) {
     const edgeChanged = graphState.activeEdge !== _prevGraphActiveEdge;
     _prevGraphActiveEdge = graphState.activeEdge;
 
-    // When the graph reconfigures, continuously re-render edges to track moving nodes
+    // When the graph reconfigures, continuously re-render edges to track moving nodes.
+    // Use requestAnimationFrame for smooth tracking synced to the display refresh.
     if (edgeChanged) {
         clearTimeout(_edgeRefreshTimer);
-        let frames = 0;
-        const totalFrames = 90; // ~3s at 30fps
-        function trackNodes() {
-            if (frames++ >= totalFrames) return;
+        if (_edgeRafId) cancelAnimationFrame(_edgeRafId);
+        const startTime = performance.now();
+        const duration = 3500; // track for slightly longer than the 3s CSS transition
+        function trackNodes(now) {
+            if (now - startTime > duration) return;
             renderGraphView._edgeOnly = true;
             renderGraphView(graph);
             renderGraphView._edgeOnly = false;
-            _edgeRefreshTimer = setTimeout(trackNodes, 33);
+            _edgeRafId = requestAnimationFrame(trackNodes);
         }
-        // Start tracking after a brief delay (let the CSS transition begin)
-        _edgeRefreshTimer = setTimeout(trackNodes, 50);
+        // Delay start so the CSS transition has begun and nodes have initial momentum
+        _edgeRefreshTimer = setTimeout(() => {
+            _edgeRafId = requestAnimationFrame(trackNodes);
+        }, 100);
     }
 
     // Hide single-view elements

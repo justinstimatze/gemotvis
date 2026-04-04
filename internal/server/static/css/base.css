@@ -1173,7 +1173,8 @@ footer {
     cursor: pointer;
     transition: left 3s cubic-bezier(0.22, 0.61, 0.36, 1),
                 top 3s cubic-bezier(0.22, 0.61, 0.36, 1),
-                transform 0.4s ease, opacity 0.6s ease;
+                transform 3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 2s ease;
 }
 
 .graph-node:hover {
@@ -1182,13 +1183,7 @@ footer {
 
 .graph-node-active {
     z-index: 3;
-    transform: translate(-50%, -35%) scale(1.15) translateZ(30px);
-}
-
-.graph-node-active .graph-node-icon {
-    width: 72px;
-    height: 72px;
-    font-size: 26px;
+    transform: translate(-50%, -35%) scale(1.5) translateZ(40px);
 }
 
 .graph-node-active .graph-node-name {
@@ -1237,9 +1232,9 @@ footer {
     transform: translate(-50%, -35%) scale(0.7) translateZ(-200px);
 }
 
-/* Dim but keep non-active edges visible, pushed back in 3D */
+/* Inactive edges stay visible as structural context behind the chat panel */
 .graph-canvas:has(.graph-edge-active) .graph-edge-div:not(.graph-edge-active) {
-    opacity: 0.4 !important;
+    opacity: 0.7 !important;
     height: 1px !important;
 }
 .graph-canvas:has(.graph-edge-active) .graph-edge-count-div {
@@ -1304,10 +1299,10 @@ footer {
     z-index: 20 !important;
     left: 50% !important;
     transform: translateX(-50%) translateZ(50px) !important;
-    top: 2% !important;
-    bottom: 252px !important;
-    max-width: 520px !important;
-    min-width: 340px;
+    top: 1% !important;
+    bottom: 10px !important; /* just above footer+scrubber, they have their own z-index */
+    max-width: 480px !important;
+    min-width: 320px;
     max-height: none !important; /* override base .center-panel max-height: 200px */
     overflow: hidden;
     display: flex;
