@@ -501,11 +501,12 @@ function startScrubberPlay() {
                 }
                 if (content && !content.querySelector('.chat-end-marker')) {
                     setTimeout(() => {
-                        if (graphState.activeEdge !== edgeAtSwitch) return; // stale
-                        if (content.isConnected && scrubber.playing) {
-                            content.appendChild(el('div', { className: 'chat-end-marker' }, 'End of negotiation'));
-                            content.scrollTop = content.scrollHeight;
-                        }
+                        if (graphState.activeEdge !== edgeAtSwitch) return;
+                        if (!content.isConnected || !scrubber.playing) return;
+                        // Only add if there are actual chat messages visible
+                        if (!content.querySelector('.chat-bubble')) return;
+                        content.appendChild(el('div', { className: 'chat-end-marker' }, 'End of negotiation'));
+                        content.scrollTop = content.scrollHeight;
                     }, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.3);
                 }
             }, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7);

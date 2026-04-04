@@ -996,10 +996,10 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.07;
-    /* Inline SVG hex pattern — flat-top hexagons */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3C/svg%3E");
-    background-size: 56px 100px;
+    opacity: 0.08;
+    /* Flat-top hexagonal tiling via SVG polygon. Tile = 60×34.64 (w = size*2, h = size*sqrt(3)) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,15 58,37 30,50 2,37 2,15' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpolygon points='60,28 88,41 88,63 60,76 32,63 32,41' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3Cpolygon points='0,28 28,41 28,63 0,76 -28,63 -28,41' fill='none' stroke='%23ff8c00' stroke-width='0.5'/%3E%3C/svg%3E");
+    background-size: 60px 52px;
 }
 
 /* --- MAGI: Active edge scan sweep --- */
