@@ -1801,7 +1801,7 @@ function renderGraphView(graph) {
                     const y1 = (90 - b.maxLat) / 180 * svgH;
                     const y2 = (90 - b.minLat) / 180 * svgH;
                     svg.setAttribute('viewBox', `${x1} ${y1} ${x2 - x1} ${y2 - y1}`);
-                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    svg.setAttribute('preserveAspectRatio', 'none');
                     svg.style.width = '100%';
                     svg.style.height = '100%';
                     svg.querySelectorAll('path').forEach(p => {
