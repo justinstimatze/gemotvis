@@ -1298,16 +1298,17 @@ footer {
     text-shadow: 0 0 4px var(--vis-bg);
 }
 
-/* Graph view: center panel — fill available height between header and footer */
+/* Graph view: center panel — fill available height, float above edges */
 .graph-view #center-panel {
     position: absolute !important;
-    z-index: 10;
+    z-index: 20 !important;
     left: 50% !important;
-    transform: translateX(-50%) !important;
+    transform: translateX(-50%) translateZ(50px) !important;
     top: 2% !important;
-    bottom: 258px !important; /* footer (220px) + scrubber (28px) + gap */
-    max-width: 520px;
+    bottom: 252px !important;
+    max-width: 520px !important;
     min-width: 340px;
+    max-height: none !important; /* override base .center-panel max-height: 200px */
     overflow: hidden;
     display: flex;
     flex-direction: column;
