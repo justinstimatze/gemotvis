@@ -1227,13 +1227,6 @@ footer {
     background: linear-gradient(90deg, var(--vis-green, #17b169), var(--vis-cyan, #0091ff)) !important;
     opacity: 0.5 !important;
     height: 3px !important;
-    /* Fade in after nodes settle (matches 3s node transition) */
-    animation: edgeFadeIn 1s ease 2.5s both;
-}
-
-@keyframes edgeFadeIn {
-    from { opacity: 0 !important; }
-    to { opacity: 0.5 !important; }
 }
 
 .graph-edge-count-div {
@@ -1397,16 +1390,9 @@ footer {
     min-width: 320px;
     max-height: none !important; /* override base .center-panel max-height: 200px */
     overflow: hidden;
-    display: flex;
-    /* Fade in/out with graph transitions */
+    display: flex !important;
+    flex-direction: column !important;
     transition: opacity 0.8s ease;
-    animation: panelFadeIn 0.8s ease 2.5s both; /* delay matches node transition */
-}
-
-@keyframes panelFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-    flex-direction: column;
 }
 
 .graph-view .panel-content {

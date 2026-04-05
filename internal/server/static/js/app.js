@@ -1839,6 +1839,7 @@ function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
 let _prevGraphActiveEdge = null;
 let _edgeRefreshTimer = null;
 let _edgeRafId = null;
+let _graphTransitioning = false; // suppress active-edge styling during node animation
 
 function renderGraphView(graph) {
     const delibs = state.deliberations;
@@ -1855,16 +1856,23 @@ function renderGraphView(graph) {
     if (edgeChanged) {
         clearTimeout(_edgeRefreshTimer);
         if (_edgeRafId) cancelAnimationFrame(_edgeRafId);
+        _graphTransitioning = true;
         const startTime = performance.now();
-        const duration = 3500; // track for slightly longer than the 3s CSS transition
+        const duration = 3500;
         function trackNodes(now) {
-            if (now - startTime > duration) return;
+            if (now - startTime > duration) {
+                _graphTransitioning = false;
+                // Final render with active edge styling
+                renderGraphView._edgeOnly = true;
+                renderGraphView(graph);
+                renderGraphView._edgeOnly = false;
+                return;
+            }
             renderGraphView._edgeOnly = true;
             renderGraphView(graph);
             renderGraphView._edgeOnly = false;
             _edgeRafId = requestAnimationFrame(trackNodes);
         }
-        // Delay start so the CSS transition has begun and nodes have initial momentum
         _edgeRefreshTimer = setTimeout(() => {
             _edgeRafId = requestAnimationFrame(trackNodes);
         }, 100);
@@ -1984,7 +1992,7 @@ function renderGraphView(graph) {
         const angle = Math.atan2(dyPx, dxPx) * 180 / Math.PI;
 
         let edgeClass = 'graph-edge-div';
-        if (isActive || isScrubTarget) edgeClass += ' graph-edge-active';
+        if ((isActive || isScrubTarget) && !_graphTransitioning) edgeClass += ' graph-edge-active';
         if (posCount === 0) edgeClass += ' graph-edge-empty';
 
         const edgeId = isSingleDelib ? `edge-${edge.a}-${edge.b}` : `edge-${edge.delibID}`;
