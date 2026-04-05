@@ -1844,7 +1844,8 @@ let _graphTransitioning = false; // suppress active-edge styling during node ani
 function renderGraphView(graph) {
     const delibs = state.deliberations;
     const main = document.getElementById('main');
-    main.className = `graph-view${graphState.activeEdge ? ' graph-edge-focused' : ''}`;
+    // Don't apply focused class during node transition animation
+    main.className = `graph-view${graphState.activeEdge && !_graphTransitioning ? ' graph-edge-focused' : ''}`;
 
     // When the active edge changes, the graph reconfigures. Hide edge divs
     // during the node transition, then refresh edges after nodes settle.
@@ -2061,7 +2062,8 @@ function renderGraphView(graph) {
             sideClass = (agentIdx % 2 === 0) ? 'graph-node-left' : 'graph-node-right';
         }
 
-        const nodeClass = `graph-node ${isEdgeAgent ? 'graph-node-active' : ''} ${sideClass} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`;
+        const showActive = isEdgeAgent && !_graphTransitioning;
+        const nodeClass = `graph-node ${showActive ? 'graph-node-active' : ''} ${showActive ? sideClass : ''} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`;
 
         // Try to find existing node to update in place (smooth transition)
         let node = canvas.querySelector(`.graph-node[data-agent-id="${agentID}"]`);
@@ -2097,7 +2099,13 @@ function renderGraphView(graph) {
     // Determine which delib to show in the center panel
     const activeDelibID = graphState.activeEdge || (isSingleDelib ? graph.groupDelibID : null);
 
-    if (activeDelibID && delibs[activeDelibID]) {
+    // During transition: hide panel/footer, show overview title
+    if (_graphTransitioning) {
+        centerPanel.classList.add('hidden');
+        document.getElementById('footer')?.classList.add('hidden');
+        document.getElementById('analysis-bar')?.classList.add('hidden');
+        if (topicEl) topicEl.textContent = `${graph.nodes.length} Agents \u00b7 ${graph.edges.length} Gemots`;
+    } else if (activeDelibID && delibs[activeDelibID]) {
         const rawDs = delibs[activeDelibID];
         const ds = scrubTime ? filterToTime(rawDs, scrubTime) : rawDs;
 

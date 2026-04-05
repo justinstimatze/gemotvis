@@ -1177,16 +1177,20 @@ footer {
 }
 
 /* In graph view, footer and scrubber always reserve space to prevent layout jumps */
-.graph-view ~ footer,
+.graph-view ~ footer {
+    display: grid !important; /* preserve 3-column grid layout */
+}
 .graph-view ~ #scrubber-bar {
-    visibility: visible !important;
     display: flex !important;
 }
 
-.graph-view ~ footer.hidden,
+.graph-view ~ footer.hidden {
+    visibility: hidden !important;
+    display: grid !important;
+}
 .graph-view ~ #scrubber-bar.hidden {
     visibility: hidden !important;
-    display: flex !important; /* still takes space */
+    display: flex !important;
 }
 
 /* World map background for agents with lat/lon coordinates */

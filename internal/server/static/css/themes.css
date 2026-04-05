@@ -2112,8 +2112,8 @@ body.boot-minimal .boot-overlay .boot-text {
 }
 
 #screen.theme-minimal .graph-edge-div.graph-edge-active {
-    background: #0070f3 !important;
-    opacity: 0.35 !important;
+    background: linear-gradient(90deg, #0070f3, #7c3aed) !important;
+    opacity: 0.4 !important;
     height: 3px !important;
 }
 
@@ -2589,7 +2589,7 @@ body.boot-gastown .boot-text:nth-child(3) {
 }
 
 #screen.theme-gastown .graph-edge-div { background: #c4a882; }
-#screen.theme-gastown .graph-edge-div.graph-edge-active { background: #cd7f32 !important; opacity: 0.5 !important; }
+#screen.theme-gastown .graph-edge-div.graph-edge-active { background: linear-gradient(90deg, #cd9b1d, #b87333) !important; opacity: 0.5 !important; height: 3px !important; }
 #screen.theme-gastown .graph-edge-div.graph-edge-empty { background: #d4c4a8; }
 #screen.theme-gastown .graph-edge-count-div { font-family: 'Crimson Text', serif; color: #7a6652; font-size: 9px; }
 
