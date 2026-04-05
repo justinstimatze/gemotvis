@@ -1185,7 +1185,7 @@ footer {
     width: 84%;
     height: 84%;
     pointer-events: none;
-    z-index: 0;
+    z-index: 1; /* above hex grid ::before (z-index 0) */
     opacity: 0.1;
     color: var(--vis-text-dim);
     border: none;

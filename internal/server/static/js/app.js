@@ -1152,11 +1152,8 @@ function renderCenterPanel(ds) {
         });
 
         renderCenterPanel._posCount = positions.length;
-        // Only auto-scroll if user hasn't scrolled up
-        requestAnimationFrame(() => {
-            const atBottom = content.scrollHeight - content.scrollTop - content.clientHeight < 50;
-            if (atBottom) content.scrollTop = content.scrollHeight;
-        });
+        // Always scroll to bottom after rebuilding (we just cleared and re-added everything)
+        requestAnimationFrame(() => { content.scrollTop = content.scrollHeight; });
     }
 
     // Show "end of negotiation" marker only when all positions were already rendered
@@ -1819,9 +1816,9 @@ function getGraphNodePositions(graph) {
 function computeFocusedLayout(basePositions, activeAgentA, activeAgentB) {
     if (!activeAgentA || !activeAgentB) return basePositions;
 
-    // Active pair: left and right with breathing room from edges and center panel
-    const focusA = { x: 8, y: 40 };
-    const focusB = { x: 92, y: 40 };
+    // Active pair: left and right, evenly spaced with center panel
+    const focusA = { x: 15, y: 40 };
+    const focusB = { x: 85, y: 40 };
 
     return basePositions.map(n => {
         if (n.id === activeAgentA) return { ...n, x: focusA.x, y: focusA.y };
