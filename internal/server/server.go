@@ -115,7 +115,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/events", s.handleEvents)
 	s.mux.HandleFunc("GET /api/config", s.handleConfig)
 	s.mux.HandleFunc("GET /api/datasets", s.handleDatasets)
-	s.mux.HandleFunc("POST /api/switch", s.handleSwitch)
+	// Dataset switching is per-client via ?data= URL param, no server-side mutation needed
 
 	// Dashboard routes (API key session auth)
 	s.mux.HandleFunc("POST /api/session", s.handleSessionCreate)
@@ -173,9 +173,23 @@ func (s *Server) getSnapshot() *poller.Snapshot {
 	return &poller.Snapshot{Deliberations: map[string]*poller.DelibState{}}
 }
 
+// getSnapshotForRequest returns the dataset matching the ?data= query param,
+// or the default snapshot if no param or no datasets configured.
+func (s *Server) getSnapshotForRequest(r *http.Request) *poller.Snapshot {
+	if s.datasets != nil {
+		name := r.URL.Query().Get("data")
+		if name != "" {
+			if snap, ok := s.datasets[name]; ok {
+				return snap
+			}
+		}
+	}
+	return s.getSnapshot()
+}
+
 func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(s.getSnapshot()) //nolint:errcheck
+	json.NewEncoder(w).Encode(s.getSnapshotForRequest(r)) //nolint:errcheck
 }
 
 func (s *Server) handleDatasets(w http.ResponseWriter, _ *http.Request) {
@@ -199,21 +213,6 @@ func (s *Server) handleDatasets(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{"datasets": names, "active": active}) //nolint:errcheck
 }
 
-func (s *Server) handleSwitch(w http.ResponseWriter, r *http.Request) {
-	name := r.URL.Query().Get("data")
-	if s.datasets == nil || name == "" {
-		http.Error(w, "no datasets", http.StatusBadRequest)
-		return
-	}
-	snap, ok := s.datasets[name]
-	if !ok {
-		http.Error(w, "unknown dataset: "+name, http.StatusNotFound)
-		return
-	}
-	s.snapshot = snap
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "active": name}) //nolint:errcheck
-}
 
 // handleConfig returns client-side configuration (cycle interval, mode).
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
@@ -253,7 +252,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
-	snapshotData := s.getSnapshot()
+	snapshotData := s.getSnapshotForRequest(r)
 
 	var ch <-chan []byte
 	var unsub func()

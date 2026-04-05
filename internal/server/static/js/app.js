@@ -84,7 +84,10 @@ function clearChildren(parent) {
 function connect() {
     if (eventSource) eventSource.close();
 
-    eventSource = new EventSource('/api/events');
+    // Pass ?data= param to SSE so the server knows which dataset this client wants
+    const dataParam = new URLSearchParams(window.location.search).get('data');
+    const eventsUrl = dataParam ? `/api/events?data=${encodeURIComponent(dataParam)}` : '/api/events';
+    eventSource = new EventSource(eventsUrl);
 
     eventSource.onopen = () => {
         state.connected = true;
@@ -2475,22 +2478,12 @@ loadConfig().then(() => {
     } else {
         if (forceMulti) state.multiView = true;
 
-        // Switch dataset if ?data= param is present
-        const dataParam = new URLSearchParams(window.location.search).get('data');
-        const afterSwitch = () => {
-            const isExplicitDemo = new URLSearchParams(window.location.search).has('demo');
-            if (!isExplicitDemo && window.location.pathname === '/') {
-                showLanding();
-            }
-            connect();
-        };
-        if (dataParam) {
-            fetch(`/api/switch?data=${encodeURIComponent(dataParam)}`, { method: 'POST' })
-                .then(() => afterSwitch())
-                .catch(() => afterSwitch());
-        } else {
-            afterSwitch();
+        // Dataset selection is per-client via ?data= URL param (passed to SSE connection)
+        const isExplicitDemo = new URLSearchParams(window.location.search).has('demo');
+        if (!isExplicitDemo && window.location.pathname === '/') {
+            showLanding();
         }
+        connect();
     }
 });
 
