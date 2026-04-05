@@ -1311,7 +1311,7 @@ footer {
 
 /* Dim map when focused on a bilateral (positions shift from geographic) */
 .graph-canvas:has(.graph-edge-active) .world-map-bg {
-    opacity: 0.04 !important;
+    opacity: 0.12 !important;
 }
 
 /* Inactive edges stay visible as structural context behind the chat panel */
