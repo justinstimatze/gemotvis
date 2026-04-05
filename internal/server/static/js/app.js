@@ -1497,17 +1497,13 @@ function typeReveal(textEl, fullText) {
     textEl.textContent = '';
     const panel = textEl.closest('.panel-content');
     const speed = Math.max(15, Math.min(40, SCRUBBER_SPEEDS[scrubber.speedIdx] * 0.7 / words.length));
-    // Check if user has scrolled up BEFORE typing starts — respect that throughout
-    const userScrolledUp = panel && (panel.scrollHeight - panel.scrollTop - panel.clientHeight > 100);
     typingTimer = setInterval(() => {
         shown++;
         const partial = words.slice(0, shown).join('');
         while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
         textEl.appendChild(renderTextWithMentions(partial, []));
-        // Always scroll during typing unless user had scrolled up before this message
-        if (panel && !userScrolledUp) {
-            panel.scrollTop = panel.scrollHeight;
-        }
+        // Always scroll to bottom during typing
+        if (panel) panel.scrollTop = panel.scrollHeight;
         if (shown >= words.length) {
             clearInterval(typingTimer);
             typingTimer = null;
