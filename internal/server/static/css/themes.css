@@ -578,7 +578,24 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     box-shadow: 0 0 20px rgba(255, 140, 0, 0.5), inset 0 0 12px rgba(255, 140, 0, 0.2);
 }
 
-#screen.theme-magi .graph-node-active .graph-node-icon {
+/* Left active node = green (matches left chat bubble border) */
+#screen.theme-magi .graph-node-active.graph-node-left .graph-node-icon {
+    border-color: #00ff41;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.5), 0 0 60px rgba(0, 255, 65, 0.2), inset 0 0 15px rgba(0, 255, 65, 0.2);
+    color: #00ff41;
+    text-shadow: 0 0 12px rgba(0, 255, 65, 0.9);
+}
+
+/* Right active node = cyan (matches right chat bubble border) */
+#screen.theme-magi .graph-node-active.graph-node-right .graph-node-icon {
+    border-color: #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), 0 0 60px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.2);
+    color: #00ffff;
+    text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+}
+
+/* Fallback for active nodes without side (single-delib or group) */
+#screen.theme-magi .graph-node-active:not(.graph-node-left):not(.graph-node-right) .graph-node-icon {
     border-color: #00ffff;
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), 0 0 60px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.2);
     color: #00ffff;
@@ -596,7 +613,11 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     margin-top: 16px; /* clear the rotated diamond's bottom corner */
 }
 
-#screen.theme-magi .graph-node-active .graph-node-name {
+#screen.theme-magi .graph-node-active.graph-node-left .graph-node-name {
+    color: #00ff41;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+}
+#screen.theme-magi .graph-node-active.graph-node-right .graph-node-name {
     color: #00ffff;
     text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
 }
@@ -662,9 +683,9 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 
 #screen.theme-magi .chat-left {
     align-self: flex-start;
-    background: #1a1000;
-    border-left: 2px solid #ff8c00;
-    box-shadow: inset 2px 0 8px rgba(255, 140, 0, 0.08);
+    background: #001a00;
+    border-left: 2px solid #00ff41;
+    box-shadow: inset 2px 0 8px rgba(0, 255, 65, 0.08);
 }
 
 #screen.theme-magi .chat-right {
@@ -677,11 +698,11 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 #screen.theme-magi .chat-name {
     font-size: 10px;
     font-weight: bold;
-    color: #ff8c00;
+    color: #00ff41;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 3px;
-    text-shadow: 0 0 4px rgba(255, 140, 0, 0.5);
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
 }
 
 #screen.theme-magi .chat-right .chat-name {
@@ -707,11 +728,11 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 
 #screen.theme-magi .chat-left.chat-new .chat-text::after {
     content: '▊';
-    color: #ff8c00;
+    color: #00ff41;
     animation: cursorBlink 0.6s step-end infinite;
     font-size: 12px;
     margin-left: 1px;
-    text-shadow: 0 0 6px rgba(255, 140, 0, 0.8);
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.8);
 }
 
 #screen.theme-magi .chat-right.chat-new .chat-text::after {
@@ -1426,7 +1447,7 @@ body.boot-minimal .boot-overlay .boot-text {
     margin-bottom: 3px;
 }
 
-#screen.theme-minimal .chat-right .chat-name { color: #0070f3; }
+#screen.theme-minimal .chat-right .chat-name { color: #7c3aed; }
 
 #screen.theme-minimal .chat-text {
     color: #171717;
@@ -2047,12 +2068,19 @@ body.boot-minimal .boot-overlay .boot-text {
     box-shadow: 0 0 0 3px rgba(0,112,243,0.12), 0 1px 3px rgba(0,0,0,0.06);
 }
 
-#screen.theme-minimal .graph-node-active .graph-node-icon {
+#screen.theme-minimal .graph-node-active.graph-node-left .graph-node-icon {
     border-color: #0070f3;
     box-shadow: 0 0 0 3px rgba(0,112,243,0.2), 0 2px 8px rgba(0,112,243,0.15);
-    width: 58px;
-    height: 58px;
-    font-size: 22px;
+    color: #0070f3;
+}
+#screen.theme-minimal .graph-node-active.graph-node-right .graph-node-icon {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.2), 0 2px 8px rgba(124,58,237,0.15);
+    color: #7c3aed;
+}
+#screen.theme-minimal .graph-node-active:not(.graph-node-left):not(.graph-node-right) .graph-node-icon {
+    border-color: #0070f3;
+    box-shadow: 0 0 0 3px rgba(0,112,243,0.2), 0 2px 8px rgba(0,112,243,0.15);
     color: #0070f3;
 }
 

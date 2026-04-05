@@ -2029,20 +2029,30 @@ function renderGraphView(graph) {
             }
         });
 
-        // In single-delib mode, all agents are active participants
+        // Determine if this agent is active and which side (for color matching chat bubbles)
         const isEdgeAgent = isSingleDelib
             ? (graphState.activeEdge != null)
             : (graphState.activeEdge && graph.edges.some(e =>
                 e.delibID === graphState.activeEdge && (e.a === agentID || e.b === agentID)));
 
+        // Side matches chat bubble left/right: even agent index = left, odd = right
+        let sideClass = '';
+        if (isEdgeAgent) {
+            // Use full agent list for consistent indexing
+            const rawDelib = graphState.activeEdge ? delibs[graphState.activeEdge] : null;
+            const allAgents = rawDelib ? (rawDelib.agents || []).map(a => a.id) : graph.nodes;
+            const agentIdx = allAgents.indexOf(agentID);
+            sideClass = (agentIdx % 2 === 0) ? 'graph-node-left' : 'graph-node-right';
+        }
+
+        const nodeClass = `graph-node ${isEdgeAgent ? 'graph-node-active' : ''} ${sideClass} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`;
+
         // Try to find existing node to update in place (smooth transition)
         let node = canvas.querySelector(`.graph-node[data-agent-id="${agentID}"]`);
         if (node) {
-            // Update position (CSS transition handles animation)
             node.style.left = `${nodePos.x}%`;
             node.style.top = `${nodePos.y}%`;
-            node.className = `graph-node ${isEdgeAgent ? 'graph-node-active' : ''} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`;
-            // Update stats
+            node.className = nodeClass;
             const statsEl = node.querySelector('.graph-node-stats');
             if (activeGemots > 0) {
                 if (statsEl) statsEl.textContent = `${totalMessages} msg · ${activeGemots} gemot${activeGemots !== 1 ? 's' : ''}`;
@@ -2051,9 +2061,8 @@ function renderGraphView(graph) {
                 statsEl.remove();
             }
         } else {
-            // First render: create node
             node = el('div', {
-                className: `graph-node ${isEdgeAgent ? 'graph-node-active' : ''} ${activeGemots === 0 ? 'graph-node-quiet' : ''}`,
+                className: nodeClass,
                 style: `left:${nodePos.x}%; top:${nodePos.y}%;`,
                 dataset: { agentId: agentID },
             },
