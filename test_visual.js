@@ -102,11 +102,12 @@ async function testBilateralFocus(page, theme) {
         const panel = document.getElementById('center-panel');
         const panelRect = panel?.getBoundingClientRect();
 
-        // Check active nodes aren't overlapping the panel
+        // Check active node ICONS aren't overlapping the panel (labels may extend)
         let nodeOverlapsPanel = false;
         activeNodes.forEach(n => {
-            const nr = n.getBoundingClientRect();
-            if (panelRect && nr.right > panelRect.left && nr.left < panelRect.right &&
+            const icon = n.querySelector('.graph-node-icon');
+            const nr = icon ? icon.getBoundingClientRect() : n.getBoundingClientRect();
+            if (panelRect && nr.right > panelRect.left + 20 && nr.left < panelRect.right - 20 &&
                 nr.bottom > panelRect.top && nr.top < panelRect.bottom) {
                 nodeOverlapsPanel = true;
             }

@@ -635,9 +635,10 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
 }
 
 #screen.theme-magi .graph-edge-div.graph-edge-active {
-    background: #00ffff !important;
-    opacity: 0.5 !important;
-    box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
+    background: linear-gradient(90deg, #00ff41, #00ffff) !important;
+    opacity: 0.6 !important;
+    height: 3px !important;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.4), 0 0 16px rgba(0, 255, 65, 0.2);
 }
 
 #screen.theme-magi .graph-edge-div.graph-edge-empty {
@@ -1040,16 +1041,19 @@ body.boot-magi .boot-text:nth-child(6) { animation-delay: 1.7s; color: #00ffff; 
     100% { background-position: 200% 0; }
 }
 
+/* Scan sweep on active edge — green to cyan gradient with animation */
 #screen.theme-magi .graph-edge-div.graph-edge-active {
     background: linear-gradient(
         90deg,
-        #00ffff 0%, rgba(0, 255, 255, 0.1) 40%,
+        #00ff41 0%, rgba(0, 255, 65, 0.1) 40%,
         rgba(0, 255, 255, 0.8) 50%,
         rgba(0, 255, 255, 0.1) 60%, #00ffff 100%
     ) !important;
     background-size: 200% 100%;
     animation: edgeScanSweep 3s linear infinite;
-    opacity: 0.4 !important;
+    opacity: 0.5 !important;
+    height: 3px !important;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.3), 0 0 16px rgba(0, 255, 65, 0.15);
 }
 
 /* --- MAGI: Chat panel data noise border --- */

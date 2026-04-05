@@ -1176,6 +1176,19 @@ footer {
     overflow: hidden;
 }
 
+/* In graph view, footer and scrubber always reserve space to prevent layout jumps */
+.graph-view ~ footer,
+.graph-view ~ #scrubber-bar {
+    visibility: visible !important;
+    display: flex !important;
+}
+
+.graph-view ~ footer.hidden,
+.graph-view ~ #scrubber-bar.hidden {
+    visibility: hidden !important;
+    display: flex !important; /* still takes space */
+}
+
 /* World map background for agents with lat/lon coordinates */
 .world-map-bg {
     position: absolute;
@@ -1211,8 +1224,9 @@ footer {
 }
 
 .graph-edge-div.graph-edge-active {
-    background: var(--vis-amber) !important;
-    opacity: 0.35 !important;
+    background: linear-gradient(90deg, var(--vis-green, #17b169), var(--vis-cyan, #0091ff)) !important;
+    opacity: 0.5 !important;
+    height: 3px !important;
 }
 
 .graph-edge-count-div {
