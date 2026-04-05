@@ -2445,6 +2445,8 @@ const bootDelay = activeTheme === 'magi' ? 3200 : activeTheme === 'gastown' ? 20
 setTimeout(() => {
     const boot = document.getElementById('boot');
     if (boot) boot.classList.add('done');
+    // Re-render after boot overlay clears so edges align with visible layout
+    requestAnimationFrame(() => render());
 }, bootDelay);
 
 const watchCodes = getWatchCodes();
