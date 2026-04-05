@@ -649,7 +649,14 @@ function render() {
                     if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
                     const cp = document.getElementById('center-content');
                     if (cp) clearChildren(cp);
-                    document.getElementById('center-panel')?.classList.add('hidden');
+                    // Fade out panel during transition, it fades back in via CSS animation
+                    const panel = document.getElementById('center-panel');
+                    if (panel) {
+                        panel.style.opacity = '0';
+                        panel.classList.add('hidden');
+                        // Re-trigger fade-in animation after nodes settle
+                        setTimeout(() => { panel.style.opacity = ''; }, 2800);
+                    }
                 }
                 graphState.activeEdge = newEdge;
             }
@@ -1942,13 +1949,14 @@ function renderGraphView(graph) {
     const ch = canvas.offsetHeight || 1;
     const canvasRect = canvas.getBoundingClientRect();
 
-    // For edge positioning, use the computed node positions (posMap)
-    // instead of getBoundingClientRect which is distorted by 3D perspective
+    // Edge endpoints target the icon center, which is slightly above the CSS position
+    // (the node transform is translate(-50%, -35%) so the icon center is ~5px above the position)
+    const iconOffsetY = -8; // pixels upward to hit icon center
     const liveNodePos = {};
     for (const [id, pos] of Object.entries(posMap)) {
         liveNodePos[id] = {
             px: pos.x / 100 * cw,
-            py: pos.y / 100 * ch,
+            py: pos.y / 100 * ch + iconOffsetY,
         };
     }
 
@@ -2724,8 +2732,25 @@ window.addEventListener('resize', () => {
     resizeTimer = setTimeout(render, 150);
 });
 
+// Skip to next conversation (different delibID)
+function scrubSkipForward() {
+    if (!scrubber.events.length) return;
+    const currentDelib = scrubber.events[scrubber.eventIndex]?.delibID;
+    let next = (scrubber.eventIndex || 0) + 1;
+    // Find next visual event from a DIFFERENT deliberation
+    while (next < scrubber.events.length) {
+        const e = scrubber.events[next];
+        if ((e.type === 'position' || e.type === 'vote') && e.delibID !== currentDelib) break;
+        next++;
+    }
+    if (next < scrubber.events.length) {
+        scrubTo(next, scrubber.playing);
+    }
+}
+
 // Scrubber controls
 document.getElementById('scrubber-play')?.addEventListener('click', toggleScrubberPlay);
+document.getElementById('scrubber-skip')?.addEventListener('click', scrubSkipForward);
 document.getElementById('scrubber-speed')?.addEventListener('click', cycleScrubberSpeed);
 document.getElementById('scrubber-filter')?.addEventListener('click', cycleScrubberFilter);
 document.getElementById('scrubber-live')?.addEventListener('click', scrubToLive);
