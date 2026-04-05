@@ -1309,9 +1309,9 @@ footer {
     transform: translate(-50%, -35%) scale(0.7) translateZ(-200px);
 }
 
-/* Fade out map when focused on a bilateral (positions no longer geographic) */
+/* Dim map when focused on a bilateral (positions shift from geographic) */
 .graph-canvas:has(.graph-edge-active) .world-map-bg {
-    opacity: 0 !important;
+    opacity: 0.04 !important;
 }
 
 /* Inactive edges stay visible as structural context behind the chat panel */

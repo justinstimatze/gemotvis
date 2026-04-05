@@ -546,7 +546,8 @@ function startScrubberPlay() {
         scrubber.playTimer = setTimeout(advance, delay);
     }
 
-    scrubber.playTimer = setTimeout(advance, SCRUBBER_SPEEDS[scrubber.speedIdx]);
+    // First advance fires quickly to skip non-visual events and reach the first position
+    scrubber.playTimer = setTimeout(advance, 100);
     updatePlayButton();
 }
 
