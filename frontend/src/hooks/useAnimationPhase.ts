@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useGraphStore } from '../stores/graph';
 import type { AnimationPhase } from '../types';
 
-const MOVE_DURATION = 3000; // ms for node position animation
+const MOVE_DURATION = 800; // ms pause after layout change before showing panel
 
 /**
  * Manages graph animation phase transitions.

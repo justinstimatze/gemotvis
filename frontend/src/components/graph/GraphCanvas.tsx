@@ -164,14 +164,14 @@ function GraphCanvasInner() {
       >
         <MiniMap
           nodeColor={miniMapNodeColor}
-          maskColor="rgba(0, 0, 0, 0.1)"
+          nodeStrokeWidth={3}
+          maskColor="rgba(0, 0, 0, 0.08)"
           className="graph-minimap"
           pannable
           zoomable
         />
       </ReactFlow>
       <WorldMap show={layoutResult.showWorldMap} />
-      <CenterPanel />
     </>
   );
 }
@@ -181,6 +181,7 @@ export function GraphCanvas() {
   return (
     <div className="graph-view" style={{ width: '100%', height: '100%' }}>
       <GraphCanvasInner />
+      <CenterPanel />
     </div>
   );
 }

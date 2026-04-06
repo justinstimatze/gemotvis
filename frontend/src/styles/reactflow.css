@@ -10,12 +10,9 @@
   font-size: inherit;
   width: auto !important;
   height: auto !important;
-  /* Animate position changes — React Flow sets transform: translate(x, y) */
-  transition: transform 2.5s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .react-flow__node { transition: none !important; }
+  /* No position animation — edges and nodes must move together.
+     React Flow updates both simultaneously via React state.
+     Visual transition handled by animation phase (3s delay before panel shows). */
 }
 
 /* Agent node — override old base.css/themes.css card styles */
@@ -281,14 +278,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 30;
+  z-index: 40;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 16px;
   background: var(--vis-panel, #fff);
   border-top: 1px solid var(--vis-panel-border, #e0e0e0);
   font-size: 11px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .scrubber-btn {
@@ -946,7 +944,12 @@
 
 /* Footer */
 .theme-magi .graph-footer {
-  background: rgba(255, 140, 0, 0.3);
+  background: #1a1200;
+  border-top: 1px solid #ff8c00;
+}
+
+.theme-magi .footer-panel {
+  background: #0a0a0a;
 }
 
 .theme-magi .footer-panel-title {
