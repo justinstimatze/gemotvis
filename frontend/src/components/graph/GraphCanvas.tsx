@@ -55,7 +55,7 @@ function GraphCanvasInner() {
   }, [layoutResult.positions, activeEdge, graph.edges]);
 
   // Build React Flow data
-  const rfNodes = useRFNodes(nodePositions, graph, filteredDelibs, activeEdge);
+  const rfNodes = useRFNodes(nodePositions, graph, filteredDelibs, activeEdge, rawDelibs);
   const rfEdges = useRFEdges(graph, filteredDelibs, activeEdge);
 
   // fitView on node count change or animation phase change (panel appear/disappear)

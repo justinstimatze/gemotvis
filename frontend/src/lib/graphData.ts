@@ -46,6 +46,7 @@ export function buildRFNodes(
   graph: Graph,
   filteredDelibs: Record<string, DelibState>,
   activeEdge: string | null,
+  rawDelibs?: Record<string, DelibState>,
 ): Node<AgentNodeData>[] {
   const isSingleDelib = isSingleDelibGraph(graph);
 
@@ -59,7 +60,9 @@ export function buildRFNodes(
         const pc = getPositionCount(ds);
         totalMessages += pc;
         if (pc > 0) activeGemots++;
-        const status = ds?.deliberation?.status;
+        // Check status from raw (unfiltered) data so scrubber position doesn't affect dimming
+        const rawDs = (rawDelibs ?? filteredDelibs)[edge.delibID];
+        const status = rawDs?.deliberation?.status;
         if (status === 'open' || status === 'analyzing') hasOpenDelib = true;
       }
     }

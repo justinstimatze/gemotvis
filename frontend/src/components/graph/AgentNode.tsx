@@ -36,7 +36,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   // Only dim nodes in multi-delib mode (agentCount > totalAgents in active bilateral)
   // In single-delib, all nodes are participants so none should dim
   const isInactive = !data.isEdgeAgent && animationPhase === 'ready' && !data.singleDelib;
-  const isQuiet = data.activeGemots === 0 || !data.hasOpenDelib;
+  const isQuiet = !data.hasOpenDelib;
   const isSpeaking = speakingAgent === data.agentId;
 
   const classes = classNames(

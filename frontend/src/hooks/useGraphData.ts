@@ -12,10 +12,11 @@ export function useRFNodes(
   graph: Graph,
   filteredDelibs: Record<string, DelibState>,
   activeEdge: string | null,
+  rawDelibs?: Record<string, DelibState>,
 ): Node<AgentNodeData>[] {
   return useMemo(
-    () => buildRFNodes(nodePositions, graph, filteredDelibs, activeEdge),
-    [nodePositions, graph, filteredDelibs, activeEdge],
+    () => buildRFNodes(nodePositions, graph, filteredDelibs, activeEdge, rawDelibs),
+    [nodePositions, graph, filteredDelibs, activeEdge, rawDelibs],
   );
 }
 
