@@ -2,6 +2,18 @@ import { useState, useCallback, useEffect } from 'react';
 import { useThemeStore } from '../stores/theme';
 import type { Theme } from '../types';
 
+const themeDescriptions: Record<Theme, { label: string; desc: string; colors: string[] }> = {
+  minimal: { label: 'Minimal', desc: 'Clean and modern', colors: ['#fafafa', '#0070f3', '#333'] },
+  magi: { label: 'MAGI', desc: 'CRT amber terminal', colors: ['#0a0a0a', '#ff8c00', '#00ff41'] },
+  gastown: { label: 'Gastown', desc: 'Brass & parchment', colors: ['#f5e6d3', '#b87333', '#5c3a1e'] },
+};
+
+const datasetDescriptions: Record<string, string> = {
+  demo: '5 agents — AI governance deliberation',
+  diplomacy: '7 nations — Spring 1904 bilateral negotiations',
+  'code-review': '3 reviewers — async function security review',
+};
+
 export function LandingPage() {
   const theme = useThemeStore((s) => s.activeTheme);
   const setTheme = useThemeStore((s) => s.setTheme);
@@ -9,7 +21,6 @@ export function LandingPage() {
   const [datasets, setDatasets] = useState<string[]>([]);
   const [selectedDataset, setSelectedDataset] = useState('demo');
 
-  // Fetch available datasets
   useEffect(() => {
     fetch('/api/datasets')
       .then((r) => r.json() as Promise<{ datasets: string[]; active: string }>)
@@ -20,8 +31,8 @@ export function LandingPage() {
       .catch(() => {});
   }, []);
 
-  const handleThemeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTheme(e.target.value as Theme);
+  const handleThemeChange = useCallback((t: Theme) => {
+    setTheme(t);
   }, [setTheme]);
 
   const startDemo = useCallback(() => {
@@ -41,27 +52,47 @@ export function LandingPage() {
         <h1 className="landing-title">gemotvis</h1>
         <p className="landing-subtitle">Deliberation visualization</p>
 
+        {/* Theme picker with previews */}
         <div className="landing-section">
           <label className="landing-label">Theme</label>
-          <select className="landing-select" value={theme} onChange={handleThemeChange}>
-            <option value="minimal">Minimal</option>
-            <option value="magi">MAGI</option>
-            <option value="gastown">Gastown</option>
-          </select>
+          <div className="landing-theme-grid">
+            {(Object.keys(themeDescriptions) as Theme[]).map((t) => {
+              const td = themeDescriptions[t];
+              return (
+                <button
+                  key={t}
+                  className={`landing-theme-card ${theme === t ? 'active' : ''}`}
+                  onClick={() => handleThemeChange(t)}
+                >
+                  <div className="landing-theme-preview">
+                    {td.colors.map((c, i) => (
+                      <div key={i} className="landing-theme-swatch" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <div className="landing-theme-name">{td.label}</div>
+                  <div className="landing-theme-desc">{td.desc}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
+        {/* Dataset selector with descriptions */}
         {datasets.length > 1 && (
           <div className="landing-section">
             <label className="landing-label">Dataset</label>
-            <select
-              className="landing-select"
-              value={selectedDataset}
-              onChange={(e) => setSelectedDataset(e.target.value)}
-            >
+            <div className="landing-dataset-list">
               {datasets.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <button
+                  key={d}
+                  className={`landing-dataset-card ${selectedDataset === d ? 'active' : ''}`}
+                  onClick={() => setSelectedDataset(d)}
+                >
+                  <span className="landing-dataset-name">{d}</span>
+                  <span className="landing-dataset-desc">{datasetDescriptions[d] ?? ''}</span>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
         )}
 
