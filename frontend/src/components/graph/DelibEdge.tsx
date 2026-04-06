@@ -19,6 +19,8 @@ type DelibEdgeType = Edge<DelibEdgeData, 'delib'>;
 
 function DelibEdgeComponent({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -26,6 +28,7 @@ function DelibEdgeComponent({
   data,
 }: EdgeProps<DelibEdgeType>) {
   const activeEdge = useGraphStore((s) => s.activeEdge);
+  const activeNode = useGraphStore((s) => s.activeNode);
   const animationPhase = useGraphStore((s) => s.animationPhase);
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
 
@@ -33,8 +36,11 @@ function DelibEdgeComponent({
   const isEmpty = (data?.posCount ?? 0) === 0;
   const posCount = data?.posCount ?? 0;
 
-  const thickness = isActive ? 4 : Math.min(1.5 + posCount * 0.08, 3);
-  const opacity = isActive ? 0.5 : isEmpty ? 0.15 : Math.min(0.2 + posCount * 0.005, 0.4);
+  // Highlight edges connected to hovered node
+  const isHovered = activeNode != null && (source === activeNode || target === activeNode);
+
+  const thickness = isActive ? 4 : isHovered ? 3 : Math.min(1.5 + posCount * 0.08, 3);
+  const opacity = isActive ? 0.5 : isHovered ? 0.6 : isEmpty ? 0.15 : Math.min(0.2 + posCount * 0.005, 0.4);
 
   const [edgePath, labelX, labelY] = getStraightPath({
     sourceX, sourceY, targetX, targetY,
@@ -55,6 +61,7 @@ function DelibEdgeComponent({
   const classes = [
     'graph-edge-path',
     isActive ? 'graph-edge-active' : '',
+    isHovered ? 'graph-edge-hover' : '',
     isEmpty ? 'graph-edge-empty' : '',
   ].filter(Boolean).join(' ');
 

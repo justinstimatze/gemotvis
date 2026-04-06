@@ -90,6 +90,11 @@
   stroke-width: 3px;
 }
 
+.graph-edge-path.graph-edge-hover {
+  stroke: var(--vis-amber, #0070f3);
+  transition: stroke 0.2s, opacity 0.2s;
+}
+
 .graph-edge-path.graph-edge-empty {
   stroke: var(--vis-panel-border, #ddd);
 }

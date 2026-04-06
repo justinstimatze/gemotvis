@@ -164,6 +164,15 @@ function GraphCanvasInner() {
     }
   }, [rfNodes.length, fitView]);
 
+  // Track hovered node for edge highlighting
+  const setActiveNode = useGraphStore((s) => s.setActiveNode);
+  const onNodeMouseEnter = useCallback((_event: React.MouseEvent, node: Node<AgentNodeData>) => {
+    setActiveNode(node.data.agentId);
+  }, [setActiveNode]);
+  const onNodeMouseLeave = useCallback(() => {
+    setActiveNode(null);
+  }, [setActiveNode]);
+
   // Node click: cycle through bilaterals for that agent
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node<AgentNodeData>) => {
     const agentId = node.data.agentId;
@@ -200,6 +209,8 @@ function GraphCanvasInner() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodeClick={onNodeClick}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
         fitView
         fitViewOptions={{ padding: 0.35 }}
         nodesDraggable={false}
