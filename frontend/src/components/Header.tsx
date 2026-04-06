@@ -17,9 +17,10 @@ export function Header() {
   const status = ds?.deliberation?.status ?? '';
 
   const statusLabels = useThemeStore((s) => s.statusLabels);
-  const statusText = connected
-    ? (status === 'analyzing' ? statusLabels.analyzing : statusLabels.online)
-    : statusLabels.offline;
+  const statusText = mode === 'demo' ? 'Demo'
+    : connected
+      ? (status === 'analyzing' ? statusLabels.analyzing : statusLabels.online)
+      : statusLabels.offline;
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newTheme = e.target.value as Theme;

@@ -41,7 +41,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
         className="agent-node-icon"
         style={{ borderColor: showActive ? color : undefined }}
       >
-        {name.charAt(0).toUpperCase()}
+        <span className="agent-node-letter">{name.charAt(0).toUpperCase()}</span>
       </div>
       <div className="agent-node-name">{name}</div>
       {data.activeGemots > 0 && (

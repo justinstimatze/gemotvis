@@ -24,3 +24,6 @@ Thumbs.db
 *.env.local
 magi.jpg
 frontend/tsconfig.tsbuildinfo
+
+# Theme reference images
+reference/
