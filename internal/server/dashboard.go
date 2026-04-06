@@ -229,13 +229,15 @@ func (s *Server) handleSessionCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Secure flag only over HTTPS — localhost uses HTTP
+	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    sessionID,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		Secure:   isSecure,
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(dashboardSessionTimeout.Seconds()),
 	})
 
@@ -249,13 +251,14 @@ func (s *Server) handleSessionDelete(w http.ResponseWriter, r *http.Request) {
 		s.dashboards.deleteSession(cookie.Value)
 	}
 
+	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		Secure:   isSecure,
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
 	})
 
