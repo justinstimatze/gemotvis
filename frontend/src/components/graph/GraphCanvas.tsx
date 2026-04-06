@@ -1,19 +1,18 @@
-import { useMemo, useEffect, useCallback, useRef } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import {
   ReactFlow,
-  MiniMap,
   useReactFlow,
   type Node,
   type Edge,
 } from '@xyflow/react';
 import { useSessionStore } from '../../stores/session';
 import { useGraphStore } from '../../stores/graph';
-import { useThemeStore } from '../../stores/theme';
+// useThemeStore removed — was only used for MiniMap colors
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useAnimationPhase } from '../../hooks/useAnimationPhase';
 import { buildGraphFromDelibs } from '../../lib/buildGraph';
 import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
-import { agentColor } from '../../lib/color';
+// agentColor removed — was only used for MiniMap colors
 import { AgentNode, type AgentNodeData } from './AgentNode';
 import { DelibEdge, type DelibEdgeData } from './DelibEdge';
 import { CenterPanel } from './CenterPanel';
@@ -30,7 +29,7 @@ function GraphCanvasInner() {
   const rawDelibs = useSessionStore((s) => s.deliberations);
   const filteredDelibs = useFilteredState();
   const activeEdge = useGraphStore((s) => s.activeEdge);
-  const theme = useThemeStore((s) => s.activeTheme);
+  // const theme = useThemeStore((s) => s.activeTheme); // was for MiniMap
   const { fitView } = useReactFlow();
   // (prevActiveEdge removed — fitView now triggers on node count change instead)
   useAnimationPhase();
@@ -141,11 +140,6 @@ function GraphCanvasInner() {
     }
   }, [rfNodes.length, fitView]);
 
-  // MiniMap node color based on agent color
-  const miniMapNodeColor = useCallback((node: Node<AgentNodeData>) => {
-    return agentColor(node.data.agentIndex, node.data.agentCount, theme);
-  }, [theme]);
-
   return (
     <>
       <ReactFlow
@@ -158,18 +152,15 @@ function GraphCanvasInner() {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
+        panOnDrag={false}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
+        preventScrolling={false}
         proOptions={{ hideAttribution: true }}
         minZoom={0.3}
         maxZoom={2}
       >
-        <MiniMap
-          nodeColor={miniMapNodeColor}
-          nodeStrokeWidth={3}
-          maskColor="rgba(0, 0, 0, 0.08)"
-          className="graph-minimap"
-          pannable
-          zoomable
-        />
       </ReactFlow>
       <WorldMap show={layoutResult.showWorldMap} />
     </>
@@ -181,7 +172,7 @@ export function GraphCanvas() {
   return (
     <div className="graph-view" style={{ width: '100%', height: '100%' }}>
       <GraphCanvasInner />
-      <CenterPanel />
+      <CenterPanel /> {/* Renders as portal to #screen */}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useGraphStore } from '../../stores/graph';
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useSessionStore } from '../../stores/session';
@@ -6,7 +7,7 @@ import { ChatThread } from '../chat/ChatThread';
 import { AnalysisSection } from '../chat/AnalysisSection';
 import type { AgentInfo } from '../../types';
 
-/** Center panel overlay — shows chat thread for the active bilateral. */
+/** Center panel overlay — rendered as a portal to escape React Flow's stacking context. */
 export function CenterPanel() {
   const activeEdge = useGraphStore((s) => s.activeEdge);
   const animationPhase = useGraphStore((s) => s.animationPhase);
@@ -15,7 +16,6 @@ export function CenterPanel() {
 
   const ds = activeEdge ? filteredDelibs[activeEdge] : null;
 
-  // Collect all agents across all deliberations for mention highlighting
   const allAgents = useMemo((): AgentInfo[] => {
     const agents: AgentInfo[] = [];
     for (const d of Object.values(rawDelibs)) {
@@ -24,14 +24,17 @@ export function CenterPanel() {
     return agents;
   }, [rawDelibs]);
 
-  // Only show when animation is complete and we have an active edge with data
   if (!activeEdge || animationPhase !== 'ready' || !ds) return null;
 
   const positions = ds.positions ?? [];
   const agents = ds.agents ?? [];
   const topic = ds.deliberation?.topic ?? '';
 
-  return (
+  // Portal to #screen so the panel is outside React Flow's stacking context
+  const target = document.getElementById('screen');
+  if (!target) return null;
+
+  return createPortal(
     <div className="center-panel-overlay">
       <div className="center-header">
         <span className="center-title">{topic}</span>
@@ -42,6 +45,7 @@ export function CenterPanel() {
         allAgents={allAgents}
       />
       {ds.analysis && <AnalysisSection analysis={ds.analysis} />}
-    </div>
+    </div>,
+    target,
   );
 }

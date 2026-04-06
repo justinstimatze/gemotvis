@@ -18,6 +18,7 @@ export function Header() {
 
   const statusLabels = useThemeStore((s) => s.statusLabels);
   const statusText = mode === 'demo' ? 'Demo'
+    : mode === 'replay' ? 'Replay'
     : connected
       ? (status === 'analyzing' ? statusLabels.analyzing : statusLabels.online)
       : statusLabels.offline;
