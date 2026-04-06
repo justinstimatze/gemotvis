@@ -35,8 +35,9 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
 
   return (
     <div className={classes}>
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
-      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
+      {/* Handles centered on the icon, not the full node wrapper */}
+      <Handle type="source" position={Position.Top} id="s" className="agent-handle" />
+      <Handle type="target" position={Position.Top} id="t" className="agent-handle" />
       <div
         className="agent-node-icon"
         style={{ borderColor: showActive ? color : undefined }}

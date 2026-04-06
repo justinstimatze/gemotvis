@@ -73,6 +73,16 @@
   line-height: 1;
 }
 
+/* Position handles at icon center (28px from top = half of 56px icon) */
+.agent-handle {
+  opacity: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  top: 28px !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
 .agent-node-active .agent-node-icon {
   box-shadow: 0 0 12px var(--vis-amber, #0070f3);
 }
@@ -81,10 +91,13 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--vis-text, #333);
-  margin-top: 6px;
+  margin-top: 8px;
   white-space: nowrap;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .agent-node-stats {
@@ -815,8 +828,8 @@
 
 /* Diamond nodes with dark gradient fill + crosshair */
 .theme-magi .agent-node-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 0;
   transform: rotate(45deg);
   border: 2px solid #ff8c00;
@@ -824,6 +837,8 @@
   box-shadow: 0 0 20px rgba(255,140,0,0.4), 0 0 40px rgba(255,140,0,0.15),
               inset 0 0 10px rgba(255,140,0,0.15);
   overflow: hidden;
+  /* Extra margin to prevent rotated diamond from overlapping label */
+  margin-bottom: 12px;
 }
 
 .theme-magi .agent-node-icon::after {
@@ -948,17 +963,15 @@
    pressure gauges, riveted iron plates, steam pipes
    ===================================================================== */
 
-/* Octagonal gauge nodes (steampunk pressure gauge shape) */
+/* Pressure gauge nodes — circular with thick brass bezel */
 .theme-gastown .agent-node-icon {
   width: 56px;
   height: 56px;
-  border-radius: 0;
-  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-  border: none;
-  background: linear-gradient(135deg, #f5e6d3 0%, #e8dcc8 50%, #d4c4a8 100%);
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.15);
-  outline: 3px solid #cd7f32;
-  outline-offset: -3px;
+  border-radius: 50%;
+  border: 4px solid #cd7f32;
+  background: linear-gradient(160deg, #f5e6d3 0%, #e8dcc8 40%, #d4c4a8 100%);
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.2), inset 0 0 8px rgba(205,127,50,0.1),
+              0 0 0 1px #8b5e3c; /* dark outer ring */
 }
 
 .theme-gastown .agent-node-letter {

@@ -31,8 +31,8 @@ function DelibEdgeComponent({
   const isEmpty = (data?.posCount ?? 0) === 0;
   const posCount = data?.posCount ?? 0;
 
-  const thickness = isActive ? 3 : Math.min(0.8 + posCount * 0.04, 2);
-  const opacity = isActive ? 0.5 : isEmpty ? 0.06 : Math.min(0.08 + posCount * 0.003, 0.25);
+  const thickness = isActive ? 3 : Math.min(1.2 + posCount * 0.06, 2.5);
+  const opacity = isActive ? 0.5 : isEmpty ? 0.15 : Math.min(0.2 + posCount * 0.005, 0.4);
 
   const [edgePath, labelX, labelY] = getStraightPath({
     sourceX, sourceY, targetX, targetY,
