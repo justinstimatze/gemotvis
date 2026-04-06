@@ -33,12 +33,33 @@ export function useSSE(config: SSEConfig = {}) {
       .catch(() => {}); // best-effort
   }, [setConfig]);
 
-  // Fetch initial state
+  // Fetch initial state — retry if empty (poller may not have completed first poll yet)
   useEffect(() => {
-    fetch(stateURL)
-      .then((r) => r.json() as Promise<Snapshot>)
-      .then((snap) => setDeliberations(snap.deliberations))
-      .catch(() => {});
+    let retryTimer: ReturnType<typeof setTimeout>;
+    let retries = 0;
+
+    function fetchState() {
+      fetch(stateURL)
+        .then((r) => r.json() as Promise<Snapshot>)
+        .then((snap) => {
+          const delibs = snap.deliberations ?? {};
+          setDeliberations(delibs);
+          // Retry if empty and we haven't given up
+          if (Object.keys(delibs).length === 0 && retries < 10) {
+            retries++;
+            retryTimer = setTimeout(fetchState, 3000);
+          }
+        })
+        .catch(() => {
+          if (retries < 10) {
+            retries++;
+            retryTimer = setTimeout(fetchState, 3000);
+          }
+        });
+    }
+    fetchState();
+
+    return () => clearTimeout(retryTimer);
   }, [stateURL, setDeliberations]);
 
   // SSE connection
