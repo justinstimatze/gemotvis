@@ -52,12 +52,15 @@ export function buildRFNodes(
   return nodePositions.map((np) => {
     let totalMessages = 0;
     let activeGemots = 0;
+    let hasOpenDelib = false;
     for (const edge of graph.edges) {
       if (edge.a === np.id || edge.b === np.id) {
         const ds = filteredDelibs[edge.delibID];
         const pc = getPositionCount(ds);
         totalMessages += pc;
         if (pc > 0) activeGemots++;
+        const status = ds?.deliberation?.status;
+        if (status === 'open' || status === 'analyzing') hasOpenDelib = true;
       }
     }
 
@@ -104,6 +107,7 @@ export function buildRFNodes(
         agentIndex: graph.nodes.indexOf(np.id),
         agentCount: graph.nodes.length,
         isEdgeAgent,
+        hasOpenDelib,
         singleDelib: isSingleDelib,
         sideClass,
         clusterId,

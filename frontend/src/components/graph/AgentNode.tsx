@@ -12,6 +12,7 @@ export interface AgentNodeData extends Record<string, unknown> {
   agentIndex: number;
   agentCount: number;
   isEdgeAgent: boolean;
+  hasOpenDelib: boolean;  // agent participates in at least one open/analyzing delib
   sideClass: string;
   clusterId?: number;       // opinion cluster from analysis
   voteDirection?: -1 | 0 | 1; // aggregate vote
@@ -35,7 +36,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   // Only dim nodes in multi-delib mode (agentCount > totalAgents in active bilateral)
   // In single-delib, all nodes are participants so none should dim
   const isInactive = !data.isEdgeAgent && animationPhase === 'ready' && !data.singleDelib;
-  const isQuiet = data.activeGemots === 0;
+  const isQuiet = data.activeGemots === 0 || !data.hasOpenDelib;
   const isSpeaking = speakingAgent === data.agentId;
 
   const classes = classNames(

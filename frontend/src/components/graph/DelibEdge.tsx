@@ -8,6 +8,8 @@ import {
 } from '@xyflow/react';
 import { useGraphStore } from '../../stores/graph';
 import { useScrubberStore } from '../../stores/scrubber';
+// Hide badges/labels when graph is too large (dashboard with 100+ delibs)
+const MAX_NODES_FOR_BADGES = 12;
 import { classNames } from '../../lib/helpers';
 import { updateURLParams } from '../../hooks/useURLSync';
 
@@ -44,6 +46,8 @@ function DelibEdgeComponent({
   const activeEdge = useGraphStore((s) => s.activeEdge);
   const activeNode = useGraphStore((s) => s.activeNode);
   const animationPhase = useGraphStore((s) => s.animationPhase);
+  const nodeCount = useGraphStore((s) => s.graphNodes.length);
+  const showBadges = nodeCount <= MAX_NODES_FOR_BADGES;
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
 
   const posCount = data?.posCount ?? 0;
@@ -91,7 +95,7 @@ function DelibEdgeComponent({
         className={classes}
         style={{ strokeWidth: thickness, opacity, pointerEvents: 'none' }}
       />
-      {posCount > 0 && !activeEdge && (
+      {posCount > 0 && !activeEdge && showBadges && (
         <EdgeLabelRenderer>
           <div
             className="edge-label-badge"
@@ -108,7 +112,7 @@ function DelibEdgeComponent({
         </EdgeLabelRenderer>
       )}
       {/* Crux indicator on active/hovered edges */}
-      {cruxCount > 0 && (isActive || isHovered) && (
+      {cruxCount > 0 && (isActive || isHovered) && showBadges && (
         <EdgeLabelRenderer>
           <div
             className="edge-crux-indicator"
