@@ -17,6 +17,16 @@ export interface DelibEdgeData extends Record<string, unknown> {
 
 type DelibEdgeType = Edge<DelibEdgeData, 'delib'>;
 
+function edgeStyle(posCount: number, isActive: boolean, isHovered: boolean) {
+  if (isActive) return { thickness: 4, opacity: 0.5 };
+  if (isHovered) return { thickness: 3, opacity: 0.6 };
+  if (posCount === 0) return { thickness: 1.5, opacity: 0.15 };
+  return {
+    thickness: Math.min(1.5 + posCount * 0.08, 3),
+    opacity: Math.min(0.2 + posCount * 0.005, 0.4),
+  };
+}
+
 function DelibEdgeComponent({
   id,
   source,
@@ -32,27 +42,19 @@ function DelibEdgeComponent({
   const animationPhase = useGraphStore((s) => s.animationPhase);
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
 
-  const isActive = (data?.highlighted ?? false) && animationPhase === 'ready';
-  const isEmpty = (data?.posCount ?? 0) === 0;
   const posCount = data?.posCount ?? 0;
-
-  // Highlight edges connected to hovered node
+  const isActive = (data?.highlighted ?? false) && animationPhase === 'ready';
   const isHovered = activeNode != null && (source === activeNode || target === activeNode);
-
-  const thickness = isActive ? 4 : isHovered ? 3 : Math.min(1.5 + posCount * 0.08, 3);
-  const opacity = isActive ? 0.5 : isHovered ? 0.6 : isEmpty ? 0.15 : Math.min(0.2 + posCount * 0.005, 0.4);
+  const { thickness, opacity } = edgeStyle(posCount, isActive, isHovered);
 
   const [edgePath, labelX, labelY] = getStraightPath({
     sourceX, sourceY, targetX, targetY,
   });
 
-  // Click edge to focus its bilateral conversation
   const handleClick = useCallback(() => {
     if (!data?.delibID) return;
-    // Pause autoplay and focus this bilateral
     useScrubberStore.getState().setPlaying(false);
     setActiveEdge(data.delibID);
-    // Find the first event for this delib in the timeline
     const events = useScrubberStore.getState().events;
     const idx = events.findIndex(e => e.delibID === data.delibID);
     if (idx >= 0) useScrubberStore.getState().setEventIndex(idx);
@@ -60,14 +62,13 @@ function DelibEdgeComponent({
 
   const classes = [
     'graph-edge-path',
-    isActive ? 'graph-edge-active' : '',
-    isHovered ? 'graph-edge-hover' : '',
-    isEmpty ? 'graph-edge-empty' : '',
+    isActive && 'graph-edge-active',
+    isHovered && 'graph-edge-hover',
+    posCount === 0 && 'graph-edge-empty',
   ].filter(Boolean).join(' ');
 
   return (
     <>
-      {/* Invisible wide hit area for clicking */}
       <path
         d={edgePath}
         fill="none"
@@ -82,7 +83,6 @@ function DelibEdgeComponent({
         className={classes}
         style={{ strokeWidth: thickness, opacity, pointerEvents: 'none' }}
       />
-      {/* Message count badge — clickable in overview mode */}
       {posCount > 0 && !activeEdge && (
         <EdgeLabelRenderer>
           <div

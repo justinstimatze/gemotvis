@@ -10,7 +10,7 @@ export function MetricsPanel({ ds }: MetricsPanelProps) {
   const votes = ds?.votes ?? [];
   const agents = ds?.agents ?? [];
 
-  if (positions.length === 0) return null;
+  if (positions.length < 2) return null;
 
   // Count messages per agent
   const msgCounts: Record<string, number> = {};

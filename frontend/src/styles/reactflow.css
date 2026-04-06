@@ -179,7 +179,7 @@
   top: 36px;
   right: 0;
   bottom: 44px; /* above scrubber bar */
-  width: 340px;
+  width: 380px;
   z-index: 35; /* below bottom-bar (40) so scrubber/footer aren't covered */
   background: var(--vis-panel, #fff);
   border: none;
@@ -202,6 +202,7 @@
   background: #0a0a0a;
   border-left-color: #ff8c00;
   box-shadow: -4px 0 16px rgba(255,140,0,0.15);
+  font-family: 'Inter', system-ui, sans-serif; /* proportional font for readability in narrow panel */
 }
 
 .theme-gastown .chat-panel-side {
