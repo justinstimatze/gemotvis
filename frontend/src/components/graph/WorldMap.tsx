@@ -74,7 +74,8 @@ function transformSVG(svgText: string, bounds: LatLonBounds): string {
   svg.querySelectorAll('path').forEach((p) => {
     p.setAttribute('fill', 'none');
     p.setAttribute('stroke', 'currentColor');
-    p.setAttribute('stroke-width', '0.3');
+    p.setAttribute('stroke-width', '0.15');
+    p.setAttribute('vector-effect', 'non-scaling-stroke');
   });
 
   return svg.outerHTML;

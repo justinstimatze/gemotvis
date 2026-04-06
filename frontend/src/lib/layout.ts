@@ -140,8 +140,14 @@ export function getGraphNodePositions(
   }
   const islands = Object.values(components).sort((a, b) => b.length - a.length);
 
-  // Single island: centered polygon
+  // Single island: polygon for ≤7 nodes, force-directed for 8+
   if (islands.length === 1) {
+    if (nodes.length > 7) {
+      return {
+        positions: forceDirectedLayout(nodes, graph.edges),
+        showWorldMap: false,
+      };
+    }
     return {
       positions: nodes.map((id, i) => ({ id, ...polygonPosition(i, nodes.length) })),
       showWorldMap: false,
@@ -192,4 +198,53 @@ export function computeFocusedLayout(
     if (n.id === activeAgentB) return { ...n, x: 85, y: 40 };
     return n;
   });
+}
+
+// ---- Force-directed layout ----
+
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force';
+
+interface ForceNode extends SimulationNodeDatum {
+  id: string;
+}
+
+/** Force-directed layout for dense graphs (8+ nodes or many edges). */
+export function forceDirectedLayout(
+  nodeIds: string[],
+  edges: { a: string; b: string }[],
+): NodePosition[] {
+  const nodes: ForceNode[] = nodeIds.map(id => ({ id }));
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+  const links: SimulationLinkDatum<ForceNode>[] = edges
+    .filter(e => nodeMap.has(e.a) && nodeMap.has(e.b))
+    .map(e => ({ source: nodeMap.get(e.a)!, target: nodeMap.get(e.b)! }));
+
+  const sim = forceSimulation(nodes)
+    .force('link', forceLink(links).id((d) => (d as ForceNode).id).distance(120))
+    .force('charge', forceManyBody().strength(-400))
+    .force('center', forceCenter(50, 50))
+    .force('collide', forceCollide(15))
+    .stop();
+
+  // Run synchronously
+  for (let i = 0; i < 300; i++) sim.tick();
+
+  // Normalize to 0-100 range with margin
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const n of nodes) {
+    if (n.x! < minX) minX = n.x!;
+    if (n.x! > maxX) maxX = n.x!;
+    if (n.y! < minY) minY = n.y!;
+    if (n.y! > maxY) maxY = n.y!;
+  }
+  const rangeX = maxX - minX || 1;
+  const rangeY = maxY - minY || 1;
+  const margin = 10;
+
+  return nodes.map(n => ({
+    id: n.id,
+    x: margin + ((n.x! - minX) / rangeX) * (100 - 2 * margin),
+    y: margin + ((n.y! - minY) / rangeY) * (100 - 2 * margin),
+  }));
 }
