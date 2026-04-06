@@ -18,14 +18,15 @@ type Deliberation struct {
 }
 
 type Position struct {
-	ID             string    `json:"position_id"`
-	DeliberationID string    `json:"deliberation_id"`
-	AgentID        string    `json:"agent_id"`
-	Content        string    `json:"content"`
-	ModelFamily    string    `json:"model_family,omitempty"`
-	Conviction     float64   `json:"conviction,omitempty"`
-	Round          int       `json:"round_number"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID             string         `json:"position_id"`
+	DeliberationID string         `json:"deliberation_id"`
+	AgentID        string         `json:"agent_id"`
+	Content        string         `json:"content"`
+	ModelFamily    string         `json:"model_family,omitempty"`
+	Conviction     float64        `json:"conviction,omitempty"`
+	Metadata       map[string]any `json:"metadata,omitempty"`
+	Round          int            `json:"round_number"`
+	CreatedAt      time.Time      `json:"created_at"`
 }
 
 type Vote struct {

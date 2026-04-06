@@ -276,11 +276,21 @@ func (p *Poller) fetchDelibState(id string) (*DelibState, error) {
 	agentMap := make(map[string]*AgentInfo)
 	for _, pos := range positions {
 		if _, exists := agentMap[pos.AgentID]; !exists {
-			agentMap[pos.AgentID] = &AgentInfo{
+			info := &AgentInfo{
 				ID:          pos.AgentID,
 				ModelFamily: pos.ModelFamily,
 				Conviction:  pos.Conviction,
 			}
+			// Read lat/lon from position metadata if present
+			if pos.Metadata != nil {
+				if lat, ok := pos.Metadata["lat"].(float64); ok {
+					info.Lat = &lat
+				}
+				if lon, ok := pos.Metadata["lon"].(float64); ok {
+					info.Lon = &lon
+				}
+			}
+			agentMap[pos.AgentID] = info
 		}
 	}
 
