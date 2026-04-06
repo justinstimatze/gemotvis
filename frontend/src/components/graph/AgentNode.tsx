@@ -12,7 +12,9 @@ export interface AgentNodeData extends Record<string, unknown> {
   agentIndex: number;
   agentCount: number;
   isEdgeAgent: boolean;
-  sideClass: string; // 'graph-node-left' | 'graph-node-right' | ''
+  sideClass: string;
+  clusterId?: number;     // opinion cluster from analysis
+  voteDirection?: -1 | 0 | 1; // aggregate vote
 }
 
 type AgentNodeType = Node<AgentNodeData, 'agent'>;

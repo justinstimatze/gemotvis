@@ -2,15 +2,15 @@
  * GEMOTVIS THEME OVERRIDES
  *
  * Each theme overrides CSS custom properties from base.css.
- * Component-specific theme styles are in reactflow.css.
- * This file only contains variable overrides and font loading.
+ * Uses .theme-* class selector (not #screen) so variables cascade
+ * to both #screen children AND portaled elements on body.
  */
 
 /* =====================================================================
    MAGI THEME — CRT / Evangelion / NERV
    ===================================================================== */
 
-#screen.theme-magi {
+.theme-magi {
     --vis-amber: #ff8c00;
     --vis-amber-dim: #cc7000;
     --vis-amber-glow: rgba(255, 140, 0, 0.5);
@@ -41,7 +41,7 @@
    MINIMAL THEME — Vercel / Linear / Geist
    ===================================================================== */
 
-#screen.theme-minimal {
+.theme-minimal {
     --vis-amber: #0070f3;
     --vis-amber-dim: #737373;
     --vis-amber-glow: rgba(0, 112, 243, 0.12);
@@ -69,7 +69,7 @@
    GASTOWN THEME — Steampunk / Industrial / Brass
    ===================================================================== */
 
-#screen.theme-gastown {
+.theme-gastown {
     --vis-amber: #8b5e3c;
     --vis-amber-dim: #7a6652;
     --vis-amber-glow: rgba(205, 127, 50, 0.2);
@@ -97,6 +97,6 @@
 }
 
 /* Gastown scrollbar */
-#screen.theme-gastown ::-webkit-scrollbar-track { background: #3e2723; }
-#screen.theme-gastown ::-webkit-scrollbar-thumb { background: #5d4037; }
-#screen.theme-gastown ::-webkit-scrollbar-thumb:hover { background: #cd7f32; }
+.theme-gastown ::-webkit-scrollbar-track { background: #3e2723; }
+.theme-gastown ::-webkit-scrollbar-thumb { background: #5d4037; }
+.theme-gastown ::-webkit-scrollbar-thumb:hover { background: #cd7f32; }
