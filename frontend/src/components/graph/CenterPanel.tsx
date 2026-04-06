@@ -30,12 +30,18 @@ export function CenterPanel() {
   const agents = ds.agents ?? [];
   const topic = ds.deliberation?.topic ?? '';
 
-  // Portal to #screen so the panel is outside React Flow's stacking context
+  // Center panel for 2-4 agents, side panel for 5+
+  // Use raw (unfiltered) agent count to decide layout
+  const rawDs = rawDelibs[activeEdge];
+  const totalAgents = rawDs?.agents?.length ?? agents.length;
+  const useSidePanel = totalAgents > 4;
+  const panelClass = useSidePanel ? 'chat-panel-side' : 'center-panel-overlay';
+
   const target = document.getElementById('screen');
   if (!target) return null;
 
   return createPortal(
-    <div className="center-panel-overlay">
+    <div className={panelClass}>
       <div className="center-header">
         <span className="center-title">{topic}</span>
       </div>

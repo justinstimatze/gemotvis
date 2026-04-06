@@ -39,12 +39,12 @@ async function testAutoplay(page, theme) {
     const label = `${theme}/autoplay`;
     await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
     // Wait for panel to appear (SSE + autoplay + animation phase)
-    await page.waitForSelector('.center-panel-overlay', { timeout: 20000 }).catch(() => {});
+    await page.waitForSelector('.center-panel-overlay, .chat-panel-side', { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(2000); // extra time for bubbles to render
 
     const info = await page.evaluate(() => {
         const bubbles = document.querySelectorAll('.chat-bubble');
-        const panel = document.querySelector('.center-panel-overlay');
+        const panel = document.querySelector('.center-panel-overlay, .chat-panel-side');
         const emptyBubbles = [...bubbles].filter(b => {
             const text = b.querySelector('.chat-text');
             return !text || text.textContent.trim().length === 0;
@@ -69,7 +69,7 @@ async function testFocusedNodes(page, theme) {
 
     const info = await page.evaluate(() => {
         const activeNodes = document.querySelectorAll('.agent-node-active');
-        const panel = document.querySelector('.center-panel-overlay');
+        const panel = document.querySelector('.center-panel-overlay, .chat-panel-side');
 
         return {
             activeNodeCount: activeNodes.length,
@@ -85,7 +85,7 @@ async function testTransitionTiming(page, theme) {
     const label = `${theme}/transitions`;
     await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
     // Wait for autoplay to be fully active (panel visible)
-    await page.waitForSelector('.center-panel-overlay', { timeout: 20000 }).catch(() => {});
+    await page.waitForSelector('.center-panel-overlay, .chat-panel-side', { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(2000);
 
     const timings = await page.evaluate(async () => {
@@ -93,7 +93,7 @@ async function testTransitionTiming(page, theme) {
 
         function sample(label) {
             const activeNodes = document.querySelectorAll('.agent-node-active');
-            const panel = document.querySelector('.center-panel-overlay');
+            const panel = document.querySelector('.center-panel-overlay, .chat-panel-side');
             const activeEdges = document.querySelectorAll('.graph-edge-active');
             results.push({
                 label,
