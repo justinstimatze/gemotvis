@@ -10,7 +10,7 @@ import { useScrubberStore } from '../../stores/scrubber';
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useAnimationPhase } from '../../hooks/useAnimationPhase';
 import { useRFNodes, useRFEdges } from '../../hooks/useGraphData';
-import { buildGraphFromDelibs } from '../../lib/buildGraph';
+import { buildGraphFromDelibs, countBilaterals } from '../../lib/buildGraph';
 import { isSingleDelibGraph } from '../../lib/graphData';
 import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
 import { AgentNode, type AgentNodeData } from './AgentNode';
@@ -31,7 +31,7 @@ function GraphCanvasInner() {
 
   // Build graph structure from deliberations
   const graph = useMemo(() => {
-    const bilateralCount = Object.values(rawDelibs).filter(d => d.agents?.length === 2).length;
+    const bilateralCount = countBilaterals(rawDelibs);
     if (bilateralCount > 1) return buildGraphFromDelibs(rawDelibs);
     const delibs = activeEdge && rawDelibs[activeEdge]
       ? { [activeEdge]: rawDelibs[activeEdge] }

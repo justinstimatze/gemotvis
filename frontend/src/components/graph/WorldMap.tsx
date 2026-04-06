@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSessionStore } from '../../stores/session';
-import { computeLatLonBounds, type LatLonBounds } from '../../lib/layout';
-import type { AgentInfo } from '../../types';
+import { computeLatLonBounds, collectAgentsWithCoords, type LatLonBounds } from '../../lib/layout';
 
 interface WorldMapProps {
   show: boolean;
@@ -12,15 +11,7 @@ export function WorldMap({ show }: WorldMapProps) {
   const delibs = useSessionStore((s) => s.deliberations);
 
   // Collect all agents with lat/lon
-  const agentsWithCoords = useMemo((): AgentInfo[] => {
-    const result: AgentInfo[] = [];
-    for (const ds of Object.values(delibs)) {
-      for (const a of ds.agents ?? []) {
-        if (a.lat != null && a.lon != null) result.push(a);
-      }
-    }
-    return result;
-  }, [delibs]);
+  const agentsWithCoords = useMemo(() => collectAgentsWithCoords(delibs), [delibs]);
 
   const bounds = useMemo(
     () => computeLatLonBounds(agentsWithCoords),

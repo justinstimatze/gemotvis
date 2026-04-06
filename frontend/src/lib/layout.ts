@@ -70,6 +70,17 @@ export interface LayoutResult {
   showWorldMap: boolean;
 }
 
+/** Collect all agents that have lat/lon coordinates from all deliberations. */
+export function collectAgentsWithCoords(delibs: Record<string, DelibState>): AgentInfo[] {
+  const result: AgentInfo[] = [];
+  for (const ds of Object.values(delibs)) {
+    for (const a of ds.agents ?? []) {
+      if (a.lat != null && a.lon != null) result.push(a);
+    }
+  }
+  return result;
+}
+
 /** Compute positions for all graph nodes. Priority: lat/lon > explicit xy > island layout. */
 export function getGraphNodePositions(
   graph: Graph,
@@ -78,12 +89,7 @@ export function getGraphNodePositions(
   const nodes = graph.nodes;
 
   // Check for lat/lon coordinates
-  const allAgentsWithLatLon: AgentInfo[] = [];
-  for (const ds of Object.values(delibs)) {
-    for (const a of ds.agents ?? []) {
-      if (a.lat != null && a.lon != null) allAgentsWithLatLon.push(a);
-    }
-  }
+  const allAgentsWithLatLon = collectAgentsWithCoords(delibs);
   if (allAgentsWithLatLon.length > 0) {
     const bounds = computeLatLonBounds(allAgentsWithLatLon);
     const latLonMap: Record<string, { x: number; y: number }> = {};

@@ -1,5 +1,6 @@
 import type { DelibState } from '../../types';
 import { formatTime, shortAgentID } from '../../lib/helpers';
+import { PanelWrapper } from './PanelWrapper';
 
 interface AuditLogProps {
   ds: DelibState | null;
@@ -12,26 +13,21 @@ export function AuditLog({ ds }: AuditLogProps) {
   const recent = ops.slice(-20).reverse();
 
   return (
-    <div className="footer-panel audit-panel">
-      <div className="footer-panel-title">Event Log</div>
-      {recent.length === 0 ? (
-        <div className="footer-panel-empty">No events yet</div>
-      ) : (
-        <div className="audit-list">
-          {recent.map((op, i) => {
-            const method = (op['method'] ?? '').replace('gemot/', '');
-            const agent = op['agent_id'] ?? '';
-            const time = formatTime(op['timestamp'] ?? '');
-            return (
-              <div key={i} className="audit-entry">
-                <span className="audit-time">{time}</span>
-                <span className="audit-method">{method}</span>
-                {agent && <span className="audit-agent">{shortAgentID(agent)}</span>}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <PanelWrapper className="audit-panel" title="Event Log" emptyText="No events yet" isEmpty={recent.length === 0}>
+      <div className="audit-list">
+        {recent.map((op, i) => {
+          const method = (op['method'] ?? '').replace('gemot/', '');
+          const agent = op['agent_id'] ?? '';
+          const time = formatTime(op['timestamp'] ?? '');
+          return (
+            <div key={i} className="audit-entry">
+              <span className="audit-time">{time}</span>
+              <span className="audit-method">{method}</span>
+              {agent && <span className="audit-agent">{shortAgentID(agent)}</span>}
+            </div>
+          );
+        })}
+      </div>
+    </PanelWrapper>
   );
 }

@@ -1,5 +1,10 @@
 import type { DelibState, Graph, GraphEdge, GraphGroup } from '../types';
 
+/** Count deliberations that have exactly 2 agents (bilaterals). */
+export function countBilaterals(delibs: Record<string, DelibState>): number {
+  return Object.values(delibs).filter(d => (d.agents?.length ?? 0) === 2).length;
+}
+
 /** Convert deliberations into a unified graph structure. */
 export function buildGraphFromDelibs(delibs: Record<string, DelibState>): Graph {
   const ids = Object.keys(delibs);

@@ -3,6 +3,7 @@ import type { DelibState } from '../types';
 import type { AgentNodeData } from '../components/graph/AgentNode';
 import type { DelibEdgeData } from '../components/graph/DelibEdge';
 import type { Graph, NodePosition } from '../types';
+import { getPositionCount } from './helpers';
 
 /** Check if a graph represents a single deliberation (or none). */
 export function isSingleDelibGraph(graph: Graph): boolean {
@@ -27,6 +28,18 @@ export function countDisagreements(delibs: Record<string, DelibState>, agentA: s
   return count;
 }
 
+function findInDelibs<T>(
+  delibs: Record<string, DelibState>,
+  agentId: string,
+  extractor: (ds: DelibState, agentId: string) => T | undefined,
+): T | undefined {
+  for (const ds of Object.values(delibs)) {
+    const result = extractor(ds, agentId);
+    if (result !== undefined) return result;
+  }
+  return undefined;
+}
+
 /** Pure function: build React Flow node data from layout positions and delib data. */
 export function buildRFNodes(
   nodePositions: NodePosition[],
@@ -42,7 +55,7 @@ export function buildRFNodes(
     for (const edge of graph.edges) {
       if (edge.a === np.id || edge.b === np.id) {
         const ds = filteredDelibs[edge.delibID];
-        const pc = (ds?.positions ?? []).length;
+        const pc = getPositionCount(ds);
         totalMessages += pc;
         if (pc > 0) activeGemots++;
       }
@@ -61,17 +74,9 @@ export function buildRFNodes(
       sideClass = (agentIdx % 2 === 0) ? 'graph-node-left' : 'graph-node-right';
     }
 
-    let clusterId: number | undefined;
-    for (const ds of Object.values(filteredDelibs)) {
-      const agent = ds.agents?.find(a => a.id === np.id);
-      if (agent?.cluster_id != null) { clusterId = agent.cluster_id; break; }
-    }
+    const clusterId = findInDelibs(filteredDelibs, np.id, (ds, id) => ds.agents?.find(a => a.id === id)?.cluster_id);
 
-    let voteDirection: -1 | 0 | 1 | undefined;
-    for (const ds of Object.values(filteredDelibs)) {
-      const vote = ds.votes?.find(v => v.agent_id === np.id);
-      if (vote) { voteDirection = vote.value as -1 | 0 | 1; break; }
-    }
+    const voteDirection = findInDelibs(filteredDelibs, np.id, (ds, id) => ds.votes?.find(v => v.agent_id === id)?.value as -1 | 0 | 1 | undefined);
 
     let bridgingScore = 0;
     for (const ds of Object.values(filteredDelibs)) {
@@ -118,7 +123,7 @@ export function buildRFEdges(
 
   return graph.edges.map((edge) => {
     const ds = filteredDelibs[edge.delibID];
-    const posCount = (ds?.positions ?? []).length;
+    const posCount = getPositionCount(ds);
     const highlighted = !isSingleDelib && edge.delibID === activeEdge;
     const cruxCount = countDisagreements(filteredDelibs, edge.a, edge.b);
     const consensus = ds?.analysis?.consensus_statements ?? [];

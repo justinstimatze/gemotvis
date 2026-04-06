@@ -62,6 +62,11 @@ export interface TextSegment {
   isMention: boolean;
 }
 
+/** Count positions in a deliberation state (or 0 if undefined/null). */
+export function getPositionCount(ds: { positions?: unknown[] } | undefined | null): number {
+  return (ds?.positions ?? []).length;
+}
+
 export function splitMentions(text: string, agentNames: string[]): TextSegment[] {
   if (agentNames.length === 0) return [{ text, isMention: false }];
 
