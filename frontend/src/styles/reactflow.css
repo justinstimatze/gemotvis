@@ -245,11 +245,11 @@
 /* Center panel overlay — positioned over the React Flow canvas */
 .center-panel-overlay {
   position: fixed;
-  top: 40px;
+  top: 36px;
   left: 50%;
   transform: translateX(-50%);
-  width: 480px;
-  max-height: 55vh;
+  width: 520px;
+  max-height: calc(100vh - 36px - var(--bottom-bar-h, 44px) - 8px);
   z-index: 50;
   background: var(--vis-panel, #fff);
   border: 1px solid var(--vis-panel-border, #e0e0e0);
@@ -663,7 +663,19 @@
 .audit-agent { color: var(--vis-amber, #0070f3); }
 
 /* Analysis section in center panel */
-.analysis-section { padding: 12px; border-top: 1px solid var(--vis-panel-border, #eee); }
+.analysis-section {
+  padding: 12px;
+  border-top: 1px solid var(--vis-panel-border, #eee);
+  max-height: 150px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Consensus footer panel */
+.consensus-item { font-size: 10px; line-height: 1.4; margin-bottom: 4px; }
+.consensus-text { color: var(--vis-text, #333); }
+.consensus-meta { color: var(--vis-text-dim, #888); margin-left: 4px; font-weight: 600; }
+.consensus-compromise { color: var(--vis-green, #16a34a); font-weight: 500; margin-bottom: 6px; }
 .analysis-block { margin-bottom: 12px; }
 .analysis-block-title { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--vis-text-dim, #888); margin-bottom: 6px; }
 .analysis-item { padding: 8px; background: var(--vis-bg, #f5f5f5); border-radius: 6px; margin-bottom: 6px; }

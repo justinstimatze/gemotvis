@@ -4,6 +4,7 @@ import { useGraphStore } from '../../stores/graph';
 import { useFocusedDelib } from '../../hooks/useFocusedDelib';
 import { CruxPanel } from './CruxPanel';
 import { MetricsPanel } from './MetricsPanel';
+import { ConsensusPanel } from './ConsensusPanel';
 import { AuditLog } from './AuditLog';
 import { ScrubberBar } from '../scrubber/ScrubberBar';
 
@@ -35,7 +36,7 @@ export function Footer() {
       {showPanels && ds && (
         <div className="graph-footer">
           <CruxPanel ds={ds} />
-          <MetricsPanel ds={ds} />
+          {ds.analysis?.consensus_statements?.length ? <ConsensusPanel ds={ds} /> : <MetricsPanel ds={ds} />}
           <AuditLog ds={ds} />
         </div>
       )}
