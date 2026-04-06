@@ -3,6 +3,7 @@ import { useGraphStore } from '../../stores/graph';
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useSessionStore } from '../../stores/session';
 import { ChatThread } from '../chat/ChatThread';
+import { AnalysisSection } from '../chat/AnalysisSection';
 import type { AgentInfo } from '../../types';
 
 /** Center panel overlay — shows chat thread for the active bilateral. */
@@ -40,6 +41,7 @@ export function CenterPanel() {
         agents={agents}
         allAgents={allAgents}
       />
+      {ds.analysis && <AnalysisSection analysis={ds.analysis} />}
     </div>
   );
 }

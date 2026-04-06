@@ -8,6 +8,8 @@ import { useGraphStore } from './stores/graph';
 import { useScrubberPlayback } from './hooks/useScrubberPlayback';
 import { buildGlobalTimeline } from './lib/buildTimeline';
 import { GraphCanvas } from './components/graph/GraphCanvas';
+import { ScrubberBar } from './components/scrubber/ScrubberBar';
+import { Footer } from './components/panels/Footer';
 import { useEffect, useRef } from 'react';
 
 // Expose stores for debugging (remove in production)
@@ -52,7 +54,13 @@ function GraphView() {
     return () => clearInterval(interval);
   }, []);
 
-  return <GraphCanvas />;
+  return (
+    <>
+      <GraphCanvas />
+      <Footer />
+      <ScrubberBar />
+    </>
+  );
 }
 
 export function App() {
