@@ -55,8 +55,8 @@ export function Header() {
           onChange={handleThemeChange}
         >
           <option value="minimal">Minimal</option>
-          <option value="magi">MAGI</option>
           <option value="gastown">Gastown</option>
+          {theme === 'magi' && <option value="magi">MAGI</option>}
         </select>
       </div>
     </header>

@@ -2,14 +2,14 @@ import { useState, useCallback, useEffect } from 'react';
 import { useThemeStore } from '../stores/theme';
 import type { Theme } from '../types';
 
-const themeDescriptions: Record<Theme, { label: string; desc: string; colors: string[] }> = {
+// MAGI theme is an easter egg — available via ?theme=magi but not shown in picker
+const themeDescriptions: Record<string, { label: string; desc: string; colors: string[] }> = {
   minimal: { label: 'Minimal', desc: 'Clean and modern', colors: ['#fafafa', '#0070f3', '#333'] },
-  magi: { label: 'MAGI', desc: 'CRT amber terminal', colors: ['#0a0a0a', '#ff8c00', '#00ff41'] },
   gastown: { label: 'Gastown', desc: 'Brass & parchment', colors: ['#f5e6d3', '#b87333', '#5c3a1e'] },
 };
 
 const datasetDescriptions: Record<string, string> = {
-  demo: '5 agents — AI governance deliberation',
+  showcase: '5 scenarios — governance, scheduling, diplomacy, MAGI triangle',
   diplomacy: '7 nations — Spring 1904 bilateral negotiations',
   'code-review': '3 reviewers — async function security review',
 };
@@ -19,7 +19,7 @@ export function LandingPage() {
   const setTheme = useThemeStore((s) => s.setTheme);
   const [watchCode, setWatchCode] = useState('');
   const [datasets, setDatasets] = useState<string[]>([]);
-  const [selectedDataset, setSelectedDataset] = useState('demo');
+  const [selectedDataset, setSelectedDataset] = useState('');
 
   useEffect(() => {
     fetch('/api/datasets')
@@ -36,7 +36,7 @@ export function LandingPage() {
   }, [setTheme]);
 
   const startDemo = useCallback(() => {
-    const dataParam = selectedDataset !== 'demo' ? `&data=${selectedDataset}` : '';
+    const dataParam = `&data=${selectedDataset}`;
     window.location.href = `/?demo=1&multi=true&theme=${theme}${dataParam}`;
   }, [theme, selectedDataset]);
 
@@ -56,13 +56,11 @@ export function LandingPage() {
         <div className="landing-section">
           <label className="landing-label">Theme</label>
           <div className="landing-theme-grid">
-            {(Object.keys(themeDescriptions) as Theme[]).map((t) => {
-              const td = themeDescriptions[t];
-              return (
+            {Object.entries(themeDescriptions).map(([t, td]) => (
                 <button
                   key={t}
                   className={`landing-theme-card ${theme === t ? 'active' : ''}`}
-                  onClick={() => handleThemeChange(t)}
+                  onClick={() => handleThemeChange(t as Theme)}
                 >
                   <div className="landing-theme-preview">
                     {td.colors.map((c, i) => (
@@ -72,8 +70,7 @@ export function LandingPage() {
                   <div className="landing-theme-name">{td.label}</div>
                   <div className="landing-theme-desc">{td.desc}</div>
                 </button>
-              );
-            })}
+              ))}
           </div>
         </div>
 
@@ -97,7 +94,7 @@ export function LandingPage() {
         )}
 
         <div className="landing-section">
-          <button className="landing-btn landing-btn-primary" onClick={startDemo}>
+          <button className="landing-btn landing-btn-primary" onClick={startDemo} disabled={!selectedDataset}>
             Start Demo
           </button>
         </div>

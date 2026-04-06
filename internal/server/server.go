@@ -51,7 +51,7 @@ func New(p *poller.Poller, h *hub.Hub) *Server {
 // If gemotURL and serviceKey are provided, live watching via join codes is also enabled.
 func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string, extraDatasets map[string]*poller.Snapshot) *Server {
 	datasets := map[string]*poller.Snapshot{
-		"demo": demoSnapshot(),
+		"showcase": demoSnapshot(),
 	}
 	for name, snap := range extraDatasets {
 		datasets[name] = snap
@@ -59,9 +59,9 @@ func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string, extraData
 
 	s := &Server{
 		mux:           http.NewServeMux(),
-		snapshot:      datasets["demo"],
+		snapshot:      datasets["showcase"],
 		datasets:      datasets,
-		defaultData:   "demo",
+		defaultData:   "showcase",
 		cycleInterval: cycleInterval,
 	}
 	if gemotURL != "" && serviceKey != "" {
