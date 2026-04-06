@@ -35,12 +35,20 @@ internal/
     watch.go                     Join code watching — per-session pollers via gemot /join/ endpoint
     dashboard.go                 Agent dashboard — encrypted sessions (AES-GCM), proxied polling
     demo.go                      Built-in sample data (5 scenarios from real gemot scripts)
-    static/                      Frontend (vanilla JS + CSS, //go:embed)
-      index.html                 App shell with boot sequence + HUD elements
-      css/base.css               Neutral structure + classic palette defaults (design tokens, layout, components)
-      css/themes.css             Theme-specific effects (MAGI CRT, classic manuscript, minimal clean)
-      css/layout.css             Adaptive layouts (bilateral/triangle/polygon/positioned/grid)
-      js/app.js                  SSE, state, rendering, multi-view, auto-cycle, demo loop (1200+ lines)
+    static/                      Build output from frontend/ (//go:embed, gitignored)
+frontend/                        React + TypeScript frontend (Vite build)
+  src/
+    App.tsx                      Router + theme provider + layout shell
+    types.ts                     TypeScript mirrors of Go types
+    stores/                      Zustand state (session, scrubber, graph, theme)
+    hooks/                       useSSE, useAnimationPhase, useFilteredState, useScrubberPlayback
+    lib/                         Pure logic: filterToTime, buildGraph, layout, votes, color, helpers
+    components/
+      graph/                     React Flow: GraphCanvas, AgentNode, DelibEdge, CenterPanel
+      chat/                      ChatThread, ChatBubble, TypeReveal, AnalysisSection
+      scrubber/                  ScrubberBar with timeline dots
+      panels/                    Footer (CruxPanel, MetricsPanel, AuditLog)
+    styles/                      CSS: base.css, themes.css, layout.css, reactflow.css
 ```
 
 ## Modes
@@ -100,7 +108,8 @@ When scrubbing in multi-view, the focused deliberation renders as a **full singl
 
 ## Conventions
 
-- All DOM rendering uses safe methods (createElement, textContent). No innerHTML.
+- Frontend is React + TypeScript + React Flow + Zustand. Build with `cd frontend && npm run build`.
+- All DOM rendering via React components. No innerHTML or direct DOM manipulation.
 - CSS custom properties in `:root` for theming. Colors: `--vis-*`. Theme overrides via `#screen.theme-*` in `themes.css`.
 - Security headers (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on all responses.
 - Max 50 concurrent SSE clients, 20 watch sessions, 100 dashboard sessions.

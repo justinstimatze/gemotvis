@@ -15,8 +15,8 @@ import { LandingPage } from './components/LandingPage';
 import { BootOverlay } from './components/BootOverlay';
 import { useEffect, useRef, useState } from 'react';
 
-// Expose stores for debugging
-if (typeof window !== 'undefined') {
+// Debug: expose stores on window (only in dev)
+if (import.meta.env.DEV && typeof window !== 'undefined') {
   const w = window as unknown as Record<string, unknown>;
   w.__session = useSessionStore;
   w.__scrubber = useScrubberStore;
