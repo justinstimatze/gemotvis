@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   ReactFlow,
   useReactFlow,
@@ -7,12 +7,11 @@ import {
 } from '@xyflow/react';
 import { useSessionStore } from '../../stores/session';
 import { useGraphStore } from '../../stores/graph';
-// useThemeStore removed — was only used for MiniMap colors
+import { useScrubberStore } from '../../stores/scrubber';
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useAnimationPhase } from '../../hooks/useAnimationPhase';
 import { buildGraphFromDelibs } from '../../lib/buildGraph';
 import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
-// agentColor removed — was only used for MiniMap colors
 import { AgentNode, type AgentNodeData } from './AgentNode';
 import { DelibEdge, type DelibEdgeData } from './DelibEdge';
 import { CenterPanel } from './CenterPanel';
@@ -165,6 +164,34 @@ function GraphCanvasInner() {
     }
   }, [rfNodes.length, fitView]);
 
+  // Node click: cycle through bilaterals for that agent
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node<AgentNodeData>) => {
+    const agentId = node.data.agentId;
+    // Find all edges involving this agent, sorted by message count descending.
+    // Use rawDelibs (not filtered) so we can navigate to delibs not yet revealed by scrubber.
+    const agentEdges = graph.edges
+      .filter(e => e.a === agentId || e.b === agentId)
+      .map(e => {
+        const ds = rawDelibs[e.delibID];
+        return { delibID: e.delibID, posCount: (ds?.positions ?? []).length };
+      })
+      .filter(e => e.posCount > 0)
+      .sort((a, b) => b.posCount - a.posCount);
+
+    if (agentEdges.length === 0) return;
+
+    // Cycle: if current activeEdge is one of this agent's edges, go to the next one
+    const currentIdx = agentEdges.findIndex(e => e.delibID === activeEdge);
+    const nextIdx = currentIdx >= 0 ? (currentIdx + 1) % agentEdges.length : 0;
+    const nextDelib = agentEdges[nextIdx]!.delibID;
+
+    useScrubberStore.getState().setPlaying(false);
+    useGraphStore.getState().setActiveEdge(nextDelib);
+    const events = useScrubberStore.getState().events;
+    const idx = events.findIndex(e => e.delibID === nextDelib);
+    if (idx >= 0) useScrubberStore.getState().setEventIndex(idx);
+  }, [graph.edges, rawDelibs, activeEdge]);
+
   return (
     <>
       <ReactFlow
@@ -172,6 +199,7 @@ function GraphCanvasInner() {
         edges={rfEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onNodeClick={onNodeClick}
         fitView
         fitViewOptions={{ padding: 0.35 }}
         nodesDraggable={false}
