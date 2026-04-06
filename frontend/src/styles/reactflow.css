@@ -10,6 +10,11 @@
   font-size: inherit;
 }
 
+/* Smooth node position transitions only during bilateral switch animation */
+.graph-animating .react-flow__node {
+  transition: transform 0.6s ease;
+}
+
 /* Agent node */
 .agent-node {
   display: flex;
@@ -471,13 +476,50 @@
 /* ===== Scrubber Bar ===== */
 .scrubber-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
   gap: 0;
   background: var(--vis-panel, #fff);
   border-top: 1px solid var(--vis-panel-border, #e0e0e0);
   font-size: 11px;
-  height: 44px;
   flex-shrink: 0;
+}
+
+/* Deliberation picker nav — full width row above controls */
+.scrubber-delib-nav {
+  width: 100%;
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--vis-panel-border, #e0e0e0);
+}
+
+.scrubber-delib-pill {
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border: 1px solid var(--vis-panel-border, #e0e0e0);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--vis-text-dim, #888);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.scrubber-delib-pill:hover {
+  color: var(--vis-text, #333);
+  border-color: var(--vis-text-dim, #888);
+}
+
+.scrubber-delib-pill.active {
+  color: var(--vis-text, #333);
+  border-color: var(--vis-amber, #0070f3);
+  background: var(--vis-amber-glow, rgba(0,112,243,0.08));
+  font-weight: 700;
 }
 
 /* Left controls group */
@@ -1566,6 +1608,10 @@
 .theme-magi .scrubber-marker { filter: brightness(0.7); }
 .theme-magi .scrubber-label { color: #884600; }
 .theme-magi .scrubber-counter { color: #884600; }
+.theme-magi .scrubber-delib-nav { border-bottom-color: #2a2a2a; }
+.theme-magi .scrubber-delib-pill { border-color: #2a2a2a; color: #884600; font-family: 'Courier New', monospace; border-radius: 0; }
+.theme-magi .scrubber-delib-pill:hover { color: #ff8c00; border-color: #ff8c00; }
+.theme-magi .scrubber-delib-pill.active { color: #ff8c00; border-color: #ff8c00; background: rgba(255,140,0,0.1); }
 
 /* =====================================================================
    GASTOWN THEME — Steampunk / Industrial / Brass

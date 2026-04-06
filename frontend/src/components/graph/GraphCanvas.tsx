@@ -146,8 +146,9 @@ function GraphCanvasInner() {
 
 /** Wrapper that provides ReactFlowProvider context for useReactFlow(). */
 export function GraphCanvas() {
+  const phase = useGraphStore((s) => s.animationPhase);
   return (
-    <div className="graph-view" style={{ width: '100%', height: '100%' }}>
+    <div className={`graph-view ${phase === 'moving' ? 'graph-animating' : ''}`} style={{ width: '100%', height: '100%' }}>
       <GraphCanvasInner />
       <CenterPanel />
     </div>

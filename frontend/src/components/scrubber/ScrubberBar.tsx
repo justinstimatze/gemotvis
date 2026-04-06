@@ -1,7 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { useScrubberStore } from '../../stores/scrubber';
 import { useGraphStore } from '../../stores/graph';
+import { useSessionStore } from '../../stores/session';
 import { useScrubberPlayback } from '../../hooks/useScrubberPlayback';
+import { truncate } from '../../lib/helpers';
 
 export function ScrubberBar() {
   const events = useScrubberStore((s) => s.events);
@@ -67,10 +69,50 @@ export function ScrubberBar() {
     ? events[eventIndex].label
     : '';
 
+  // Unique deliberations in timeline order (for delib picker)
+  const activeEdge = useGraphStore((s) => s.activeEdge);
+  const deliberations = useSessionStore((s) => s.deliberations);
+  const delibList = useMemo(() => {
+    const seen = new Set<string>();
+    const list: { id: string; topic: string; firstIdx: number }[] = [];
+    for (let i = 0; i < events.length; i++) {
+      const id = events[i]!.delibID;
+      if (!seen.has(id)) {
+        seen.add(id);
+        const ds = deliberations[id];
+        const topic = ds?.deliberation?.topic ?? id;
+        const agentCount = ds?.agents?.length ?? 0;
+        const suffix = agentCount > 0 ? ` (${agentCount})` : '';
+        list.push({ id, topic: truncate(topic, 22) + suffix, firstIdx: i });
+      }
+    }
+    return list;
+  }, [events, deliberations]);
+
+  const jumpToDelib = useCallback((delibId: string, firstIdx: number) => {
+    setEventIndex(firstIdx);
+    setActiveEdge(delibId);
+  }, [setEventIndex, setActiveEdge]);
+
   if (events.length === 0) return null;
 
   return (
     <div className="scrubber-bar" id="scrubber-bar">
+      {/* Deliberation picker — only show when multiple delibs */}
+      {delibList.length > 1 && (
+        <div className="scrubber-delib-nav">
+          {delibList.map((d) => (
+            <button
+              key={d.id}
+              className={`scrubber-delib-pill ${activeEdge === d.id ? 'active' : ''}`}
+              onClick={() => jumpToDelib(d.id, d.firstIdx)}
+              title={deliberations[d.id]?.deliberation?.topic ?? d.id}
+            >
+              {d.topic}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Controls */}
       <div className="scrubber-controls">
         <button className="scrubber-btn scrubber-play" onClick={togglePlay} title={playing ? 'Pause (Space)' : 'Play (Space)'}>
