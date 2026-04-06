@@ -1,52 +1,28 @@
 /* React Flow integration styles (base CSS imported in main.tsx) */
 
-/* Remove React Flow default node styling — we style our own */
+/* Override React Flow default node styling */
 .react-flow__node {
-  background: none !important;
-  border: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
   font-size: inherit;
-  width: auto !important;
-  height: auto !important;
-  /* No position animation — edges and nodes must move together.
-     React Flow updates both simultaneously via React state.
-     Visual transition handled by animation phase (3s delay before panel shows). */
 }
 
-/* Agent node — override old base.css/themes.css card styles */
-.react-flow .agent-node {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
+/* Agent node */
+.agent-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   cursor: pointer;
   min-width: 80px;
-  position: static !important;
-  transform: none !important;
-  width: auto !important;
-  height: auto !important;
-  background: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  filter: none !important;
   transition: opacity 0.6s ease;
 }
 
-.react-flow .agent-node:hover {
-  opacity: 0.9;
-}
-
-.react-flow .agent-node-active {
-  /* Active nodes handled by icon glow, not scale (scale breaks React Flow positioning) */
-}
-
-.react-flow .agent-node-quiet {
-  opacity: 0.4;
-}
+.agent-node:hover { opacity: 0.9; }
+.agent-node-quiet { opacity: 0.4; }
 
 /* Icon: fixed square, centered content */
 .agent-node-icon {
