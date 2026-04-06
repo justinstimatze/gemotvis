@@ -242,8 +242,8 @@ async function testScrubberBar(page, theme) {
     const info = await page.evaluate(() => {
         const bar = document.querySelector('.scrubber-bar');
         const playBtn = document.querySelector('.scrubber-play');
-        const dots = document.querySelectorAll('.scrubber-dot');
-        const activeDot = document.querySelector('.scrubber-dot.active');
+        const dots = document.querySelectorAll('.scrubber-marker');
+        const activeDot = document.querySelector('.scrubber-marker.active');
         return {
             hasBar: !!bar,
             hasPlayBtn: !!playBtn,

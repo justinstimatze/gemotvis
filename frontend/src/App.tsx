@@ -9,7 +9,6 @@ import { useGraphStore } from './stores/graph';
 import { useScrubberPlayback } from './hooks/useScrubberPlayback';
 import { buildGlobalTimeline } from './lib/buildTimeline';
 import { GraphCanvas } from './components/graph/GraphCanvas';
-import { ScrubberBar } from './components/scrubber/ScrubberBar';
 import { Footer } from './components/panels/Footer';
 import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
@@ -62,7 +61,6 @@ function GraphView() {
     <>
       <GraphCanvas />
       <Footer />
-      <ScrubberBar />
     </>
   );
 }

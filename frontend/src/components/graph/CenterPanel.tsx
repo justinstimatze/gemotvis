@@ -37,9 +37,6 @@ export function CenterPanel() {
   const useSidePanel = totalAgents > 4;
   const panelClass = useSidePanel ? 'chat-panel-side' : 'center-panel-overlay';
 
-  const target = document.getElementById('screen');
-  if (!target) return null;
-
   return createPortal(
     <div className={panelClass}>
       <div className="center-header">
@@ -52,6 +49,6 @@ export function CenterPanel() {
       />
       {ds.analysis && <AnalysisSection analysis={ds.analysis} />}
     </div>,
-    target,
+    document.body,
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useScrubberStore } from '../../stores/scrubber';
 import { useGraphStore } from '../../stores/graph';
 import { useScrubberPlayback } from '../../hooks/useScrubberPlayback';
@@ -27,47 +27,81 @@ export function ScrubberBar() {
     if (evt) setActiveEdge(evt.delibID);
   }, [events, setEventIndex, setActiveEdge]);
 
+  // Click on progress bar to scrub
+  const handleTrackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const idx = Math.round(pct * (events.length - 1));
+    scrubTo(Math.max(0, Math.min(events.length - 1, idx)));
+  }, [events.length, scrubTo]);
+
   const filterLabel = typeFilter ? typeFilter.toUpperCase() : 'ALL';
+  const progress = events.length > 0 && eventIndex != null
+    ? ((eventIndex + 1) / events.length) * 100
+    : 0;
+
+  // Count events by type for the progress indicator
+  const counts = useMemo(() => {
+    let positions = 0, votes = 0, analysis = 0;
+    for (const e of events) {
+      if (e.type === 'position') positions++;
+      else if (e.type === 'vote') votes++;
+      else if (e.type === 'analysis') analysis++;
+    }
+    return { positions, votes, analysis, total: events.length };
+  }, [events]);
+
+  const currentLabel = eventIndex != null && events[eventIndex]
+    ? events[eventIndex].label
+    : '';
 
   if (events.length === 0) return null;
 
   return (
     <div className="scrubber-bar" id="scrubber-bar">
-      <button className="scrubber-btn scrubber-play" onClick={togglePlay} title={playing ? 'Pause' : 'Play'}>
-        {playing ? '\u23F8' : '\u25B6'}
-      </button>
-      <button className="scrubber-btn" onClick={cycleSpeed} title="Speed">
-        {speedLabel}
-      </button>
-      <button className="scrubber-btn" onClick={cycleFilter} title="Filter">
-        {filterLabel}
-      </button>
-
-      <div className="scrubber-track">
-        {events.map((evt, i) => {
-          if (typeFilter && evt.type !== typeFilter) return null;
-          const isActive = eventIndex === i;
-          const isPast = eventIndex != null && i <= eventIndex;
-          return (
-            <button
-              key={i}
-              className={`scrubber-dot ${evt.type} ${isActive ? 'active' : ''} ${isPast ? 'past' : ''}`}
-              title={evt.label}
-              onClick={() => scrubTo(i)}
-            />
-          );
-        })}
+      {/* Controls */}
+      <div className="scrubber-controls">
+        <button className="scrubber-btn scrubber-play" onClick={togglePlay} title={playing ? 'Pause (Space)' : 'Play (Space)'}>
+          {playing ? '\u23F8' : '\u25B6'}
+        </button>
+        <button className="scrubber-btn" onClick={skipForward} title="Skip to next conversation (S)">
+          {'\u23ED'}
+        </button>
+        <button className="scrubber-btn scrubber-speed" onClick={cycleSpeed} title="Speed (1-4)">
+          {speedLabel}
+        </button>
+        <button className="scrubber-btn scrubber-filter" onClick={cycleFilter} title="Filter (F)">
+          {filterLabel}
+        </button>
       </div>
 
-      <button className="scrubber-btn" onClick={skipForward} title="Skip to next conversation">
-        {'\u23ED'}
-      </button>
-
-      <span className="scrubber-label">
-        {eventIndex != null && events[eventIndex]
-          ? events[eventIndex].label
-          : 'Ready'}
-      </span>
+      {/* Progress track with clickable bar */}
+      <div className="scrubber-track-wrapper">
+        <div className="scrubber-track" onClick={handleTrackClick}>
+          <div className="scrubber-progress" style={{ width: `${progress}%` }} />
+          {/* Event markers on the track */}
+          {events.map((evt, i) => {
+            if (typeFilter && evt.type !== typeFilter) return null;
+            const pct = (i / Math.max(events.length - 1, 1)) * 100;
+            const isActive = eventIndex === i;
+            return (
+              <div
+                key={i}
+                className={`scrubber-marker ${evt.type} ${isActive ? 'active' : ''}`}
+                style={{ left: `${pct}%` }}
+                title={evt.label}
+              />
+            );
+          })}
+        </div>
+        {/* Current event label */}
+        <div className="scrubber-info">
+          <span className="scrubber-label">{currentLabel}</span>
+          <span className="scrubber-counter">
+            {eventIndex != null ? eventIndex + 1 : 0}/{counts.total}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
