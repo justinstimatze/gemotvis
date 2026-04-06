@@ -81,7 +81,7 @@
 .agent-node-icon {
   width: 72px;
   height: 72px;
-  border: 2.5px solid var(--vis-text-dim, #888);
+  border: 2.5px solid transparent; /* agent color applied via inline style */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1574,7 +1574,6 @@
 
 /* Clean circle nodes with subtle hover ring */
 .theme-minimal .agent-node-icon {
-  border: 1.5px solid #d4d4d4;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
