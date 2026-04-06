@@ -32,7 +32,7 @@ export function CenterPanel() {
   const topic = ds.deliberation?.topic ?? '';
 
   return (
-    <div id="center-panel" className="center-panel-overlay">
+    <div className="center-panel-overlay">
       <div className="center-header">
         <span className="center-title">{topic}</span>
       </div>
