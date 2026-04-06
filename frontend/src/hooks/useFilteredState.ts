@@ -18,7 +18,11 @@ export function useFilteredState(): Record<string, DelibState> {
   const activeEdge = useGraphStore((s) => s.activeEdge);
 
   return useMemo(() => {
-    if (!scrubberEnabled || scrubberEventIndex == null) return deliberations;
+    // Skip filtering for live views (dashboard, watch, group) — show all data immediately
+    const isLive = window.location.pathname.startsWith('/dashboard') ||
+                   window.location.pathname.startsWith('/watch/') ||
+                   window.location.pathname.startsWith('/g/');
+    if (isLive || !scrubberEnabled || scrubberEventIndex == null) return deliberations;
 
     const currentEvent = scrubberEvents[scrubberEventIndex];
     const cutoffTime = currentEvent?.time ?? null;
