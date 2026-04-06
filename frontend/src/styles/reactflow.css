@@ -143,7 +143,7 @@
 }
 
 .graph-edge-path.graph-edge-hover {
-  stroke: var(--vis-amber, #0070f3);
+  stroke: var(--vis-text, #333);
   transition: stroke 0.2s, opacity 0.2s;
 }
 
