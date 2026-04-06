@@ -3,15 +3,21 @@ import { useThemeStore } from '../stores/theme';
 import { useFocusedDelib } from '../hooks/useFocusedDelib';
 import type { Theme } from '../types';
 
+function getRouteMode(): 'demo' | 'live' | 'replay' {
+  const path = window.location.pathname;
+  if (path.startsWith('/dashboard') || path.startsWith('/watch/') || path.startsWith('/g/')) return 'live';
+  return 'demo';
+}
+
 export function Header() {
   const connected = useSessionStore((s) => s.connected);
-  const mode = useSessionStore((s) => s.mode);
   const theme = useThemeStore((s) => s.activeTheme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const { ds } = useFocusedDelib();
   const topic = ds?.deliberation?.topic ?? '';
   const status = ds?.deliberation?.status ?? '';
 
+  const mode = getRouteMode();
   const statusLabels = useThemeStore((s) => s.statusLabels);
   const statusText = mode === 'demo' ? 'Demo'
     : mode === 'replay' ? 'Replay'
