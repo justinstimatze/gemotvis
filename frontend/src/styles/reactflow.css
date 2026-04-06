@@ -76,6 +76,7 @@
 /* Edge path styles */
 .graph-edge-path {
   stroke: var(--vis-text-dim, #888);
+  transition: stroke 0.3s, opacity 0.3s;
 }
 
 .graph-edge-path.graph-edge-active {
@@ -87,9 +88,35 @@
   stroke: var(--vis-panel-border, #ddd);
 }
 
-.graph-edge-count {
+/* Edge label badge (HTML via EdgeLabelRenderer) */
+.edge-label-badge {
   font-size: 9px;
-  fill: var(--vis-text-dim, #888);
+  font-weight: 600;
+  color: var(--vis-text-dim, #888);
+  background: var(--vis-panel, #fff);
+  border: 1px solid var(--vis-panel-border, #e0e0e0);
+  border-radius: 8px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* MiniMap — positioned above footer (180px) + scrubber (36px) */
+.graph-minimap {
+  border: 1px solid var(--vis-panel-border, #e0e0e0) !important;
+  border-radius: 6px !important;
+  background: var(--vis-panel, #fff) !important;
+  bottom: 230px !important;
+  right: 12px !important;
+}
+
+.theme-magi .graph-minimap {
+  background: #0a0a0a !important;
+  border-color: #ff8c00 !important;
+}
+
+.theme-gastown .graph-minimap {
+  background: #e8dcc8 !important;
+  border-color: #c4a882 !important;
 }
 
 /* Graph view container — account for header (32px) and scrubber (36px) */

@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import {
   BaseEdge,
+  EdgeLabelRenderer,
   getStraightPath,
   type EdgeProps,
   type Edge,
@@ -29,8 +30,8 @@ function DelibEdgeComponent({
   const isEmpty = (data?.posCount ?? 0) === 0;
   const posCount = data?.posCount ?? 0;
 
-  const thickness = Math.min(0.8 + posCount * 0.04, 2);
-  const opacity = isEmpty ? 0.06 : Math.min(0.08 + posCount * 0.003, 0.25);
+  const thickness = isActive ? 3 : Math.min(0.8 + posCount * 0.04, 2);
+  const opacity = isActive ? 0.5 : isEmpty ? 0.06 : Math.min(0.08 + posCount * 0.003, 0.25);
 
   const [edgePath, labelX, labelY] = getStraightPath({
     sourceX, sourceY, targetX, targetY,
@@ -48,21 +49,22 @@ function DelibEdgeComponent({
         id={id}
         path={edgePath}
         className={classes}
-        style={{
-          strokeWidth: isActive ? 3 : thickness,
-          opacity: isActive ? 0.5 : opacity,
-        }}
+        style={{ strokeWidth: thickness, opacity }}
       />
+      {/* Message count badge — only in overview mode (no active edge) */}
       {posCount > 0 && !activeEdge && (
-        <text
-          x={labelX}
-          y={labelY}
-          className="graph-edge-count"
-          textAnchor="middle"
-          dominantBaseline="central"
-        >
-          {posCount}
-        </text>
+        <EdgeLabelRenderer>
+          <div
+            className="edge-label-badge"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'none',
+            }}
+          >
+            {posCount}
+          </div>
+        </EdgeLabelRenderer>
       )}
     </>
   );
