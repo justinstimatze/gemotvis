@@ -35,14 +35,20 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
     isQuiet ? 'agent-node-quiet' : '',
   ].filter(Boolean).join(' ');
 
+  // Cluster colors — consistent across themes
+  const clusterColors = ['#0070f3', '#7c3aed', '#17b169', '#f5a623', '#ef4444', '#0091ff'];
+  const clusterColor = data.clusterId != null ? clusterColors[data.clusterId % clusterColors.length] : undefined;
+
   return (
     <div className={classes}>
-      {/* Handles centered on the icon, not the full node wrapper */}
       <Handle type="source" position={Position.Top} id="s" className="agent-handle" />
       <Handle type="target" position={Position.Top} id="t" className="agent-handle" />
       <div
         className="agent-node-icon"
-        style={{ borderColor: showActive ? color : undefined }}
+        style={{
+          borderColor: showActive ? color : clusterColor ?? undefined,
+          boxShadow: clusterColor && !showActive ? `0 0 0 3px ${clusterColor}33` : undefined,
+        }}
       >
         <span className="agent-node-letter">{name.charAt(0).toUpperCase()}</span>
       </div>

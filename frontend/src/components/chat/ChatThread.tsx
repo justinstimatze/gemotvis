@@ -27,12 +27,21 @@ export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
     return Math.max(20, speed / 200);
   }, [speed]);
 
-  // Auto-scroll to bottom when new content appears
+  // Auto-scroll: use a sentinel div at the bottom that scrolls into view
+  const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight;
-    }
+    // Scroll on position count change
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [positions.length]);
+
+  // Also scroll periodically during typing to keep up with word reveal
+  useEffect(() => {
+    if (!playing) return;
+    const interval = setInterval(() => {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 500);
+    return () => clearInterval(interval);
+  }, [playing]);
 
   // Track position count for "is new" detection
   useEffect(() => {
@@ -63,6 +72,7 @@ export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
             />
           );
         })}
+        <div ref={scrollRef} />
       </div>
     </div>
   );

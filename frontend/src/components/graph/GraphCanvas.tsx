@@ -98,12 +98,26 @@ function GraphCanvasInner() {
         sideClass = (agentIdx % 2 === 0) ? 'graph-node-left' : 'graph-node-right';
       }
 
+      // Find cluster ID from any delib's analysis that includes this agent
+      let clusterId: number | undefined;
+      for (const ds of Object.values(filteredDelibs)) {
+        const agent = ds.agents?.find(a => a.id === np.id);
+        if (agent?.cluster_id != null) { clusterId = agent.cluster_id; break; }
+      }
+
+      // Find aggregate vote direction
+      let voteDirection: -1 | 0 | 1 | undefined;
+      for (const ds of Object.values(filteredDelibs)) {
+        const vote = ds.votes?.find(v => v.agent_id === np.id);
+        if (vote) { voteDirection = vote.value as -1 | 0 | 1; break; }
+      }
+
       return {
         id: np.id,
         type: 'agent' as const,
         position: { x: np.x / 100 * CANVAS_W, y: np.y / 100 * CANVAS_H },
-        width: 110,
-        height: 103,
+        width: 130,
+        height: 120,
         data: {
           agentId: np.id,
           totalMessages,
@@ -112,6 +126,8 @@ function GraphCanvasInner() {
           agentCount: graph.nodes.length,
           isEdgeAgent,
           sideClass,
+          clusterId,
+          voteDirection,
         },
       };
     });
