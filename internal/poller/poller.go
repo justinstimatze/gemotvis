@@ -248,9 +248,16 @@ func (p *Poller) poll(ctx context.Context) {
 		}
 	}
 
+	isFirstPoll := len(p.current.Deliberations) == 0 && len(newSnapshot.Deliberations) > 0
+
 	p.mu.Lock()
 	p.current = newSnapshot
 	p.mu.Unlock()
+
+	// After first successful poll, push full snapshot so SSE clients get initial data
+	if isFirstPoll {
+		p.hub.Broadcast("snapshot", newSnapshot)
+	}
 }
 
 func (p *Poller) fetchDelibState(id string) (*DelibState, error) {

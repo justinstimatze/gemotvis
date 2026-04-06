@@ -8,8 +8,8 @@ import {
 } from '@xyflow/react';
 import { useGraphStore } from '../../stores/graph';
 import { useScrubberStore } from '../../stores/scrubber';
-// Hide badges/labels when graph is too large (dashboard with 100+ delibs)
-const MAX_NODES_FOR_BADGES = 12;
+// Only show edge badges on small graphs or when hovered/active
+const MAX_NODES_FOR_OVERVIEW_BADGES = 5;
 import { classNames } from '../../lib/helpers';
 import { updateURLParams } from '../../hooks/useURLSync';
 
@@ -47,7 +47,7 @@ function DelibEdgeComponent({
   const activeNode = useGraphStore((s) => s.activeNode);
   const animationPhase = useGraphStore((s) => s.animationPhase);
   const nodeCount = useGraphStore((s) => s.graphNodes.length);
-  const showBadges = nodeCount <= MAX_NODES_FOR_BADGES;
+  const showOverviewBadges = nodeCount <= MAX_NODES_FOR_OVERVIEW_BADGES;
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
 
   const posCount = data?.posCount ?? 0;
@@ -95,7 +95,7 @@ function DelibEdgeComponent({
         className={classes}
         style={{ strokeWidth: thickness, opacity, pointerEvents: 'none' }}
       />
-      {posCount > 0 && !activeEdge && showBadges && (
+      {posCount > 0 && !activeEdge && showOverviewBadges && (
         <EdgeLabelRenderer>
           <div
             className="edge-label-badge"
@@ -111,8 +111,23 @@ function DelibEdgeComponent({
           </div>
         </EdgeLabelRenderer>
       )}
+      {/* Show badge on hover for larger graphs */}
+      {posCount > 0 && isHovered && !showOverviewBadges && !activeEdge && (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-label-badge"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+            }}
+          >
+            {posCount}
+            {cruxCount > 0 && <span className="edge-crux-badge">{cruxCount}</span>}
+          </div>
+        </EdgeLabelRenderer>
+      )}
       {/* Crux indicator on active/hovered edges */}
-      {cruxCount > 0 && (isActive || isHovered) && showBadges && (
+      {cruxCount > 0 && (isActive || isHovered) && (
         <EdgeLabelRenderer>
           <div
             className="edge-crux-indicator"
