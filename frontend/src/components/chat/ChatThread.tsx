@@ -36,8 +36,10 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
 
   const theme = useThemeStore((s) => s.activeTheme);
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
+  // Sorted agent list matches graph node ordering for consistent colors
+  const sortedAgentIDs = useMemo(() => [...new Set([...allAgents.map(a => a.id), ...agentIDs])].sort(), [allAgents, agentIDs]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
-  const agentCount = allAgents.length || agents.length;
+  const agentCount = sortedAgentIDs.length;
   const typingSpeed = useMemo(() => Math.max(20, speed / 200), [speed]);
 
   // Auto-scroll on new positions
@@ -58,9 +60,13 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
   // Track position count for "is new" detection + set speaking agent
   const setSpeakingAgent = useGraphStore((s) => s.setSpeakingAgent);
   useEffect(() => {
-    if (positions.length > prevCountRef.current && playing && animationPhase === 'ready') {
+    const isNewPosition = positions.length > prevCountRef.current;
+    // Only pulse when actively typing a new message (not when scrubbing reveals old ones)
+    if (isNewPosition && playing && animationPhase === 'ready') {
       const newest = positions[positions.length - 1];
       if (newest) setSpeakingAgent(newest.agent_id);
+    } else if (!playing) {
+      setSpeakingAgent(null);
     }
     prevCountRef.current = positions.length;
   }, [positions.length, playing, animationPhase, positions, setSpeakingAgent]);
@@ -84,11 +90,11 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
     <div className="center-content" ref={contentRef}>
       <div className="chat-thread">
         {positions.map((p, idx) => {
-          const agentIdx = agentIDs.indexOf(p.agent_id);
-          const isLeft = agentIdx % 2 === 0;
+          const isLeft = agentIDs.indexOf(p.agent_id) % 2 === 0;
           const isNewest = idx === positions.length - 1;
           const shouldType = isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
-          const color = agentColor(agentIdx >= 0 ? agentIdx : 0, agentCount, theme);
+          const colorIdx = sortedAgentIDs.indexOf(p.agent_id);
+          const color = agentColor(colorIdx >= 0 ? colorIdx : 0, agentCount, theme);
 
           return (
             <div
