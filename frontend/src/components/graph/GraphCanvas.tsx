@@ -16,6 +16,7 @@ import { AgentNode, type AgentNodeData } from './AgentNode';
 import { DelibEdge } from './DelibEdge';
 import { CenterPanel } from './CenterPanel';
 import { WorldMap } from './WorldMap';
+import { updateURLParams } from '../../hooks/useURLSync';
 
 const nodeTypes = { agent: AgentNode };
 const edgeTypes = { delib: DelibEdge };
@@ -94,6 +95,7 @@ function GraphCanvasInner() {
         const events = useScrubberStore.getState().events;
         const idx = events.findIndex(e => e.delibID === nextDelib);
         if (idx >= 0) useScrubberStore.getState().setEventIndex(idx);
+        updateURLParams();
         return;
       }
     }

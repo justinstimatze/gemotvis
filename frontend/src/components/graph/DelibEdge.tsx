@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import { useGraphStore } from '../../stores/graph';
 import { useScrubberStore } from '../../stores/scrubber';
+import { updateURLParams } from '../../hooks/useURLSync';
 
 export interface DelibEdgeData extends Record<string, unknown> {
   delibID: string;
@@ -60,6 +61,7 @@ function DelibEdgeComponent({
     const events = useScrubberStore.getState().events;
     const idx = events.findIndex(e => e.delibID === data.delibID);
     if (idx >= 0) useScrubberStore.getState().setEventIndex(idx);
+    updateURLParams();
   }, [data?.delibID, setActiveEdge]);
 
   const classes = [

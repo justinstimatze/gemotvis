@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useGraphStore } from '../../stores/graph';
 import { useFilteredState } from '../../hooks/useFilteredState';
@@ -24,6 +24,14 @@ export function CenterPanel() {
     return agents;
   }, [rawDelibs]);
 
+  // Hooks must be called before any early return
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const toggleSearch = useCallback(() => {
+    setSearchOpen(o => !o);
+    if (searchOpen) setSearchQuery('');
+  }, [searchOpen]);
+
   if (!activeEdge || animationPhase !== 'ready' || !ds) return null;
 
   const positions = ds.positions ?? [];
@@ -31,7 +39,6 @@ export function CenterPanel() {
   const topic = ds.deliberation?.topic ?? '';
 
   // Center panel for 2-4 agents, side panel for 5+
-  // Use raw (unfiltered) agent count to decide layout
   const rawDs = rawDelibs[activeEdge];
   const totalAgents = rawDs?.agents?.length ?? agents.length;
   const useSidePanel = totalAgents > 4;
@@ -41,11 +48,30 @@ export function CenterPanel() {
     <div className={panelClass}>
       <div className="center-header">
         <span className="center-title">{topic}</span>
+        <button className="center-search-btn" onClick={toggleSearch} title="Search messages (/)">
+          &#128269;
+        </button>
       </div>
+      {searchOpen && (
+        <div className="center-search-bar">
+          <input
+            className="center-search-input"
+            type="text"
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+          {searchQuery && (
+            <button className="center-search-clear" onClick={() => setSearchQuery('')}>&times;</button>
+          )}
+        </div>
+      )}
       <ChatThread
         positions={positions}
         agents={agents}
         allAgents={allAgents}
+        searchQuery={searchQuery}
       />
       {ds.analysis && <AnalysisSection analysis={ds.analysis} />}
     </div>,

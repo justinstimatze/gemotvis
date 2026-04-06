@@ -105,6 +105,20 @@ export function useKeyboardShortcuts() {
           break;
         }
 
+        case '/': {
+          // Focus search input if it exists
+          const searchInput = document.querySelector('.center-search-input') as HTMLInputElement;
+          const searchBtn = document.querySelector('.center-search-btn') as HTMLButtonElement;
+          if (searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+          } else if (searchBtn) {
+            e.preventDefault();
+            searchBtn.click();
+          }
+          break;
+        }
+
         case '1': scrub.setSpeedByIndex(0); break;
         case '2': scrub.setSpeedByIndex(1); break;
         case '3': scrub.setSpeedByIndex(2); break;

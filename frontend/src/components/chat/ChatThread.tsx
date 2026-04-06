@@ -9,9 +9,10 @@ interface ChatThreadProps {
   positions: PositionType[];
   agents: AgentInfo[];
   allAgents: AgentInfo[]; // from all deliberations, for mention highlighting
+  searchQuery?: string;
 }
 
-export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
+export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatThreadProps) {
   const animationPhase = useGraphStore((s) => s.animationPhase);
   const activeNode = useGraphStore((s) => s.activeNode);
   const playing = useScrubberStore((s) => s.playing);
@@ -77,9 +78,23 @@ export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
           const isNewlyAdded = idx >= prevCountRef.current;
           const shouldType = isNewest && isNewlyAdded && playing && animationPhase === 'ready';
           const isHighlighted = activeNode === p.agent_id;
+          const query = searchQuery?.toLowerCase() ?? '';
+          const matchesSearch = query && (
+            p.content.toLowerCase().includes(query) ||
+            p.agent_id.toLowerCase().includes(query)
+          );
+          const dimmedBySearch = query && !matchesSearch;
 
           return (
-            <div key={p.position_id} ref={(el) => setBubbleRef(idx, el)} className={isHighlighted ? 'chat-bubble-highlighted' : ''}>
+            <div
+              key={p.position_id}
+              ref={(el) => setBubbleRef(idx, el)}
+              className={[
+                isHighlighted && 'chat-bubble-highlighted',
+                matchesSearch && 'chat-bubble-search-match',
+                dimmedBySearch && 'chat-bubble-search-dim',
+              ].filter(Boolean).join(' ')}
+            >
               <ChatBubble
                 agentId={p.agent_id}
                 content={p.content}
