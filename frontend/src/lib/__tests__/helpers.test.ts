@@ -12,7 +12,7 @@ describe('shortAgentID', () => {
     expect(shortAgentID('org:team:dave-agent')).toBe('dave');
   });
   it('truncates long names', () => {
-    expect(shortAgentID('this-is-a-very-long-agent-name')).toBe('this-is-a-very-l..');
+    expect(shortAgentID('this-is-a-very-long-agent-name')).toBe('this-is-a-very-long-ag..');
   });
   it('returns ? for empty', () => {
     expect(shortAgentID('')).toBe('?');

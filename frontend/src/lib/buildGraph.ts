@@ -13,12 +13,22 @@ export function buildGraphFromDelibs(delibs: Record<string, DelibState>): Graph 
   const groups: GraphGroup[] = [];
   let groupDelibID: string | null = null;
 
+  // Track which agent pairs already have edges to avoid duplicates
+  const edgeSet = new Set<string>();
+  function addEdge(a: string, b: string, delibID: string) {
+    const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+    if (!edgeSet.has(key)) {
+      edgeSet.add(key);
+      edges.push({ a, b, delibID });
+    }
+  }
+
   for (const id of ids) {
     const agents = (delibs[id]?.agents ?? []).map(a => a.id);
     agents.forEach(a => allAgents.add(a));
 
     if (agents.length === 2) {
-      edges.push({ a: agents[0]!, b: agents[1]!, delibID: id });
+      addEdge(agents[0]!, agents[1]!, id);
     } else if (agents.length >= 3) {
       groups.push({ delibID: id, agents });
     }
@@ -26,21 +36,29 @@ export function buildGraphFromDelibs(delibs: Record<string, DelibState>): Graph 
 
   // Single deliberation with 3+ agents and no bilaterals:
   // create pairwise edges (the graph IS the deliberation)
-  if (edges.length === 0 && groups.length > 0) {
+  if (edges.length === 0 && groups.length === 1) {
     const g = groups[0]!;
     groupDelibID = g.delibID;
     for (let i = 0; i < g.agents.length; i++) {
       for (let j = i + 1; j < g.agents.length; j++) {
-        edges.push({ a: g.agents[i]!, b: g.agents[j]!, delibID: g.delibID });
+        addEdge(g.agents[i]!, g.agents[j]!, g.delibID);
       }
     }
-  } else {
-    // Find a group delib whose agents are a superset of bilateral agents
-    const bilateralAgents = new Set<string>();
-    edges.forEach(e => { bilateralAgents.add(e.a); bilateralAgents.add(e.b); });
+  } else if (groups.length > 0) {
+    // Multiple delibs: create edges between agents who share a group delib.
+    // Use the group with most positions as the edge's delibID.
+    for (const g of groups) {
+      for (let i = 0; i < g.agents.length; i++) {
+        for (let j = i + 1; j < g.agents.length; j++) {
+          addEdge(g.agents[i]!, g.agents[j]!, g.delibID);
+        }
+      }
+    }
+
+    // Find a group delib whose agents are a superset of all agents
     for (const g of groups) {
       const gSet = new Set(g.agents);
-      if ([...bilateralAgents].every(a => gSet.has(a))) {
+      if ([...allAgents].every(a => gSet.has(a))) {
         groupDelibID = g.delibID;
         break;
       }

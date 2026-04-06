@@ -25,12 +25,12 @@ describe('buildGraphFromDelibs', () => {
     expect(g.groupDelibID).toBe('d1');
   });
 
-  it('mixed bilaterals and group finds superset group', () => {
+  it('mixed bilaterals and group creates edges from both', () => {
     const g = buildGraphFromDelibs({
       bi: makeDelib('bi', ['a', 'b']),
       group: makeDelib('group', ['a', 'b', 'c']),
     });
-    expect(g.edges).toHaveLength(1); // only the bilateral
+    expect(g.edges).toHaveLength(3); // a-b (bilateral), a-c, b-c (from group)
     expect(g.groupDelibID).toBe('group');
   });
 });
