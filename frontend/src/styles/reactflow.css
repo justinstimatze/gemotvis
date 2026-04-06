@@ -110,7 +110,7 @@
 }
 
 .agent-node-active .agent-node-icon {
-  box-shadow: 0 0 12px var(--vis-amber, #0070f3);
+  box-shadow: 0 0 12px rgba(0,0,0,0.15);
 }
 
 .agent-node-name {
@@ -1279,18 +1279,9 @@
   color: #ff8c00;
 }
 
-/* Active left node: green phosphor */
-.theme-magi .agent-node-active.graph-node-left .agent-node-icon {
-  border-color: #00ff41;
-  box-shadow: 0 0 20px rgba(0,255,65,0.5), 0 0 40px rgba(0,255,65,0.2),
-              inset 0 0 10px rgba(0,255,65,0.15);
-}
-
-/* Active right node: cyan phosphor */
-.theme-magi .agent-node-active.graph-node-right .agent-node-icon {
-  border-color: #00ffff;
-  box-shadow: 0 0 20px rgba(0,255,255,0.5), 0 0 40px rgba(0,255,255,0.2),
-              inset 0 0 10px rgba(0,255,255,0.15);
+/* Active nodes: CRT glow using agent's own color */
+.theme-magi .agent-node-active .agent-node-icon {
+  box-shadow: 0 0 20px rgba(255,140,0,0.3), 0 0 40px rgba(255,140,0,0.1);
 }
 
 .theme-magi .agent-node-name {
@@ -1443,12 +1434,7 @@
 }
 
 .theme-gastown .agent-node-active .agent-node-icon {
-  background: linear-gradient(135deg, #cd7f32 0%, #b8860b 100%);
   box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
-}
-
-.theme-gastown .agent-node-active .agent-node-letter {
-  color: #f5e6d3;
 }
 
 .theme-gastown .agent-node:hover .agent-node-icon {
@@ -1593,19 +1579,11 @@
 }
 
 .theme-minimal .agent-node:hover .agent-node-icon {
-  box-shadow: 0 0 0 3px rgba(0,112,243,0.12), 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-/* Active left: blue ring + shadow */
-.theme-minimal .agent-node-active.graph-node-left .agent-node-icon {
-  border-color: #0070f3;
-  box-shadow: 0 0 0 3px rgba(0,112,243,0.2), 0 2px 8px rgba(0,112,243,0.15);
-}
-
-/* Active right: purple ring + shadow */
-.theme-minimal .agent-node-active.graph-node-right .agent-node-icon {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124,58,237,0.2), 0 2px 8px rgba(124,58,237,0.15);
+.theme-minimal .agent-node-active .agent-node-icon {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* Text glow on light background */
