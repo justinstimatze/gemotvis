@@ -9,6 +9,7 @@ interface ChatBubbleProps {
   shouldType: boolean;
   agentNames: string[];
   typingSpeed: number;
+  agentColor?: string;
   onTypingComplete?: () => void;
 }
 
@@ -56,13 +57,17 @@ function ChatBubbleComponent({
   shouldType,
   agentNames,
   typingSpeed,
+  agentColor,
   onTypingComplete,
 }: ChatBubbleProps) {
   const name = shortAgentID(agentId);
 
   return (
-    <div className={`chat-bubble ${isLeft ? 'chat-left' : 'chat-right'} ${shouldType ? 'chat-new' : ''}`}>
-      <div className="chat-name">{name}</div>
+    <div
+      className={`chat-bubble ${isLeft ? 'chat-left' : 'chat-right'} ${shouldType ? 'chat-new' : ''}`}
+      style={agentColor ? { borderLeftColor: agentColor, borderLeftWidth: 3, borderLeftStyle: 'solid' } : undefined}
+    >
+      <div className="chat-name" style={agentColor ? { color: agentColor } : undefined}>{name}</div>
       <div className="chat-text">
         {shouldType ? (
           <TypeReveal

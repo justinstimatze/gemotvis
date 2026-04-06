@@ -1,8 +1,10 @@
 import { useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Position as PositionType, AgentInfo } from '../../types';
 import { collectAgentNames } from '../../lib/helpers';
+import { agentColor } from '../../lib/color';
 import { ChatBubble } from './ChatBubble';
 import { useGraphStore } from '../../stores/graph';
+import { useThemeStore } from '../../stores/theme';
 import { useScrubberStore } from '../../stores/scrubber';
 
 interface ChatThreadProps {
@@ -32,8 +34,10 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
     else bubbleRefs.current.delete(idx);
   }, []);
 
+  const theme = useThemeStore((s) => s.activeTheme);
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
+  const agentCount = allAgents.length || agents.length;
   const typingSpeed = useMemo(() => Math.max(20, speed / 200), [speed]);
 
   // Auto-scroll on new positions
@@ -80,9 +84,11 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
     <div className="center-content" ref={contentRef}>
       <div className="chat-thread">
         {positions.map((p, idx) => {
-          const isLeft = agentIDs.indexOf(p.agent_id) % 2 === 0;
+          const agentIdx = agentIDs.indexOf(p.agent_id);
+          const isLeft = agentIdx % 2 === 0;
           const isNewest = idx === positions.length - 1;
           const shouldType = isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
+          const color = agentColor(agentIdx >= 0 ? agentIdx : 0, agentCount, theme);
 
           return (
             <div
@@ -100,6 +106,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
                 shouldType={shouldType}
                 agentNames={agentNames}
                 typingSpeed={typingSpeed}
+                agentColor={color}
                 onTypingComplete={shouldType ? () => setSpeakingAgent(null) : undefined}
               />
             </div>
