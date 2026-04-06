@@ -32,7 +32,7 @@ function GraphCanvasInner() {
   const activeEdge = useGraphStore((s) => s.activeEdge);
   const theme = useThemeStore((s) => s.activeTheme);
   const { fitView } = useReactFlow();
-  const prevActiveEdge = useRef(activeEdge);
+  // (prevActiveEdge removed — fitView now triggers on node count change instead)
   useAnimationPhase();
 
   // Build graph from the active delib (or all delibs if no active edge)
@@ -59,18 +59,6 @@ function GraphCanvasInner() {
     if (edge) return computeFocusedLayout(layoutResult.positions, edge.a, edge.b);
     return layoutResult.positions;
   }, [layoutResult.positions, activeEdge, graph.edges]);
-
-  // fitView when active delib changes (smooth camera reframe)
-  useEffect(() => {
-    if (activeEdge !== prevActiveEdge.current) {
-      prevActiveEdge.current = activeEdge;
-      // Delay to let React Flow update node positions first
-      const timer = setTimeout(() => {
-        fitView({ padding: 0.2, duration: 800 });
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [activeEdge, fitView]);
 
   // Build React Flow nodes
   const rfNodes = useMemo((): Node<AgentNodeData>[] => {
@@ -141,6 +129,18 @@ function GraphCanvasInner() {
     });
   }, [graph.edges, filteredDelibs]);
 
+  // fitView when the number of nodes changes (different delib = different agent count)
+  const prevNodeCount = useRef(rfNodes.length);
+  useEffect(() => {
+    if (rfNodes.length !== prevNodeCount.current) {
+      prevNodeCount.current = rfNodes.length;
+      const timer = setTimeout(() => {
+        fitView({ padding: 0.35, duration: 600 });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [rfNodes.length, fitView]);
+
   // MiniMap node color based on agent color
   const miniMapNodeColor = useCallback((node: Node<AgentNodeData>) => {
     return agentColor(node.data.agentIndex, node.data.agentCount, theme);
@@ -154,7 +154,7 @@ function GraphCanvasInner() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.15 }}
+        fitViewOptions={{ padding: 0.35 }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
