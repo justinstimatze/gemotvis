@@ -139,6 +139,11 @@ export function App() {
   const showApp = isDemo() || isWatchPath() || isDashboardPath();
   useKeyboardShortcuts();
 
+  // Apply theme class to body for portaled elements (scrubber, footer, panels)
+  useEffect(() => {
+    document.body.className = `theme-${theme}`;
+  }, [theme]);
+
   // Show landing page if not demo/watch/dashboard
   if (!showApp && !bootDone) {
     return (
