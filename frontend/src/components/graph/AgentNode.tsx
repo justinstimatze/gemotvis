@@ -60,9 +60,10 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
           width: iconSize,
           height: iconSize,
           fontSize,
-          borderColor: showActive ? color : clusterColor ?? undefined,
-          boxShadow: clusterColor && !showActive ? `0 0 0 3px ${clusterColor}33` : undefined,
-        }}
+          borderColor: color,
+          boxShadow: clusterColor ? `0 0 0 3px ${clusterColor}33` : undefined,
+          '--agent-color': color,
+        } as React.CSSProperties}
       >
         <span className="agent-node-letter">{name.charAt(0).toUpperCase()}</span>
       </div>

@@ -38,6 +38,10 @@ function GraphCanvasInner() {
     return buildGraphFromDelibs(delibs);
   }, [rawDelibs, activeEdge]);
 
+  // Sync graph node list to store for consistent colors in chat
+  const setGraphNodes = useGraphStore((s) => s.setGraphNodes);
+  useEffect(() => { setGraphNodes(graph.nodes); }, [graph.nodes, setGraphNodes]);
+
   // Compute and apply layout
   const layoutResult = useMemo(() => getGraphNodePositions(graph, rawDelibs), [graph, rawDelibs]);
 

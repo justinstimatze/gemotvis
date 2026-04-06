@@ -36,10 +36,10 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
 
   const theme = useThemeStore((s) => s.activeTheme);
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
-  // Sorted agent list matches graph node ordering for consistent colors
-  const sortedAgentIDs = useMemo(() => [...new Set([...allAgents.map(a => a.id), ...agentIDs])].sort(), [allAgents, agentIDs]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
-  const agentCount = sortedAgentIDs.length;
+  // Read graph node list from store — exact same ordering as AgentNode colors
+  const graphNodes = useGraphStore((s) => s.graphNodes);
+  const agentCount = graphNodes.length;
   const typingSpeed = useMemo(() => Math.max(20, speed / 200), [speed]);
 
   // Auto-scroll on new positions
@@ -93,7 +93,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
           const isLeft = agentIDs.indexOf(p.agent_id) % 2 === 0;
           const isNewest = idx === positions.length - 1;
           const shouldType = isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
-          const colorIdx = sortedAgentIDs.indexOf(p.agent_id);
+          const colorIdx = graphNodes.indexOf(p.agent_id);
           const color = agentColor(colorIdx >= 0 ? colorIdx : 0, agentCount, theme);
 
           return (

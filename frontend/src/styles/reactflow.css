@@ -30,8 +30,8 @@
 }
 
 @keyframes speakingPulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--vis-amber, rgba(0,112,243,0.4)); }
-  50% { box-shadow: 0 0 0 8px var(--vis-amber, rgba(0,112,243,0)); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--agent-color, rgba(0,112,243,0.4)); }
+  50% { box-shadow: 0 0 0 10px transparent; }
 }
 
 .agent-tooltip {
