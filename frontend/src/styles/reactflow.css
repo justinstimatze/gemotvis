@@ -18,27 +18,36 @@
   .react-flow__node { transition: none !important; }
 }
 
-/* Agent node — flex column to stack icon, name, stats vertically */
-.agent-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Agent node — override old base.css/themes.css card styles */
+.react-flow .agent-node {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
   text-align: center;
   cursor: pointer;
   min-width: 80px;
-  transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.6s ease;
+  position: static !important;
+  transform: none !important;
+  width: auto !important;
+  height: auto !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  filter: none !important;
+  transition: opacity 0.6s ease;
 }
 
-.agent-node:hover {
-  transform: scale(1.08);
+.react-flow .agent-node:hover {
+  opacity: 0.9;
 }
 
-.agent-node-active {
-  transform: scale(1.5);
+.react-flow .agent-node-active {
+  /* Active nodes handled by icon glow, not scale (scale breaks React Flow positioning) */
 }
 
-.agent-node-quiet {
+.react-flow .agent-node-quiet {
   opacity: 0.4;
 }
 
