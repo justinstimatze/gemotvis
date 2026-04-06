@@ -52,6 +52,16 @@ export function useSSE(config: SSEConfig = {}) {
           // Only update store if we got actual data (avoid clearing existing state)
           if (Object.keys(delibs).length > 0) {
             setDeliberations(delibs);
+            // In live mode, auto-focus the most active bilateral on initial load
+            if (isLive && !useGraphStore.getState().activeEdge) {
+              let bestId = '';
+              let bestCount = 0;
+              for (const [id, ds] of Object.entries(delibs)) {
+                const count = ds.positions?.length ?? 0;
+                if (count > bestCount) { bestCount = count; bestId = id; }
+              }
+              if (bestId) useGraphStore.getState().setActiveEdge(bestId);
+            }
           }
           // Retry if empty and we haven't given up
           if (Object.keys(delibs).length === 0 && retries < 10) {
@@ -92,6 +102,16 @@ export function useSSE(config: SSEConfig = {}) {
             // Don't replace existing data with empty snapshot (avoids flash on reconnect)
             if (Object.keys(incoming).length > 0) {
               setDeliberations(incoming);
+              // In live mode, auto-focus the most active bilateral on initial load
+              if (isLive && !useGraphStore.getState().activeEdge) {
+                let bestId = '';
+                let bestCount = 0;
+                for (const [id, ds] of Object.entries(incoming)) {
+                  const count = ds.positions?.length ?? 0;
+                  if (count > bestCount) { bestCount = count; bestId = id; }
+                }
+                if (bestId) useGraphStore.getState().setActiveEdge(bestId);
+              }
             }
             break;
           }
