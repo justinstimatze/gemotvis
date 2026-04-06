@@ -10,6 +10,12 @@
   font-size: inherit;
   width: auto !important;
   height: auto !important;
+  /* Animate position changes — React Flow sets transform: translate(x, y) */
+  transition: transform 2.5s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__node { transition: none !important; }
 }
 
 /* Agent node */

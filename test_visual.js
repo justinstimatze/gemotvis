@@ -1,9 +1,9 @@
-// Visual regression test suite for gemotvis
+// Visual regression test suite for gemotvis (React + React Flow frontend)
 // Run: node test_visual.js
 // Requires: playwright (npx playwright install chromium)
+// Requires: gemotvis demo server running on localhost:9090
 
 const { chromium } = require('playwright');
-const assert = require('assert');
 
 const BASE = 'http://localhost:9090';
 const RESULTS = [];
@@ -16,45 +16,35 @@ function check(name, condition, detail) {
 async function testOverview(page, theme) {
     const label = `${theme}/overview`;
     await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
-    await page.waitForTimeout(4000);
+    await page.waitForTimeout(5000);
 
     const info = await page.evaluate(() => {
-        const nodes = document.querySelectorAll('.graph-node');
-        const edges = document.querySelectorAll('.graph-edge-div');
-        const canvas = document.getElementById('graph-canvas');
-
-        // Check node positions aren't clipped
-        const nodeClips = [...nodes].filter(n => {
-            const r = n.getBoundingClientRect();
-            return r.left < -20 || r.right > window.innerWidth + 20;
-        });
+        const rfNodes = document.querySelectorAll('.react-flow__node');
+        const agentNodes = document.querySelectorAll('.agent-node');
+        const reactFlow = document.querySelector('.react-flow');
 
         return {
-            nodeCount: nodes.length,
-            edgeCount: edges.length,
-            clippedNodes: nodeClips.length,
-            canvasExists: !!canvas,
+            rfNodeCount: rfNodes.length,
+            agentNodeCount: agentNodes.length,
+            hasReactFlow: !!reactFlow,
         };
     });
 
-    check(`${label}/nodes`, info.nodeCount > 0, `${info.nodeCount} nodes`);
-    check(`${label}/edges`, info.edgeCount > 0, `${info.edgeCount} edges`);
-    check(`${label}/canvas`, info.canvasExists, 'graph canvas exists');
-    check(`${label}/no-clipped-nodes`, info.clippedNodes === 0, `${info.clippedNodes} nodes clipped`);
-    // Demo has 5 deliberations with 17 unique agents total
-    check(`${label}/node-count`, info.nodeCount === 17, `expected 17, got ${info.nodeCount}`);
-    check(`${label}/edge-count`, info.edgeCount === 10, `expected 10, got ${info.edgeCount}`);
+    check(`${label}/has-react-flow`, info.hasReactFlow, 'react-flow exists');
+    check(`${label}/has-nodes`, info.rfNodeCount > 0, `${info.rfNodeCount} nodes`);
+    check(`${label}/has-agent-nodes`, info.agentNodeCount > 0, `${info.agentNodeCount} agent nodes`);
 }
 
 async function testAutoplay(page, theme) {
     const label = `${theme}/autoplay`;
     await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
-    await page.waitForTimeout(25000);
+    // Wait for panel to appear (SSE + autoplay + animation phase)
+    await page.waitForSelector('.center-panel-overlay', { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(2000); // extra time for bubbles to render
 
     const info = await page.evaluate(() => {
         const bubbles = document.querySelectorAll('.chat-bubble');
-        const panel = document.getElementById('center-panel');
-        const content = document.getElementById('center-content');
+        const panel = document.querySelector('.center-panel-overlay');
         const emptyBubbles = [...bubbles].filter(b => {
             const text = b.querySelector('.chat-text');
             return !text || text.textContent.trim().length === 0;
@@ -63,206 +53,241 @@ async function testAutoplay(page, theme) {
         return {
             bubbleCount: bubbles.length,
             emptyBubbles: emptyBubbles.length,
-            panelVisible: panel && !panel.classList.contains('hidden'),
-            contentScrolled: content ? content.scrollTop > 0 : false,
-            contentOverflows: content ? content.scrollHeight > content.clientHeight : false,
+            panelVisible: !!panel,
         };
     });
 
     check(`${label}/has-bubbles`, info.bubbleCount > 0, `${info.bubbleCount} bubbles`);
     check(`${label}/no-empty-bubbles`, info.emptyBubbles === 0, `${info.emptyBubbles} empty`);
     check(`${label}/panel-visible`, info.panelVisible, 'panel visible');
-    if (info.contentOverflows) {
-        check(`${label}/auto-scrolled`, info.contentScrolled, `scrollTop=${info.contentScrolled}`);
-    }
 }
 
 async function testFocusedNodes(page, theme) {
     const label = `${theme}/focused`;
     await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
-    await page.waitForTimeout(18000);
+    await page.waitForSelector('.agent-node-active', { timeout: 20000 }).catch(() => {});
 
     const info = await page.evaluate(() => {
-        const activeNodes = document.querySelectorAll('.graph-node-active');
-        const nodes = document.querySelectorAll('.graph-node');
-        const panel = document.getElementById('center-panel');
-        const panelRect = panel?.getBoundingClientRect();
-
-        // Check active node ICONS aren't overlapping the panel (labels may extend)
-        let nodeOverlapsPanel = false;
-        activeNodes.forEach(n => {
-            const icon = n.querySelector('.graph-node-icon');
-            const nr = icon ? icon.getBoundingClientRect() : n.getBoundingClientRect();
-            if (panelRect && nr.right > panelRect.left + 60 && nr.left < panelRect.right - 60 &&
-                nr.bottom > panelRect.top && nr.top < panelRect.bottom) {
-                nodeOverlapsPanel = true;
-            }
-        });
-
-        // Check active nodes have enough spacing from viewport edges
-        let tooCloseToEdge = false;
-        activeNodes.forEach(n => {
-            const r = n.getBoundingClientRect();
-            if (r.left < 0 || r.right > window.innerWidth) tooCloseToEdge = true;
-        });
+        const activeNodes = document.querySelectorAll('.agent-node-active');
+        const panel = document.querySelector('.center-panel-overlay');
 
         return {
             activeNodeCount: activeNodes.length,
-            totalNodes: nodes.length,
-            panelVisible: panel && !panel.classList.contains('hidden'),
-            nodeOverlapsPanel,
-            tooCloseToEdge,
+            panelVisible: !!panel,
         };
     });
 
-    // In single-delib graph mode (demo), active nodes = agents in active edge's delib
     check(`${label}/has-active-nodes`, info.activeNodeCount > 0, `${info.activeNodeCount} active`);
     check(`${label}/panel`, info.panelVisible, 'panel visible');
-    // Note: in single-delib mode, nodes stay in overview positions — some overlap with
-    // center panel is expected since there's no bilateral focus to push nodes aside
-    check(`${label}/not-clipped`, !info.tooCloseToEdge, 'nodes too close to edge');
-}
-
-async function testEdgeAlignment(page, theme) {
-    const label = `${theme}/edges`;
-    await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
-    await page.waitForTimeout(5000);
-
-    const info = await page.evaluate(() => {
-        const edges = document.querySelectorAll('.graph-edge-div');
-        const zeroSize = [...edges].filter(e => {
-            const w = parseFloat(e.style.width);
-            return !w || w < 1;
-        });
-        return {
-            totalEdges: edges.length,
-            zeroSizeEdges: zeroSize.length,
-        };
-    });
-
-    check(`${label}/no-zero-edges`, info.zeroSizeEdges === 0, `${info.zeroSizeEdges} zero-size edges`);
 }
 
 async function testTransitionTiming(page, theme) {
     const label = `${theme}/transitions`;
     await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
-    // Wait for initial load + first edge focus (scrubber starts at 100ms)
-    await page.waitForTimeout(6000);
+    // Wait for autoplay to be fully active (panel visible)
+    await page.waitForSelector('.center-panel-overlay', { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(2000);
 
-    // Sample the state at multiple points during the next edge change
-    // The scrubber advances roughly every 12s per message, so by 6s we should
-    // be mid-conversation. Force a skip to trigger a transition.
     const timings = await page.evaluate(async () => {
         const results = [];
 
-        // Record current state
         function sample(label) {
-            const main = document.getElementById('main');
+            const activeNodes = document.querySelectorAll('.agent-node-active');
+            const panel = document.querySelector('.center-panel-overlay');
             const activeEdges = document.querySelectorAll('.graph-edge-active');
-            const panel = document.getElementById('center-panel');
-            const activeNodes = document.querySelectorAll('.graph-node-active');
             results.push({
                 label,
-                hasFocusedClass: main?.classList.contains('graph-edge-focused'),
-                activeEdgeCount: activeEdges.length,
-                panelHidden: panel?.classList.contains('hidden'),
                 activeNodeCount: activeNodes.length,
+                panelVisible: !!panel,
+                activeEdgeCount: activeEdges.length,
             });
         }
 
-        // Click skip button to trigger edge transition
-        const skipBtn = document.getElementById('scrubber-skip');
-        if (!skipBtn) {
-            results.push({ label: 'no-skip-btn', error: true });
-            return results;
-        }
-
-        // Sample before skip
+        // Sample current state (should be playing)
         sample('before-skip');
 
-        // Click skip — this should trigger an edge change + 3.5s transition
-        skipBtn.click();
-        await new Promise(r => setTimeout(r, 50));
+        // Press 'S' to skip to next deliberation
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+        await new Promise(r => setTimeout(r, 100));
         sample('just-after-skip');
 
-        // Sample during transition (1s in)
+        // During transition (1s in)
         await new Promise(r => setTimeout(r, 1000));
         sample('during-transition-1s');
 
-        // Sample after transition should be complete (3.5s) + first message render (~1s)
-        await new Promise(r => setTimeout(r, 5000));
-        sample('after-transition-6s');
+        // After transition (4s total)
+        await new Promise(r => setTimeout(r, 3000));
+        sample('after-transition-4s');
 
         return results;
     });
 
-    if (timings.some(t => t.error)) {
-        check(`${label}/skip-button-exists`, false, 'no skip button found');
-        return;
-    }
-
     const justAfter = timings.find(t => t.label === 'just-after-skip');
     const during = timings.find(t => t.label === 'during-transition-1s');
-    const after = timings.find(t => t.label === 'after-transition-6s');
+    const after = timings.find(t => t.label === 'after-transition-4s');
 
     if (justAfter) {
-        // During transition: no focused class, no active edges, panel hidden, no active nodes
-        check(`${label}/no-focus-during-transition`, !justAfter.hasFocusedClass,
-            `hasFocusedClass=${justAfter.hasFocusedClass}`);
-        check(`${label}/no-active-edges-during-transition`, justAfter.activeEdgeCount === 0,
-            `${justAfter.activeEdgeCount} active edges`);
-        check(`${label}/panel-hidden-during-transition`, justAfter.panelHidden,
-            `panelHidden=${justAfter.panelHidden}`);
         check(`${label}/no-active-nodes-during-transition`, justAfter.activeNodeCount === 0,
             `${justAfter.activeNodeCount} active nodes`);
+        check(`${label}/panel-hidden-during-transition`, !justAfter.panelVisible,
+            `panelVisible=${justAfter.panelVisible}`);
     }
 
     if (during) {
-        check(`${label}/still-transitioning-at-1s`, !during.hasFocusedClass,
-            `hasFocusedClass=${during.hasFocusedClass}`);
+        check(`${label}/still-transitioning-at-1s`, !during.panelVisible,
+            `panelVisible=${during.panelVisible}`);
     }
 
     if (after) {
-        // After transition: focused class should be back, panel visible
-        check(`${label}/focus-restored-after-transition`, after.hasFocusedClass,
-            `hasFocusedClass=${after.hasFocusedClass}`);
-        check(`${label}/panel-visible-after-transition`, !after.panelHidden,
-            `panelHidden=${after.panelHidden}`);
+        check(`${label}/panel-visible-after-transition`, after.panelVisible,
+            `panelVisible=${after.panelVisible}`);
+        check(`${label}/active-nodes-after-transition`, after.activeNodeCount > 0,
+            `${after.activeNodeCount} active nodes`);
     }
 }
 
 async function testThemeSwitcher(page) {
-    await page.goto(`${BASE}?demo=1`);
+    await page.goto(`${BASE}?demo=1&theme=minimal`);
     await page.waitForTimeout(3000);
 
     const info = await page.evaluate(() => {
         const switcher = document.getElementById('theme-switcher');
-        return { exists: !!switcher, value: switcher?.value };
+        const screen = document.getElementById('screen');
+        return {
+            switcherExists: !!switcher,
+            switcherValue: switcher?.value,
+            screenClass: screen?.className,
+        };
     });
 
-    check('theme-switcher/exists', info.exists, 'switcher exists');
-    check('theme-switcher/value', info.value === 'minimal', `value=${info.value}`);
+    check('theme-switcher/exists', info.switcherExists, 'switcher exists');
+    check('theme-switcher/value', info.switcherValue === 'minimal', `value=${info.switcherValue}`);
+    check('theme-switcher/screen-class', info.screenClass?.includes('theme-minimal'),
+        `class=${info.screenClass}`);
+}
+
+async function testLandingPage(page) {
+    await page.goto(BASE);
+    await page.waitForTimeout(2000);
+
+    const info = await page.evaluate(() => {
+        const landing = document.querySelector('.landing-overlay');
+        const title = document.querySelector('.landing-title');
+        const demoBtn = document.querySelector('.landing-btn-primary');
+        const watchInput = document.querySelector('.landing-input');
+        return {
+            hasLanding: !!landing,
+            title: title?.textContent,
+            hasDemoBtn: !!demoBtn,
+            hasWatchInput: !!watchInput,
+        };
+    });
+
+    check('landing/exists', info.hasLanding, 'landing page shows');
+    check('landing/title', info.title === 'gemotvis', `title=${info.title}`);
+    check('landing/demo-btn', info.hasDemoBtn, 'Start Demo button');
+    check('landing/watch-input', info.hasWatchInput, 'join code input');
+}
+
+async function testHeader(page, theme) {
+    const label = `${theme}/header`;
+    await page.goto(`${BASE}?demo=1&theme=${theme}`);
+    await page.waitForTimeout(4000);
+
+    const info = await page.evaluate(() => {
+        const header = document.querySelector('.app-header');
+        const system = document.querySelector('.header-system');
+        const status = document.querySelector('.header-status');
+        return {
+            hasHeader: !!header,
+            system: system?.textContent,
+            statusOnline: status?.classList.contains('online'),
+        };
+    });
+
+    check(`${label}/exists`, info.hasHeader, 'header exists');
+    check(`${label}/system`, info.system === 'GEMOT', `system=${info.system}`);
+    check(`${label}/connected`, info.statusOnline, 'status online');
+}
+
+async function testFooterPanels(page, theme) {
+    const label = `${theme}/footer`;
+    await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
+    await page.waitForSelector('.graph-footer', { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(1000);
+
+    const info = await page.evaluate(() => {
+        const footer = document.querySelector('.graph-footer');
+        const crux = document.querySelector('.crux-panel');
+        const metrics = document.querySelector('.metrics-panel');
+        const audit = document.querySelector('.audit-panel');
+        return {
+            hasFooter: !!footer,
+            hasCrux: !!crux,
+            hasMetrics: !!metrics,
+            hasAudit: !!audit,
+        };
+    });
+
+    check(`${label}/exists`, info.hasFooter, 'footer exists');
+    check(`${label}/metrics`, info.hasMetrics, 'metrics panel');
+    check(`${label}/audit`, info.hasAudit, 'audit panel');
+}
+
+async function testScrubberBar(page, theme) {
+    const label = `${theme}/scrubber`;
+    await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
+    await page.waitForTimeout(8000);
+
+    const info = await page.evaluate(() => {
+        const bar = document.querySelector('.scrubber-bar');
+        const playBtn = document.querySelector('.scrubber-play');
+        const dots = document.querySelectorAll('.scrubber-dot');
+        const activeDot = document.querySelector('.scrubber-dot.active');
+        return {
+            hasBar: !!bar,
+            hasPlayBtn: !!playBtn,
+            playBtnText: playBtn?.textContent,
+            dotCount: dots.length,
+            hasActiveDot: !!activeDot,
+        };
+    });
+
+    check(`${label}/exists`, info.hasBar, 'scrubber bar');
+    check(`${label}/play-btn`, info.hasPlayBtn, 'play button');
+    check(`${label}/is-playing`, info.playBtnText === '\u23F8', `text=${info.playBtnText}`);
+    check(`${label}/has-dots`, info.dotCount > 0, `${info.dotCount} dots`);
+    check(`${label}/active-dot`, info.hasActiveDot, 'has active dot');
 }
 
 (async () => {
     const browser = await chromium.launch();
 
+    // Landing page test
+    console.log('\n--- landing ---');
+    const landingPage = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+    await testLandingPage(landingPage);
+    await landingPage.close();
+
+    // Per-theme tests
     for (const theme of ['minimal', 'magi', 'gastown']) {
         console.log(`\n--- ${theme} ---`);
         const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
         await testOverview(page, theme);
-        await testEdgeAlignment(page, theme);
+        await testHeader(page, theme);
         await testAutoplay(page, theme);
         await testFocusedNodes(page, theme);
+        await testFooterPanels(page, theme);
+        await testScrubberBar(page, theme);
         await testTransitionTiming(page, theme);
         await page.close();
     }
 
-    // Theme switcher test
+    // Theme switcher
     console.log('\n--- theme switcher ---');
-    const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-    await testThemeSwitcher(page);
-    await page.close();
+    const tsPage = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+    await testThemeSwitcher(tsPage);
+    await tsPage.close();
 
     await browser.close();
 

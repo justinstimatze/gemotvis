@@ -15,6 +15,7 @@ import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
 import { BootOverlay } from './components/BootOverlay';
 import { LoginForm } from './components/auth/LoginForm';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
 // Debug: expose stores on window (only in dev)
@@ -138,6 +139,7 @@ export function App() {
   const theme = useThemeStore((s) => s.activeTheme);
   const [bootDone, setBootDone] = useState(false);
   const showApp = isDemo() || isWatchPath() || isDashboardPath();
+  useKeyboardShortcuts();
 
   // Show landing page if not demo/watch/dashboard
   if (!showApp && !bootDone) {

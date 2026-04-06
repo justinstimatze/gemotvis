@@ -24,6 +24,7 @@ interface ScrubberState {
   setAutoplayStarted: (started: boolean) => void;
   cycleSpeed: () => void;
   cycleFilter: () => void;
+  setSpeedByIndex: (idx: number) => void;
   reset: () => void;
 }
 
@@ -47,6 +48,12 @@ export const useScrubberStore = create<ScrubberState>((set, get) => ({
   cycleSpeed: () => {
     const next = (get().speedIdx + 1) % SPEEDS.length;
     set({ speedIdx: next, speed: SPEEDS[next]!, speedLabel: SPEED_LABELS[next]! });
+  },
+
+  setSpeedByIndex: (idx: number) => {
+    if (idx >= 0 && idx < SPEEDS.length) {
+      set({ speedIdx: idx, speed: SPEEDS[idx]!, speedLabel: SPEED_LABELS[idx]! });
+    }
   },
 
   cycleFilter: () => {
