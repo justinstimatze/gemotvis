@@ -22,7 +22,29 @@
 }
 
 .agent-node:hover { opacity: 0.9; }
+.agent-node:hover .agent-tooltip { opacity: 1; pointer-events: auto; }
 .agent-node-quiet { opacity: 0.4; }
+
+.agent-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  background: var(--vis-panel, #fff);
+  border: 1px solid var(--vis-panel-border, #e0e0e0);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--vis-text, #333);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 20;
+}
 
 .agent-node-bridging {
   position: absolute;

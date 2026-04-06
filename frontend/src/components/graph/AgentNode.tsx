@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { useThemeStore } from '../../stores/theme';
 import { useGraphStore } from '../../stores/graph';
@@ -64,6 +64,29 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
           &#9878;
         </div>
       )}
+      <Tooltip data={data} />
+    </div>
+  );
+}
+
+const voteLabels: Record<number, string> = { [-1]: 'Disagree', 0: 'Neutral', 1: 'Agree' };
+
+function Tooltip({ data }: { data: AgentNodeData }) {
+  const lines = useMemo(() => {
+    const l: string[] = [];
+    if (data.totalMessages > 0) l.push(`${data.totalMessages} messages`);
+    if (data.activeGemots > 0) l.push(`${data.activeGemots} deliberation${data.activeGemots > 1 ? 's' : ''}`);
+    if (data.voteDirection != null) l.push(`Vote: ${voteLabels[data.voteDirection] ?? '?'}`);
+    if (data.clusterId != null) l.push(`Cluster ${data.clusterId + 1}`);
+    if (data.bridgingScore > 0) l.push(`Bridging: ${Math.round(data.bridgingScore * 100)}%`);
+    return l;
+  }, [data.totalMessages, data.activeGemots, data.voteDirection, data.clusterId, data.bridgingScore]);
+
+  if (lines.length === 0) return null;
+
+  return (
+    <div className="agent-tooltip">
+      {lines.map((l, i) => <div key={i}>{l}</div>)}
     </div>
   );
 }
