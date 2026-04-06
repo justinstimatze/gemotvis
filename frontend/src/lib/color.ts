@@ -1,6 +1,6 @@
 import type { Theme } from '../types';
 
-const MAGI_PALETTE = ['#ff8c00', '#00ffff', '#00ff41', '#ff00ff', '#ff2020', '#ffcc00', '#8888ff'];
+const MAGI_PALETTE = ['#ff8c00', '#00cc88', '#ff4040', '#00ddff', '#cc44ff', '#ccaa00', '#00ff41'];
 const GASTOWN_PALETTE = ['#cd9b1d', '#b87333', '#c45a3c', '#4a7c6f', '#8b8682', '#daa520', '#a0522d'];
 
 /** Distinct color for agent index `i` out of `n` total agents. Theme-aware. */

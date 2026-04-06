@@ -49,7 +49,10 @@ export function useSSE(config: SSEConfig = {}) {
         .then((r) => r.json() as Promise<Snapshot>)
         .then((snap) => {
           const delibs = snap.deliberations ?? {};
-          setDeliberations(delibs);
+          // Only update store if we got actual data (avoid clearing existing state)
+          if (Object.keys(delibs).length > 0) {
+            setDeliberations(delibs);
+          }
           // Retry if empty and we haven't given up
           if (Object.keys(delibs).length === 0 && retries < 10) {
             retries++;
@@ -84,9 +87,14 @@ export function useSSE(config: SSEConfig = {}) {
           | { type: 'ping' };
 
         switch (msg.type) {
-          case 'snapshot':
-            setDeliberations(msg.data.deliberations);
+          case 'snapshot': {
+            const incoming = msg.data.deliberations ?? {};
+            // Don't replace existing data with empty snapshot (avoids flash on reconnect)
+            if (Object.keys(incoming).length > 0) {
+              setDeliberations(incoming);
+            }
             break;
+          }
           case 'state': {
             const ds = msg.data;
             const id = ds.deliberation?.deliberation_id;

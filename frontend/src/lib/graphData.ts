@@ -82,7 +82,11 @@ export function buildRFNodes(
 
     const clusterId = findInDelibs(filteredDelibs, np.id, (ds, id) => ds.agents?.find(a => a.id === id)?.cluster_id);
 
-    const voteDirection = findInDelibs(filteredDelibs, np.id, (ds, id) => ds.votes?.find(v => v.agent_id === id)?.value as -1 | 0 | 1 | undefined);
+    // Only show vote badge for the focused deliberation (not cross-delib votes)
+    const focusedDs = activeEdge ? filteredDelibs[activeEdge] : undefined;
+    const voteDirection = focusedDs?.votes?.length
+      ? focusedDs.votes.find(v => v.agent_id === np.id)?.value as -1 | 0 | 1 | undefined
+      : undefined;
 
     let bridgingScore = 0;
     for (const ds of Object.values(filteredDelibs)) {

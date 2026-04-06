@@ -24,6 +24,14 @@ type AgentNodeType = Node<AgentNodeData, 'agent'>;
 
 const voteLabels: Record<number, string> = { [-1]: 'Disagree', 0: 'Neutral', 1: 'Agree' };
 
+/** Theme-aware vote symbols — MAGI uses kanji, others use generic symbols */
+function voteSymbol(direction: -1 | 0 | 1, theme: string): string {
+  if (theme === 'magi') {
+    return direction === 1 ? '\u627F\u8A8D' : direction === -1 ? '\u5426\u5B9A' : '\u4FDD\u7559';
+  }
+  return direction === 1 ? '\u2713' : direction === -1 ? '\u2717' : '\u2014';
+}
+
 function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const theme = useThemeStore((s) => s.activeTheme);
   const animationPhase = useGraphStore((s) => s.animationPhase);
@@ -77,7 +85,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
       {data.voteDirection != null && (
         <div className={`agent-node-vote vote-${data.voteDirection === 1 ? 'agree' : data.voteDirection === -1 ? 'disagree' : 'neutral'}`}
           title={voteLabels[data.voteDirection]}>
-          {data.voteDirection === 1 ? '\u2713' : data.voteDirection === -1 ? '\u2717' : '\u2014'}
+          {voteSymbol(data.voteDirection, theme)}
         </div>
       )}
       {data.activeGemots > 0 && !data.voteDirection && (
