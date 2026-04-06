@@ -51,10 +51,15 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
     return () => clearInterval(interval);
   }, [playing]);
 
-  // Track position count for "is new" detection
+  // Track position count for "is new" detection + set speaking agent
+  const setSpeakingAgent = useGraphStore((s) => s.setSpeakingAgent);
   useEffect(() => {
+    if (positions.length > prevCountRef.current && playing && animationPhase === 'ready') {
+      const newest = positions[positions.length - 1];
+      if (newest) setSpeakingAgent(newest.agent_id);
+    }
     prevCountRef.current = positions.length;
-  }, [positions.length]);
+  }, [positions.length, playing, animationPhase, positions, setSpeakingAgent]);
 
   // Scroll to highlighted agent's last message
   useEffect(() => {
@@ -95,6 +100,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
                 shouldType={shouldType}
                 agentNames={agentNames}
                 typingSpeed={typingSpeed}
+                onTypingComplete={shouldType ? () => setSpeakingAgent(null) : undefined}
               />
             </div>
           );

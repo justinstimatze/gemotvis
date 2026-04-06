@@ -26,16 +26,20 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const theme = useThemeStore((s) => s.activeTheme);
   const animationPhase = useGraphStore((s) => s.animationPhase);
 
+  const speakingAgent = useGraphStore((s) => s.speakingAgent);
+
   const name = shortAgentID(data.agentId);
   const color = agentColor(data.agentIndex, data.agentCount, theme);
   const showActive = data.isEdgeAgent && animationPhase === 'ready';
   const isQuiet = data.activeGemots === 0;
+  const isSpeaking = speakingAgent === data.agentId;
 
   const classes = [
     'agent-node',
     showActive ? 'agent-node-active' : '',
     showActive ? data.sideClass : '',
     isQuiet ? 'agent-node-quiet' : '',
+    isSpeaking ? 'agent-node-speaking' : '',
   ].filter(Boolean).join(' ');
 
   // Cluster colors — consistent across themes

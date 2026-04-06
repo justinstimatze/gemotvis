@@ -25,6 +25,15 @@
 .agent-node:hover .agent-tooltip { opacity: 1; pointer-events: auto; }
 .agent-node-quiet { opacity: 0.4; }
 
+.agent-node-speaking .agent-node-icon {
+  animation: speakingPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes speakingPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--vis-amber, rgba(0,112,243,0.4)); }
+  50% { box-shadow: 0 0 0 8px var(--vis-amber, rgba(0,112,243,0)); }
+}
+
 .agent-tooltip {
   position: absolute;
   top: 100%;
