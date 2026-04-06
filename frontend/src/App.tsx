@@ -3,6 +3,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { useThemeStore } from './stores/theme';
 import { useSSE } from './hooks/useSSE';
 import { useWatchSSE } from './hooks/useWatchSSE';
+import { useGroupSSE } from './hooks/useGroupSSE';
 import { useSessionStore } from './stores/session';
 import { useScrubberStore } from './stores/scrubber';
 import { useGraphStore } from './stores/graph';
@@ -97,6 +98,19 @@ function WatchMode() {
   );
 }
 
+/** Group mode: view all deliberations in a group (shared link). */
+function GroupMode() {
+  const { groupId } = useParams<{ groupId: string }>();
+  useGroupSSE(groupId ?? '');
+
+  return (
+    <>
+      {groupId && <div className="watch-badge">GROUP: {groupId}</div>}
+      <GraphView />
+    </>
+  );
+}
+
 /** Dashboard mode: login with API key, then view all deliberations. */
 function DashboardMode() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -130,6 +144,10 @@ function isWatchPath(): boolean {
   return window.location.pathname.startsWith('/watch/');
 }
 
+function isGroupPath(): boolean {
+  return window.location.pathname.startsWith('/g/');
+}
+
 function isDashboardPath(): boolean {
   return window.location.pathname.startsWith('/dashboard');
 }
@@ -137,7 +155,7 @@ function isDashboardPath(): boolean {
 export function App() {
   const theme = useThemeStore((s) => s.activeTheme);
   const [bootDone, setBootDone] = useState(false);
-  const showApp = isDemo() || isWatchPath() || isDashboardPath();
+  const showApp = isDemo() || isWatchPath() || isGroupPath() || isDashboardPath();
   useKeyboardShortcuts();
   useURLSync();
 
@@ -162,6 +180,7 @@ export function App() {
       <ReactFlowProvider>
         <Routes>
           <Route path="/watch/:code" element={<WatchMode />} />
+          <Route path="/g/:groupId" element={<GroupMode />} />
           <Route path="/dashboard" element={<DashboardMode />} />
           <Route path="/*" element={<DemoMode />} />
         </Routes>
