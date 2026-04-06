@@ -15,6 +15,7 @@ import { LandingPage } from './components/LandingPage';
 import { BootOverlay } from './components/BootOverlay';
 import { LoginForm } from './components/auth/LoginForm';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useURLSync } from './hooks/useURLSync';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
 // Debug: expose stores on window (only in dev)
@@ -138,6 +139,7 @@ export function App() {
   const [bootDone, setBootDone] = useState(false);
   const showApp = isDemo() || isWatchPath() || isDashboardPath();
   useKeyboardShortcuts();
+  useURLSync();
 
   // Apply theme class to body for portaled elements (scrubber, footer, panels)
   useEffect(() => {

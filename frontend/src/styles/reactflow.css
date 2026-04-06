@@ -1380,3 +1380,72 @@
   font-weight: 600;
   letter-spacing: 0.3px;
 }
+
+/* ===== Responsive Breakpoints ===== */
+
+/* Tablet / narrow desktop: collapse side panel to bottom sheet */
+@media (max-width: 900px) {
+  .chat-panel-side {
+    top: auto;
+    right: 0;
+    bottom: 44px;
+    left: 0;
+    width: 100%;
+    max-height: 40vh;
+    border-left: none;
+    border-top: 1px solid var(--vis-panel-border, #e0e0e0);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+    animation: bottomSheetIn 0.3s ease forwards;
+  }
+
+  @keyframes bottomSheetIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .center-panel-overlay {
+    width: 90%;
+    max-width: none;
+    max-height: 50%;
+    font-size: 11px;
+  }
+
+  .agent-node-icon { width: 56px; height: 56px; }
+  .agent-node-letter { font-size: 18px; }
+  .agent-node-name { font-size: 10px; max-width: 100px; }
+  .agent-node-stats { font-size: 8px; }
+
+  .app-header { font-size: 11px; }
+  .header-topic { font-size: 11px; }
+}
+
+/* Mobile: stack everything vertically */
+@media (max-width: 600px) {
+  .chat-panel-side {
+    max-height: 50vh;
+  }
+
+  .center-panel-overlay {
+    width: 95%;
+    top: 36px;
+    max-height: 45%;
+  }
+
+  .center-content { padding: 8px; }
+  .chat-bubble { font-size: 11px; padding: 6px 10px; }
+
+  .scrubber-bar { height: 36px; }
+  .scrubber-controls { gap: 4px; padding: 0 6px; }
+  .scrubber-controls button { font-size: 12px; min-width: 24px; }
+
+  .graph-footer { max-height: 80px; }
+  .footer-panel { padding: 6px 8px; font-size: 10px; }
+
+  .agent-node-icon { width: 44px; height: 44px; }
+  .agent-node-letter { font-size: 16px; }
+  .agent-node-name { font-size: 9px; max-width: 80px; }
+
+  .app-header { height: 28px; padding: 0 8px; }
+  .header-system { font-size: 12px; }
+}
