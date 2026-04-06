@@ -58,6 +58,16 @@ export function useRFNodes(
         if (vote) { voteDirection = vote.value as -1 | 0 | 1; break; }
       }
 
+      // Find best bridging score for this agent
+      let bridgingScore = 0;
+      for (const ds of Object.values(filteredDelibs)) {
+        for (const bs of ds.analysis?.bridging_statements ?? []) {
+          if (bs.agent_id === np.id && bs.bridging_score > bridgingScore) {
+            bridgingScore = bs.bridging_score;
+          }
+        }
+      }
+
       return {
         id: np.id,
         type: 'agent' as const,
@@ -74,10 +84,26 @@ export function useRFNodes(
           sideClass,
           clusterId,
           voteDirection,
+          bridgingScore,
         },
       };
     });
   }, [nodePositions, graph, filteredDelibs, activeEdge]);
+}
+
+/** Count cruxes where two agents disagree (one agrees, other disagrees). */
+function countDisagreements(delibs: Record<string, DelibState>, agentA: string, agentB: string): number {
+  let count = 0;
+  for (const ds of Object.values(delibs)) {
+    for (const crux of ds.analysis?.cruxes ?? []) {
+      const aAgrees = crux.agree_agents.includes(agentA);
+      const aDisagrees = crux.disagree_agents.includes(agentA);
+      const bAgrees = crux.agree_agents.includes(agentB);
+      const bDisagrees = crux.disagree_agents.includes(agentB);
+      if ((aAgrees && bDisagrees) || (aDisagrees && bAgrees)) count++;
+    }
+  }
+  return count;
 }
 
 /** Build React Flow edge objects from graph edges and deliberation data. */
@@ -94,12 +120,13 @@ export function useRFEdges(
       const ds = filteredDelibs[edge.delibID];
       const posCount = (ds?.positions ?? []).length;
       const highlighted = !isSingleDelib && edge.delibID === activeEdge;
+      const cruxCount = countDisagreements(filteredDelibs, edge.a, edge.b);
       return {
         id: `${edge.delibID}-${edge.a}-${edge.b}`,
         source: edge.a,
         target: edge.b,
         type: 'delib' as const,
-        data: { delibID: edge.delibID, posCount, highlighted },
+        data: { delibID: edge.delibID, posCount, highlighted, cruxCount },
       };
     });
   }, [graph.edges, filteredDelibs, activeEdge]);

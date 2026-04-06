@@ -13,6 +13,7 @@ export interface DelibEdgeData extends Record<string, unknown> {
   delibID: string;
   posCount: number;
   highlighted: boolean;
+  cruxCount: number;
 }
 
 type DelibEdgeType = Edge<DelibEdgeData, 'delib'>;
@@ -43,6 +44,7 @@ function DelibEdgeComponent({
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
 
   const posCount = data?.posCount ?? 0;
+  const cruxCount = data?.cruxCount ?? 0;
   const isActive = (data?.highlighted ?? false) && animationPhase === 'ready';
   const isHovered = activeNode != null && (source === activeNode || target === activeNode);
   const { thickness, opacity } = edgeStyle(posCount, isActive, isHovered);
@@ -95,6 +97,21 @@ function DelibEdgeComponent({
             onClick={handleClick}
           >
             {posCount}
+            {cruxCount > 0 && <span className="edge-crux-badge" title={`${cruxCount} disagreement${cruxCount > 1 ? 's' : ''}`}>{cruxCount}</span>}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+      {/* Crux indicator on active/hovered edges */}
+      {cruxCount > 0 && (isActive || isHovered) && (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-crux-indicator"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, 8px) translate(${labelX}px, ${labelY}px)`,
+            }}
+          >
+            {cruxCount} crux{cruxCount > 1 ? 'es' : ''}
           </div>
         </EdgeLabelRenderer>
       )}

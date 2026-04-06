@@ -13,8 +13,9 @@ export interface AgentNodeData extends Record<string, unknown> {
   agentCount: number;
   isEdgeAgent: boolean;
   sideClass: string;
-  clusterId?: number;     // opinion cluster from analysis
+  clusterId?: number;       // opinion cluster from analysis
   voteDirection?: -1 | 0 | 1; // aggregate vote
+  bridgingScore: number;    // best bridging score (0-1)
 }
 
 type AgentNodeType = Node<AgentNodeData, 'agent'>;
@@ -56,6 +57,11 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
       {data.activeGemots > 0 && (
         <div className="agent-node-stats">
           {data.totalMessages} msg &middot; {data.activeGemots} gemot{data.activeGemots !== 1 ? 's' : ''}
+        </div>
+      )}
+      {data.bridgingScore >= 0.6 && (
+        <div className="agent-node-bridging" title={`Bridging score: ${Math.round(data.bridgingScore * 100)}%`}>
+          &#9878;
         </div>
       )}
     </div>
