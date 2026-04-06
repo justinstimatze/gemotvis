@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSessionStore } from '../stores/session';
+import { useGraphStore } from '../stores/graph';
 import type { Snapshot, DelibState, ServerConfig } from '../types';
 
 interface SSEConfig {
@@ -16,6 +17,11 @@ export function useSSE(config: SSEConfig = {}) {
   const setConnected = useSessionStore((s) => s.setConnected);
   const setConfig = useSessionStore((s) => s.setConfig);
   const configFetched = useRef(false);
+
+  // Live mode: auto-focus updated bilaterals
+  const isLive = window.location.pathname.startsWith('/dashboard') ||
+                 window.location.pathname.startsWith('/watch/') ||
+                 window.location.pathname.startsWith('/g/');
 
   // Pass ?data= param from URL to SSE/state endpoints for dataset selection
   const dataParam = new URLSearchParams(window.location.search).get('data');
@@ -84,7 +90,13 @@ export function useSSE(config: SSEConfig = {}) {
           case 'state': {
             const ds = msg.data;
             const id = ds.deliberation?.deliberation_id;
-            if (id) upsertDelib(id, ds);
+            if (id) {
+              upsertDelib(id, ds);
+              // In live mode, auto-focus the bilateral that just got updated
+              if (isLive && (ds.positions?.length ?? 0) > 0) {
+                useGraphStore.getState().setActiveEdge(id);
+              }
+            }
             break;
           }
           // cycle and ping handled elsewhere or ignored
