@@ -34,8 +34,17 @@ function GraphCanvasInner() {
   // (prevActiveEdge removed — fitView now triggers on node count change instead)
   useAnimationPhase();
 
-  // Build graph from the active delib (or all delibs if no active edge)
+  // Build graph from all deliberations.
+  // For multi-delib bilateral data (like v9 diplomacy), we show all agents
+  // and all edges, highlighting the active bilateral.
+  // For single-delib data (like the built-in 5-agent demos), the graph
+  // shows just that delib's agents with pairwise edges.
   const graph = useMemo(() => {
+    // Count how many delibs have 2 agents (bilaterals)
+    const bilateralCount = Object.values(rawDelibs).filter(d => d.agents?.length === 2).length;
+    // If we have multiple bilaterals, show the full graph (multi-delib mode)
+    if (bilateralCount > 1) return buildGraphFromDelibs(rawDelibs);
+    // Otherwise, show only the active delib's agents (single-delib focus)
     const delibs = activeEdge && rawDelibs[activeEdge]
       ? { [activeEdge]: rawDelibs[activeEdge] }
       : rawDelibs;
