@@ -31,6 +31,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const name = shortAgentID(data.agentId);
   const color = agentColor(data.agentIndex, data.agentCount, theme);
   const showActive = data.isEdgeAgent && animationPhase === 'ready';
+  const isInactive = !data.isEdgeAgent && animationPhase === 'ready';
   const isQuiet = data.activeGemots === 0;
   const isSpeaking = speakingAgent === data.agentId;
 
@@ -38,6 +39,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
     'agent-node',
     showActive && 'agent-node-active',
     showActive && data.sideClass,
+    isInactive && 'agent-node-inactive',
     isQuiet && 'agent-node-quiet',
     isSpeaking && 'agent-node-speaking',
   );
