@@ -11,6 +11,7 @@ import { useFilteredState } from '../../hooks/useFilteredState';
 import { useAnimationPhase } from '../../hooks/useAnimationPhase';
 import { useRFNodes, useRFEdges } from '../../hooks/useGraphData';
 import { buildGraphFromDelibs } from '../../lib/buildGraph';
+import { isSingleDelibGraph } from '../../lib/graphData';
 import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
 import { AgentNode, type AgentNodeData } from './AgentNode';
 import { DelibEdge } from './DelibEdge';
@@ -47,8 +48,7 @@ function GraphCanvasInner() {
 
   const nodePositions = useMemo(() => {
     if (!activeEdge) return layoutResult.positions;
-    const uniqueDelibIDs = new Set(graph.edges.map(e => e.delibID));
-    if (uniqueDelibIDs.size <= 1) return layoutResult.positions;
+    if (isSingleDelibGraph(graph)) return layoutResult.positions;
     const edge = graph.edges.find(e => e.delibID === activeEdge);
     if (edge) return computeFocusedLayout(layoutResult.positions, edge.a, edge.b);
     return layoutResult.positions;

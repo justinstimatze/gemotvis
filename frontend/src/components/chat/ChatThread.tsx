@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Position as PositionType, AgentInfo } from '../../types';
-import { collectAgentNames } from '../../lib/helpers';
+import { collectAgentNames, classNames } from '../../lib/helpers';
 import { agentColor } from '../../lib/color';
 import { ChatBubble } from './ChatBubble';
 import { useGraphStore } from '../../stores/graph';
@@ -100,10 +100,10 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
             <div
               key={p.position_id}
               ref={(el) => setBubbleRef(idx, el)}
-              className={[
+              className={classNames(
                 activeNode === p.agent_id && 'chat-bubble-highlighted',
                 searchClasses(query, p.content, p.agent_id),
-              ].filter(Boolean).join(' ')}
+              )}
             >
               <ChatBubble
                 agentId={p.agent_id}

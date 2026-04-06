@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import { useGraphStore } from '../../stores/graph';
 import { useScrubberStore } from '../../stores/scrubber';
+import { classNames } from '../../lib/helpers';
 import { updateURLParams } from '../../hooks/useURLSync';
 
 export interface DelibEdgeData extends Record<string, unknown> {
@@ -66,13 +67,13 @@ function DelibEdgeComponent({
     updateURLParams();
   }, [data?.delibID, setActiveEdge]);
 
-  const classes = [
+  const classes = classNames(
     'graph-edge-path',
     isActive && 'graph-edge-active',
     isHovered && 'graph-edge-hover',
     hasConsensus && 'graph-edge-consensus',
     posCount === 0 && 'graph-edge-empty',
-  ].filter(Boolean).join(' ');
+  );
 
   return (
     <>

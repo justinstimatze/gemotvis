@@ -1,7 +1,6 @@
 import { useSessionStore } from '../stores/session';
 import { useThemeStore } from '../stores/theme';
-import { useGraphStore } from '../stores/graph';
-import { useFilteredState } from '../hooks/useFilteredState';
+import { useFocusedDelib } from '../hooks/useFocusedDelib';
 import type { Theme } from '../types';
 
 export function Header() {
@@ -9,10 +8,7 @@ export function Header() {
   const mode = useSessionStore((s) => s.mode);
   const theme = useThemeStore((s) => s.activeTheme);
   const setTheme = useThemeStore((s) => s.setTheme);
-  const activeEdge = useGraphStore((s) => s.activeEdge);
-  const filteredDelibs = useFilteredState();
-
-  const ds = activeEdge ? filteredDelibs[activeEdge] : null;
+  const { ds } = useFocusedDelib();
   const topic = ds?.deliberation?.topic ?? '';
   const status = ds?.deliberation?.status ?? '';
 

@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { useThemeStore } from '../../stores/theme';
 import { useGraphStore } from '../../stores/graph';
-import { shortAgentID } from '../../lib/helpers';
+import { shortAgentID, classNames } from '../../lib/helpers';
 import { agentColor } from '../../lib/color';
 
 export interface AgentNodeData extends Record<string, unknown> {
@@ -34,13 +34,13 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const isQuiet = data.activeGemots === 0;
   const isSpeaking = speakingAgent === data.agentId;
 
-  const classes = [
+  const classes = classNames(
     'agent-node',
-    showActive ? 'agent-node-active' : '',
-    showActive ? data.sideClass : '',
-    isQuiet ? 'agent-node-quiet' : '',
-    isSpeaking ? 'agent-node-speaking' : '',
-  ].filter(Boolean).join(' ');
+    showActive && 'agent-node-active',
+    showActive && data.sideClass,
+    isQuiet && 'agent-node-quiet',
+    isSpeaking && 'agent-node-speaking',
+  );
 
   // Cluster colors — consistent across themes
   const clusterColors = ['#0070f3', '#7c3aed', '#17b169', '#f5a623', '#ef4444', '#0091ff'];

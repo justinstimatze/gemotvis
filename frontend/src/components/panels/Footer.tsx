@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGraphStore } from '../../stores/graph';
-import { useFilteredState } from '../../hooks/useFilteredState';
+import { useFocusedDelib } from '../../hooks/useFocusedDelib';
 import { CruxPanel } from './CruxPanel';
 import { MetricsPanel } from './MetricsPanel';
 import { AuditLog } from './AuditLog';
@@ -9,12 +9,11 @@ import { ScrubberBar } from '../scrubber/ScrubberBar';
 
 /** Combined bottom bar: scrubber on top, data panels below. */
 export function Footer() {
-  const activeEdge = useGraphStore((s) => s.activeEdge);
   const animationPhase = useGraphStore((s) => s.animationPhase);
-  const filteredDelibs = useFilteredState();
+  const { ds: focusedDs, activeEdge } = useFocusedDelib();
 
   const showPanels = activeEdge && animationPhase === 'ready';
-  const ds = showPanels ? (filteredDelibs[activeEdge] ?? null) : null;
+  const ds = showPanels ? focusedDs : null;
 
   // Track bottom bar height so side panel can position above it
   const barRef = useRef<HTMLDivElement>(null);

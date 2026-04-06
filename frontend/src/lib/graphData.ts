@@ -4,6 +4,11 @@ import type { AgentNodeData } from '../components/graph/AgentNode';
 import type { DelibEdgeData } from '../components/graph/DelibEdge';
 import type { Graph, NodePosition } from '../types';
 
+/** Check if a graph represents a single deliberation (or none). */
+export function isSingleDelibGraph(graph: Graph): boolean {
+  return new Set(graph.edges.map(e => e.delibID)).size <= 1;
+}
+
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
 
@@ -29,8 +34,7 @@ export function buildRFNodes(
   filteredDelibs: Record<string, DelibState>,
   activeEdge: string | null,
 ): Node<AgentNodeData>[] {
-  const uniqueDelibIDs = new Set(graph.edges.map(e => e.delibID));
-  const isSingleDelib = uniqueDelibIDs.size <= 1;
+  const isSingleDelib = isSingleDelibGraph(graph);
 
   return nodePositions.map((np) => {
     let totalMessages = 0;
@@ -110,8 +114,7 @@ export function buildRFEdges(
   filteredDelibs: Record<string, DelibState>,
   activeEdge: string | null,
 ): Edge<DelibEdgeData>[] {
-  const uniqueDelibIDs = new Set(graph.edges.map(e => e.delibID));
-  const isSingleDelib = uniqueDelibIDs.size <= 1;
+  const isSingleDelib = isSingleDelibGraph(graph);
 
   return graph.edges.map((edge) => {
     const ds = filteredDelibs[edge.delibID];

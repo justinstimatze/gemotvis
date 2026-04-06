@@ -1,5 +1,10 @@
 import type { AgentInfo } from '../types';
 
+/** Join truthy class names into a space-separated string. */
+export function classNames(...classes: (string | false | undefined | null | 0)[]): string {
+  return classes.filter(Boolean).join(' ');
+}
+
 /** Shorten an agent ID for display (strip suffix, truncate). */
 export function shortAgentID(id: string): string {
   if (!id) return '?';
