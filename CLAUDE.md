@@ -41,7 +41,8 @@ frontend/                        React + TypeScript frontend (Vite build)
     App.tsx                      Router + theme provider + layout shell
     types.ts                     TypeScript mirrors of Go types
     stores/                      Zustand state (session, scrubber, graph, theme)
-    hooks/                       useSSE, useAnimationPhase, useFilteredState, useScrubberPlayback
+    hooks/                       useSSE, useAnimationPhase, useFilteredState, useScrubberPlayback,
+                                 useGraphData, useKeyboardShortcuts, useURLSync
     lib/                         Pure logic: filterToTime, buildGraph, layout, votes, color, helpers
     components/
       graph/                     React Flow: GraphCanvas, AgentNode, DelibEdge, CenterPanel
@@ -87,9 +88,50 @@ When `EnableSSE()` is called on a Poller, it connects to gemot's `/events` SSE e
 
 The scrubber bar lets users step through events chronologically. In single-view, it shows one deliberation's events. In multi-view, it shows a **global timeline** across ALL deliberations — events sorted chronologically with `delibID` tags. Pinned to viewport bottom via `position: fixed` in multi-view.
 
-Controls: play/pause, 1x/2x/4x speed, event type filter (ALL/POSITION/VOTE/ANALYSIS), arrow keys, click dot, click track, LIVE/LATEST button.
+Controls: play/pause, 1x/2x/4x speed, event type filter (ALL/POSITION/VOTE/ANALYSIS), arrow keys, click dot, click track, LIVE/LATEST button. Marker opacity varies by event density (heatmap).
 
 When scrubbing in multi-view, the focused deliberation renders as a **full single-view** (identical quality to standalone mode), not a scaled mini-view. `filterToTime()` applied to the focused deliberation's data.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| Space | Play/pause |
+| Arrow Right/Left | Step forward/back one event |
+| S | Skip to next deliberation |
+| Tab / Shift+Tab | Cycle through agents (focuses bilateral in multi-delib) |
+| / | Open chat search |
+| F | Cycle event type filter |
+| 1-4 | Set speed (1x/2x/3x/5x) |
+
+## Graph Interactions
+
+- **Click edge**: Focus that bilateral conversation, pause autoplay, jump scrubber
+- **Click node (multi-delib)**: Cycle through that agent's bilateral conversations
+- **Click node (single-delib)**: Highlight that agent's messages in chat, scroll to latest
+- **Hover node**: Show tooltip with stats (messages, votes, cluster, bridging score), highlight connected edges
+- **Search (/)**: Filter chat messages by keyword, matching messages highlighted, others dimmed
+
+## Analysis Visualization
+
+- **Cluster coloring**: Colored ring on nodes when analysis assigns opinion clusters
+- **Vote badges**: Checkmark (agree), cross (disagree), dash (neutral) on nodes
+- **Crux badges**: Red count on edges where connected agents disagree on cruxes
+- **Bridging indicator**: Compass rose on nodes with bridging score >= 60%
+- **Consensus glow**: Green glow on edges with >70% agreement
+
+## URL State
+
+Shareable links via URL params. Updated on user-initiated actions (click/keyboard), not autoplay.
+
+| Param | Description |
+|-------|-------------|
+| `?theme=` | Theme (minimal, magi, gastown) |
+| `?data=` | Dataset name (demo, diplomacy, code-review) |
+| `?edge=` | Active deliberation ID |
+| `?t=` | Scrubber event index |
+| `?demo=1` | Enable demo mode |
+| `?also=` | Additional watch codes (comma-separated) |
 
 ## Landing Page
 
@@ -97,7 +139,7 @@ When scrubbing in multi-view, the focused deliberation renders as a **full singl
 
 ## Key Design Decisions
 
-- **Go + vanilla JS, no build step**: Single binary via `//go:embed`
+- **React + TypeScript + Vite**: Frontend built to `internal/server/static/`, embedded via `//go:embed`
 - **SSE not WebSocket**: Read-only monitor
 - **Subcommands**: `demo`/`watch`/`replay`/`export` — each mode is discoverable
 - **No args = demo**: Zero-friction entry point
@@ -110,7 +152,7 @@ When scrubbing in multi-view, the focused deliberation renders as a **full singl
 
 - Frontend is React + TypeScript + React Flow + Zustand. Build with `cd frontend && npm run build`.
 - All DOM rendering via React components. No innerHTML or direct DOM manipulation.
-- CSS custom properties in `:root` for theming. Colors: `--vis-*`. Theme overrides via `#screen.theme-*` in `themes.css`.
+- CSS custom properties in `:root` for theming. Colors: `--vis-*`. Theme overrides via `.theme-*` selectors (on body for portal inheritance).
 - Security headers (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) on all responses.
 - Max 50 concurrent SSE clients, 20 watch sessions, 100 dashboard sessions.
 - `atomic.Int64` for shared session timestamps (race-free).
@@ -119,13 +161,16 @@ When scrubbing in multi-view, the focused deliberation renders as a **full singl
 
 ## Adaptive Layouts
 
-| Agent Count | Layout | CSS Class |
-|---|---|---|
-| 2 | Bilateral (side-by-side) | `layout-bilateral` |
-| 3 | MAGI triangle | `layout-triangle` |
-| 4-7 | Regular polygon | `layout-polygon` |
-| 8+ | Flex grid | `layout-grid` |
-| Any with x,y coords | Geographic positions | `layout-positioned` |
+Layout computed in `lib/layout.ts`, positions passed to React Flow nodes.
+
+| Agent Count | Layout |
+|---|---|
+| 2 | Bilateral (side-by-side) |
+| 3-7 | Regular polygon |
+| 8+ | Force-directed (d3-force) |
+| Multiple bilaterals | Full network graph with focused bilateral |
+| Any with lat/lon | Geographic projection with world map |
+| Any with x,y coords | Explicit positioned layout |
 
 ## Themes
 
@@ -138,14 +183,19 @@ Select via `?theme=` query param. Same HTML and JS for all themes — only CSS c
 | Minimal | `theme-minimal` | Circle | Clean #fafafa, system sans-serif, pill badges, Linear/Vercel-inspired |
 | Gastown | `theme-gastown` | Diamond | Warm parchment, dark brown bars, brass accents, Cinzel type, industrial pipes |
 
-Architecture: `base.css` defines `--vis-*` variables with classic palette defaults and neutral structural styles. `themes.css` adds theme-specific effects — MAGI adds CRT effects/glow, classic adds manuscript decorations (terrain, compass rose, shields), minimal overrides to a clean modern look. Fonts loaded dynamically in `app.js` per theme.
+Architecture: `base.css` defines `--vis-*` variables with classic palette defaults and neutral structural styles. `themes.css` overrides variables per theme using `.theme-*` selectors. `reactflow.css` contains all component styles including theme-specific overrides for nodes, edges, panels, and scrubber. Theme class set on `document.body` so portaled elements (scrubber, footer, chat panels) inherit variables.
 
 ## Multi-View
 
-When `?multi=true` or watching multiple codes, all deliberations render simultaneously in a spatial canvas. CSS `transform: scale() translate()` provides smooth camera zoom/pan:
-- Demo loop cycles: overview → zoom delib 1 → overview → zoom delib 2 → ...
-- Live events trigger auto-zoom to the active deliberation
-- Manual click pauses for 60s, then resumes
+When multiple bilateral deliberations exist (e.g. diplomacy dataset with 22 bilaterals), all agents render as a full network graph with edges per bilateral. Click/hover edges or nodes to explore. Side panel (380px, docked right) shows chat for the focused bilateral.
+
+For 2-4 agent single deliberations, center panel overlay shows the chat conversation.
+
+## Responsive Layout
+
+- **> 900px**: Side panel docked right, full graph
+- **<= 900px**: Side panel becomes bottom sheet (40vh max), smaller nodes
+- **<= 600px**: Further compaction — smaller icons, tighter spacing
 
 ## Deployment
 
@@ -165,6 +215,16 @@ fly secrets set GEMOTVIS_SERVICE_KEY=xxx GEMOTVIS_GEMOT_URL=https://gemot.dev
 | `GEMOTVIS_ADDR` | `:9090` | Listen address |
 | `GEMOTVIS_POLL_INTERVAL` | `10s` | Polling interval |
 | `GEMOTVIS_DELIBERATION_ID` | | Watch specific deliberation |
+
+## Testing
+
+```bash
+cd frontend && npm test              # 20 unit tests (vitest)
+node test_visual.js                  # 79 visual regression tests (playwright)
+docker build -t gemotvis . && docker run --rm -p 9091:9090 gemotvis  # Docker build verification
+```
+
+Visual tests require `npx playwright install chromium` and the demo server running on `:9090`.
 
 ## A2A Client Methods
 
