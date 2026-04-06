@@ -104,6 +104,7 @@ export function buildRFNodes(
         agentIndex: graph.nodes.indexOf(np.id),
         agentCount: graph.nodes.length,
         isEdgeAgent,
+        singleDelib: isSingleDelib,
         sideClass,
         clusterId,
         voteDirection,

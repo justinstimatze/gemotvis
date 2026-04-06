@@ -16,6 +16,7 @@ export interface AgentNodeData extends Record<string, unknown> {
   clusterId?: number;       // opinion cluster from analysis
   voteDirection?: -1 | 0 | 1; // aggregate vote
   bridgingScore: number;    // best bridging score (0-1)
+  singleDelib: boolean;     // true when graph shows a single deliberation
 }
 
 type AgentNodeType = Node<AgentNodeData, 'agent'>;
@@ -31,7 +32,9 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const name = shortAgentID(data.agentId);
   const color = agentColor(data.agentIndex, data.agentCount, theme);
   const showActive = data.isEdgeAgent && animationPhase === 'ready';
-  const isInactive = !data.isEdgeAgent && animationPhase === 'ready';
+  // Only dim nodes in multi-delib mode (agentCount > totalAgents in active bilateral)
+  // In single-delib, all nodes are participants so none should dim
+  const isInactive = !data.isEdgeAgent && animationPhase === 'ready' && !data.singleDelib;
   const isQuiet = data.activeGemots === 0;
   const isSpeaking = speakingAgent === data.agentId;
 
