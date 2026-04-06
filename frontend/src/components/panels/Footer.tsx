@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGraphStore } from '../../stores/graph';
 import { useFilteredState } from '../../hooks/useFilteredState';
@@ -15,8 +16,22 @@ export function Footer() {
   const showPanels = activeEdge && animationPhase === 'ready';
   const ds = showPanels ? (filteredDelibs[activeEdge] ?? null) : null;
 
+  // Track bottom bar height so side panel can position above it
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const update = () => {
+      document.documentElement.style.setProperty('--bottom-bar-h', `${el.offsetHeight}px`);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return createPortal(
-    <div className="bottom-bar">
+    <div className="bottom-bar" ref={barRef}>
       <ScrubberBar />
       {showPanels && ds && (
         <div className="graph-footer">

@@ -42,6 +42,10 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const clusterColors = ['#0070f3', '#7c3aed', '#17b169', '#f5a623', '#ef4444', '#0091ff'];
   const clusterColor = data.clusterId != null ? clusterColors[data.clusterId % clusterColors.length] : undefined;
 
+  // Scale icon size: fewer agents = bigger icons
+  const iconSize = data.agentCount <= 3 ? 96 : data.agentCount <= 5 ? 84 : 72;
+  const fontSize = data.agentCount <= 3 ? 32 : data.agentCount <= 5 ? 28 : 24;
+
   return (
     <div className={classes}>
       <Handle type="source" position={Position.Top} id="s" className="agent-handle" />
@@ -49,6 +53,9 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
       <div
         className="agent-node-icon"
         style={{
+          width: iconSize,
+          height: iconSize,
+          fontSize,
           borderColor: showActive ? color : clusterColor ?? undefined,
           boxShadow: clusterColor && !showActive ? `0 0 0 3px ${clusterColor}33` : undefined,
         }}

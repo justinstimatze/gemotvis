@@ -78,12 +78,16 @@ export function buildRFNodes(
       }
     }
 
+    // Scale node dimensions with icon size
+    const nodeW = graph.nodes.length <= 3 ? 160 : graph.nodes.length <= 5 ? 145 : 130;
+    const nodeH = graph.nodes.length <= 3 ? 150 : graph.nodes.length <= 5 ? 135 : 120;
+
     return {
       id: np.id,
       type: 'agent' as const,
       position: { x: np.x / 100 * CANVAS_W, y: np.y / 100 * CANVAS_H },
-      width: 130,
-      height: 120,
+      width: nodeW,
+      height: nodeH,
       data: {
         agentId: np.id,
         totalMessages,

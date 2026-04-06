@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGraphStore } from '../../stores/graph';
 import { useFilteredState } from '../../hooks/useFilteredState';
@@ -32,16 +32,22 @@ export function CenterPanel() {
     if (searchOpen) setSearchQuery('');
   }, [searchOpen]);
 
+  // Center panel for 2-4 agents, side panel for 5+
+  const rawDs = activeEdge ? rawDelibs[activeEdge] : null;
+  const totalAgents = rawDs?.agents?.length ?? 0;
+  const useSidePanel = activeEdge && animationPhase === 'ready' && ds && totalAgents > 4;
+
+  // Set body class so graph-view can shrink when side panel is visible
+  useEffect(() => {
+    document.body.classList.toggle('has-side-panel', !!useSidePanel);
+    return () => { document.body.classList.remove('has-side-panel'); };
+  }, [useSidePanel]);
+
   if (!activeEdge || animationPhase !== 'ready' || !ds) return null;
 
   const positions = ds.positions ?? [];
   const agents = ds.agents ?? [];
   const topic = ds.deliberation?.topic ?? '';
-
-  // Center panel for 2-4 agents, side panel for 5+
-  const rawDs = rawDelibs[activeEdge];
-  const totalAgents = rawDs?.agents?.length ?? agents.length;
-  const useSidePanel = totalAgents > 4;
   const panelClass = useSidePanel ? 'chat-panel-side' : 'center-panel-overlay';
 
   return createPortal(

@@ -31,9 +31,6 @@ func demoSnapshot() *poller.Snapshot {
 	// Analyzing state — shows the pipeline progress bar
 	snap.Deliberations["analyzing"] = demoAnalyzing(now)
 
-	// Diplomacy — 7 powers with geographic positions
-	snap.Deliberations["diplomacy"] = demoDiplomacy(now)
-
 	return snap
 }
 

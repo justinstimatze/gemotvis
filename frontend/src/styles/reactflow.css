@@ -220,7 +220,13 @@
   padding-top: 32px;
   padding-bottom: 36px;
   position: relative;
-  isolation: isolate; /* create stacking context so panel z-index works vs React Flow */
+  isolation: isolate;
+  transition: padding-right 0.3s ease;
+}
+
+/* Shrink graph to fit beside side panel */
+.has-side-panel .graph-view {
+  padding-right: 380px;
 }
 
 /* Center panel overlay — positioned over the React Flow canvas */
@@ -252,7 +258,7 @@
   position: fixed;
   top: 36px;
   right: 0;
-  bottom: 44px; /* above scrubber bar */
+  bottom: var(--bottom-bar-h, 44px); /* dynamically sized above bottom bar */
   width: 380px;
   z-index: 35; /* below bottom-bar (40) so scrubber/footer aren't covered */
   background: var(--vis-panel, #fff);

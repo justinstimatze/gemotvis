@@ -9,7 +9,7 @@ const themeDescriptions: Record<string, { label: string; desc: string; colors: s
 };
 
 const datasetDescriptions: Record<string, string> = {
-  showcase: '5 scenarios — governance, scheduling, diplomacy, MAGI triangle',
+  showcase: '4 scenarios — governance, scheduling, MAGI triangle, analysis',
   diplomacy: '7 nations — Spring 1904 bilateral negotiations',
   'code-review': '3 reviewers — async function security review',
 };
