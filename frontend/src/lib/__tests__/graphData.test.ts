@@ -101,7 +101,7 @@ describe('buildRFNodes', () => {
     const delibs = { d1: makeDelib({ votes: [
       { vote_id: 'v1', agent_id: 'a1', value: 1, deliberation_id: 'd1', position_id: 'p1', created_at: '' },
     ]}) };
-    const nodes = buildRFNodes(positions, graph, delibs, null);
+    const nodes = buildRFNodes(positions, graph, delibs, 'd1');
     expect(nodes[0]!.data.voteDirection).toBe(1);
     expect(nodes[1]!.data.voteDirection).toBeUndefined();
   });
