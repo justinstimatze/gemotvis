@@ -13,6 +13,7 @@ import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
 import { AgentNode, type AgentNodeData } from './AgentNode';
 import { DelibEdge, type DelibEdgeData } from './DelibEdge';
 import { CenterPanel } from './CenterPanel';
+import { WorldMap } from './WorldMap';
 
 const nodeTypes = { agent: AgentNode };
 const edgeTypes = { delib: DelibEdge };
@@ -130,6 +131,7 @@ export function GraphCanvas() {
         elementsSelectable={false}
         proOptions={{ hideAttribution: true }}
       />
+      <WorldMap show={layoutResult.showWorldMap} />
       <CenterPanel />
     </div>
   );

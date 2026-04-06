@@ -576,3 +576,203 @@
   color: #cd9b1d;
   font-size: 13px;
 }
+
+/* Watch badge */
+.watch-badge {
+  position: fixed;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 12px;
+  background: var(--vis-amber, #0070f3);
+  color: #fff;
+  border-radius: 0 0 6px 6px;
+}
+
+/* World map background */
+.world-map-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  color: var(--vis-text-dim, #888);
+}
+
+/* ===== Login Form ===== */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vis-bg, #fafafa);
+}
+
+.login-card {
+  width: 340px;
+  padding: 32px;
+  background: var(--vis-panel, #fff);
+  border: 1px solid var(--vis-panel-border, #e0e0e0);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--vis-text, #333);
+  margin: 0 0 4px;
+}
+
+.login-subtitle {
+  font-size: 12px;
+  color: var(--vis-text-dim, #888);
+  margin: 0 0 20px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--vis-panel-border, #ddd);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: monospace;
+  background: var(--vis-bg, #fafafa);
+  color: var(--vis-text, #333);
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+.login-error {
+  font-size: 12px;
+  color: var(--vis-red, #f44336);
+  margin-bottom: 12px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--vis-amber, #0070f3);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.login-btn:hover { opacity: 0.9; }
+.login-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ===== Theme-Specific Node Shapes ===== */
+
+/* MAGI: Diamond-shaped nodes */
+.theme-magi .agent-node-icon {
+  border-radius: 0;
+  transform: rotate(45deg);
+  border-color: var(--vis-amber, #ff8c00);
+}
+
+.theme-magi .agent-node-icon > * {
+  transform: rotate(-45deg);
+}
+
+.theme-magi .agent-node-active .agent-node-icon {
+  box-shadow: 0 0 16px var(--vis-amber, #ff8c00), 0 0 32px rgba(255, 140, 0, 0.3);
+}
+
+.theme-magi .agent-node-name {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1.5px;
+}
+
+/* MAGI: Scanline effect on graph */
+.theme-magi .graph-view::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* MAGI: Active edge glow */
+.theme-magi .graph-edge-path.graph-edge-active {
+  stroke: var(--vis-green, #00ff41);
+  filter: drop-shadow(0 0 4px var(--vis-green, #00ff41));
+}
+
+/* MAGI: Chat bubble styling */
+.theme-magi .chat-bubble {
+  border: 1px solid var(--vis-amber, #ff8c00);
+}
+
+.theme-magi .chat-left {
+  background: rgba(0, 255, 65, 0.1);
+  border-color: var(--vis-green, #00ff41);
+}
+
+.theme-magi .chat-right {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: var(--vis-cyan, #00ffff);
+}
+
+/* Gastown: Diamond nodes with copper border */
+.theme-gastown .agent-node-icon {
+  border-radius: 0;
+  transform: rotate(45deg);
+  border-color: var(--vis-amber, #cd9b1d);
+  border-width: 3px;
+}
+
+.theme-gastown .agent-node-icon > * {
+  transform: rotate(-45deg);
+}
+
+.theme-gastown .agent-node-active .agent-node-icon {
+  box-shadow: 0 0 12px rgba(205, 155, 29, 0.5);
+}
+
+.theme-gastown .agent-node-name {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1px;
+}
+
+/* Gastown: Warm edge styling */
+.theme-gastown .graph-edge-path.graph-edge-active {
+  stroke: var(--vis-amber, #cd9b1d);
+}
+
+/* Gastown: Chat styling */
+.theme-gastown .chat-left {
+  background: rgba(205, 155, 29, 0.08);
+  border-color: var(--vis-amber, #cd9b1d);
+}
+
+/* Minimal: Clean circle nodes (default) */
+.theme-minimal .agent-node-active .agent-node-icon {
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.2);
+}
+
+.theme-minimal .graph-edge-path.graph-edge-active {
+  stroke: var(--vis-blue, #0070f3);
+}
+
+/* Minimal: subtle gradient active edge */
+.theme-minimal .chat-left {
+  background: #f0f4ff;
+}
