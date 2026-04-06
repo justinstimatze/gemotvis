@@ -32,11 +32,10 @@ export function CenterPanel() {
   }, [searchOpen]);
 
   // Center panel for 2-4 agents, side panel for 5+
-  // Use side panel when the delib has many agents OR the graph has many nodes (multi-delib)
+  // Side panel only for delibs with many agents (group rounds, not bilaterals)
   const rawDs = activeEdge ? rawDelibs[activeEdge] : null;
   const totalAgents = rawDs?.agents?.length ?? 0;
-  const graphNodeCount = useGraphStore((s) => s.graphNodes.length);
-  const useSidePanel = activeEdge && animationPhase === 'ready' && ds && (totalAgents > 4 || graphNodeCount > 5);
+  const useSidePanel = activeEdge && animationPhase === 'ready' && ds && totalAgents > 4;
 
   // Set body class so graph-view can shrink when side panel is visible
   useEffect(() => {
