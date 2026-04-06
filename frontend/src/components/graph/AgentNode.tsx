@@ -20,6 +20,8 @@ export interface AgentNodeData extends Record<string, unknown> {
 
 type AgentNodeType = Node<AgentNodeData, 'agent'>;
 
+const voteLabels: Record<number, string> = { [-1]: 'Disagree', 0: 'Neutral', 1: 'Agree' };
+
 function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const theme = useThemeStore((s) => s.activeTheme);
   const animationPhase = useGraphStore((s) => s.animationPhase);
@@ -54,7 +56,13 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
         <span className="agent-node-letter">{name.charAt(0).toUpperCase()}</span>
       </div>
       <div className="agent-node-name">{name}</div>
-      {data.activeGemots > 0 && (
+      {data.voteDirection != null && (
+        <div className={`agent-node-vote vote-${data.voteDirection === 1 ? 'agree' : data.voteDirection === -1 ? 'disagree' : 'neutral'}`}
+          title={voteLabels[data.voteDirection]}>
+          {data.voteDirection === 1 ? '\u2713' : data.voteDirection === -1 ? '\u2717' : '\u2014'}
+        </div>
+      )}
+      {data.activeGemots > 0 && !data.voteDirection && (
         <div className="agent-node-stats">
           {data.totalMessages} msg &middot; {data.activeGemots} gemot{data.activeGemots !== 1 ? 's' : ''}
         </div>
@@ -68,8 +76,6 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
     </div>
   );
 }
-
-const voteLabels: Record<number, string> = { [-1]: 'Disagree', 0: 'Neutral', 1: 'Agree' };
 
 function Tooltip({ data }: { data: AgentNodeData }) {
   const lines = useMemo(() => {

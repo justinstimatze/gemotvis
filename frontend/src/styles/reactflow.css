@@ -46,6 +46,18 @@
   z-index: 20;
 }
 
+.agent-node-vote {
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+  padding: 0 6px;
+  border-radius: 8px;
+  line-height: 16px;
+}
+.agent-node-vote.vote-agree { color: #16a34a; background: #dcfce7; }
+.agent-node-vote.vote-disagree { color: #dc2626; background: #fef2f2; }
+.agent-node-vote.vote-neutral { color: #737373; background: #f5f5f5; }
+
 .agent-node-bridging {
   position: absolute;
   top: -2px;
@@ -124,6 +136,11 @@
 .graph-edge-path.graph-edge-hover {
   stroke: var(--vis-amber, #0070f3);
   transition: stroke 0.2s, opacity 0.2s;
+}
+
+.graph-edge-path.graph-edge-consensus {
+  stroke: var(--vis-green, #16a34a);
+  filter: drop-shadow(0 0 3px var(--vis-green, #16a34a));
 }
 
 .graph-edge-path.graph-edge-empty {

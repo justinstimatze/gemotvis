@@ -51,6 +51,18 @@ export function ScrubberBar() {
     return { positions, votes, analysis, total: events.length };
   }, [events]);
 
+  // Compute density per marker (events within ±2% of timeline position)
+  const density = useMemo(() => {
+    if (events.length < 2) return events.map(() => 1);
+    const n = events.length;
+    const window = Math.max(2, Math.floor(n * 0.04)); // 4% window
+    return events.map((_, i) => {
+      const lo = Math.max(0, i - window);
+      const hi = Math.min(n - 1, i + window);
+      return (hi - lo + 1) / (window * 2 + 1);
+    });
+  }, [events]);
+
   const currentLabel = eventIndex != null && events[eventIndex]
     ? events[eventIndex].label
     : '';
@@ -88,7 +100,7 @@ export function ScrubberBar() {
               <div
                 key={i}
                 className={`scrubber-marker ${evt.type} ${isActive ? 'active' : ''}`}
-                style={{ left: `${pct}%` }}
+                style={{ left: `${pct}%`, opacity: 0.4 + (density[i] ?? 0.5) * 0.6 }}
                 title={evt.label}
               />
             );

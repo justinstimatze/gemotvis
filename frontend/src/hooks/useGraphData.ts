@@ -121,12 +121,15 @@ export function useRFEdges(
       const posCount = (ds?.positions ?? []).length;
       const highlighted = !isSingleDelib && edge.delibID === activeEdge;
       const cruxCount = countDisagreements(filteredDelibs, edge.a, edge.b);
+      // Check if this delib reached consensus (any statement with >70% agreement)
+      const consensus = ds?.analysis?.consensus_statements ?? [];
+      const hasConsensus = consensus.some(c => c.overall_agree_ratio >= 0.7);
       return {
         id: `${edge.delibID}-${edge.a}-${edge.b}`,
         source: edge.a,
         target: edge.b,
         type: 'delib' as const,
-        data: { delibID: edge.delibID, posCount, highlighted, cruxCount },
+        data: { delibID: edge.delibID, posCount, highlighted, cruxCount, hasConsensus },
       };
     });
   }, [graph.edges, filteredDelibs, activeEdge]);

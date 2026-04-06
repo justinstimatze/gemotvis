@@ -15,6 +15,7 @@ export interface DelibEdgeData extends Record<string, unknown> {
   posCount: number;
   highlighted: boolean;
   cruxCount: number;
+  hasConsensus: boolean;
 }
 
 type DelibEdgeType = Edge<DelibEdgeData, 'delib'>;
@@ -46,6 +47,7 @@ function DelibEdgeComponent({
 
   const posCount = data?.posCount ?? 0;
   const cruxCount = data?.cruxCount ?? 0;
+  const hasConsensus = data?.hasConsensus ?? false;
   const isActive = (data?.highlighted ?? false) && animationPhase === 'ready';
   const isHovered = activeNode != null && (source === activeNode || target === activeNode);
   const { thickness, opacity } = edgeStyle(posCount, isActive, isHovered);
@@ -68,6 +70,7 @@ function DelibEdgeComponent({
     'graph-edge-path',
     isActive && 'graph-edge-active',
     isHovered && 'graph-edge-hover',
+    hasConsensus && 'graph-edge-consensus',
     posCount === 0 && 'graph-edge-empty',
   ].filter(Boolean).join(' ');
 
