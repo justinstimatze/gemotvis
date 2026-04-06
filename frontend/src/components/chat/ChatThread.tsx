@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Position as PositionType, AgentInfo } from '../../types';
 import { collectAgentNames } from '../../lib/helpers';
 import { ChatBubble } from './ChatBubble';
@@ -13,10 +13,16 @@ interface ChatThreadProps {
 
 export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
   const animationPhase = useGraphStore((s) => s.animationPhase);
+  const activeNode = useGraphStore((s) => s.activeNode);
   const playing = useScrubberStore((s) => s.playing);
   const speed = useScrubberStore((s) => s.speed);
   const contentRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
+  const bubbleRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const setBubbleRef = useCallback((idx: number, el: HTMLDivElement | null) => {
+    if (el) bubbleRefs.current.set(idx, el);
+    else bubbleRefs.current.delete(idx);
+  }, []);
 
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
@@ -48,6 +54,17 @@ export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
     prevCountRef.current = positions.length;
   }, [positions.length]);
 
+  // Scroll to highlighted agent's last message
+  useEffect(() => {
+    if (!activeNode) return;
+    for (let i = positions.length - 1; i >= 0; i--) {
+      if (positions[i]?.agent_id === activeNode) {
+        bubbleRefs.current.get(i)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        break;
+      }
+    }
+  }, [activeNode, positions]);
+
   if (positions.length === 0) return null;
 
   return (
@@ -59,17 +76,19 @@ export function ChatThread({ positions, agents, allAgents }: ChatThreadProps) {
           const isNewest = idx === positions.length - 1;
           const isNewlyAdded = idx >= prevCountRef.current;
           const shouldType = isNewest && isNewlyAdded && playing && animationPhase === 'ready';
+          const isHighlighted = activeNode === p.agent_id;
 
           return (
-            <ChatBubble
-              key={p.position_id}
-              agentId={p.agent_id}
-              content={p.content}
-              isLeft={isLeft}
-              shouldType={shouldType}
-              agentNames={agentNames}
-              typingSpeed={typingSpeed}
-            />
+            <div key={p.position_id} ref={(el) => setBubbleRef(idx, el)} className={isHighlighted ? 'chat-bubble-highlighted' : ''}>
+              <ChatBubble
+                agentId={p.agent_id}
+                content={p.content}
+                isLeft={isLeft}
+                shouldType={shouldType}
+                agentNames={agentNames}
+                typingSpeed={typingSpeed}
+              />
+            </div>
           );
         })}
         <div ref={scrollRef} />

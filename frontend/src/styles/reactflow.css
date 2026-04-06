@@ -295,6 +295,11 @@
   margin-bottom: 0;
 }
 
+.chat-bubble-highlighted .chat-bubble {
+  opacity: 1 !important;
+  box-shadow: 0 0 0 2px var(--vis-amber, #0070f3);
+}
+
 .chat-new {
   animation: bubbleIn 0.3s ease;
 }

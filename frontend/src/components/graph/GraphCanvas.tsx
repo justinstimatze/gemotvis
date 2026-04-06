@@ -72,7 +72,7 @@ function GraphCanvasInner() {
     setActiveNode(null);
   }, [setActiveNode]);
 
-  // Node click → cycle through agent's bilaterals
+  // Node click → cycle through agent's bilaterals (multi-delib) or highlight agent (single-delib)
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node<AgentNodeData>) => {
     const agentId = node.data.agentId;
     const agentEdges = graph.edges
@@ -81,17 +81,26 @@ function GraphCanvasInner() {
       .filter(e => e.posCount > 0)
       .sort((a, b) => b.posCount - a.posCount);
 
-    if (agentEdges.length === 0) return;
+    // Multi-delib: cycle through this agent's bilaterals
+    if (agentEdges.length > 0) {
+      const uniqueDelibs = new Set(agentEdges.map(e => e.delibID));
+      if (uniqueDelibs.size > 1 || !uniqueDelibs.has(activeEdge ?? '')) {
+        const currentIdx = agentEdges.findIndex(e => e.delibID === activeEdge);
+        const nextIdx = currentIdx >= 0 ? (currentIdx + 1) % agentEdges.length : 0;
+        const nextDelib = agentEdges[nextIdx]!.delibID;
 
-    const currentIdx = agentEdges.findIndex(e => e.delibID === activeEdge);
-    const nextIdx = currentIdx >= 0 ? (currentIdx + 1) % agentEdges.length : 0;
-    const nextDelib = agentEdges[nextIdx]!.delibID;
+        useScrubberStore.getState().setPlaying(false);
+        useGraphStore.getState().setActiveEdge(nextDelib);
+        const events = useScrubberStore.getState().events;
+        const idx = events.findIndex(e => e.delibID === nextDelib);
+        if (idx >= 0) useScrubberStore.getState().setEventIndex(idx);
+        return;
+      }
+    }
 
-    useScrubberStore.getState().setPlaying(false);
-    useGraphStore.getState().setActiveEdge(nextDelib);
-    const events = useScrubberStore.getState().events;
-    const idx = events.findIndex(e => e.delibID === nextDelib);
-    if (idx >= 0) useScrubberStore.getState().setEventIndex(idx);
+    // Single-delib: toggle agent highlight (scroll chat to their latest message)
+    const current = useGraphStore.getState().activeNode;
+    useGraphStore.getState().setActiveNode(current === agentId ? null : agentId);
   }, [graph.edges, rawDelibs, activeEdge]);
 
   return (
