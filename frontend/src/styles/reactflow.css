@@ -401,3 +401,178 @@
   color: var(--vis-text, #333);
   cursor: pointer;
 }
+
+/* ===== Landing Page ===== */
+.landing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vis-bg, #fafafa);
+}
+
+.landing-content {
+  width: 360px;
+  padding: 40px 32px;
+  background: var(--vis-panel, #fff);
+  border: 1px solid var(--vis-panel-border, #e0e0e0);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.landing-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: lowercase;
+  color: var(--vis-text, #333);
+  margin: 0 0 4px;
+}
+
+.landing-subtitle {
+  font-size: 12px;
+  color: var(--vis-text-dim, #888);
+  margin: 0 0 24px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.landing-section { margin-bottom: 16px; }
+
+.landing-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vis-text-dim, #888);
+  margin-bottom: 6px;
+}
+
+.landing-select, .landing-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--vis-panel-border, #ddd);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--vis-bg, #fafafa);
+  color: var(--vis-text, #333);
+  box-sizing: border-box;
+}
+
+.landing-row {
+  display: flex;
+  gap: 8px;
+}
+
+.landing-row .landing-input { flex: 1; }
+
+.landing-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--vis-panel-border, #ddd);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--vis-panel, #fff);
+  color: var(--vis-text, #333);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.landing-btn:hover { background: var(--vis-bg, #f5f5f5); }
+.landing-btn:disabled { opacity: 0.4; cursor: default; }
+
+.landing-btn-primary {
+  width: 100%;
+  background: var(--vis-amber, #0070f3);
+  color: #fff;
+  border-color: var(--vis-amber, #0070f3);
+}
+
+.landing-btn-primary:hover { opacity: 0.9; background: var(--vis-amber, #0070f3); }
+
+.landing-divider {
+  height: 1px;
+  background: var(--vis-panel-border, #eee);
+  margin: 20px 0;
+}
+
+.landing-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.landing-link {
+  font-size: 11px;
+  color: var(--vis-text-dim, #888);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.landing-link:hover { color: var(--vis-text, #333); }
+
+/* ===== Boot Overlay ===== */
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vis-bg, #fafafa);
+  animation: bootFadeOut 0.5s ease 0.3s forwards;
+}
+
+@keyframes bootFadeOut {
+  to { opacity: 0; pointer-events: none; }
+}
+
+.boot-text {
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--vis-text, #333);
+  line-height: 1.8;
+}
+
+.boot-line {
+  animation: bootLineIn 0.2s ease;
+}
+
+@keyframes bootLineIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.boot-cursor {
+  animation: blink 0.6s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* MAGI boot theme */
+.boot-magi {
+  background: #050505;
+}
+
+.boot-magi .boot-text {
+  color: #ff8c00;
+  font-size: 13px;
+  text-shadow: 0 0 8px rgba(255, 140, 0, 0.5);
+}
+
+/* Gastown boot theme */
+.boot-gastown {
+  background: #1a1510;
+}
+
+.boot-gastown .boot-text {
+  color: #cd9b1d;
+  font-size: 13px;
+}

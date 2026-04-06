@@ -11,9 +11,11 @@ import { GraphCanvas } from './components/graph/GraphCanvas';
 import { ScrubberBar } from './components/scrubber/ScrubberBar';
 import { Footer } from './components/panels/Footer';
 import { Header } from './components/Header';
-import { useEffect, useRef } from 'react';
+import { LandingPage } from './components/LandingPage';
+import { BootOverlay } from './components/BootOverlay';
+import { useEffect, useRef, useState } from 'react';
 
-// Expose stores for debugging (remove in production)
+// Expose stores for debugging
 if (typeof window !== 'undefined') {
   const w = window as unknown as Record<string, unknown>;
   w.__session = useSessionStore;
@@ -25,9 +27,8 @@ if (typeof window !== 'undefined') {
 function GraphView() {
   const deliberations = useSessionStore((s) => s.deliberations);
   const setEvents = useScrubberStore((s) => s.setEvents);
-  useScrubberPlayback(); // activates the playback effect
+  useScrubberPlayback();
 
-  // Build timeline when deliberations change
   useEffect(() => {
     const ids = Object.keys(deliberations);
     if (ids.length === 0) return;
@@ -35,7 +36,6 @@ function GraphView() {
     setEvents(events);
   }, [deliberations, setEvents]);
 
-  // Auto-start playback: poll until events are ready, then start once
   const autoplayRef = useRef(false);
   useEffect(() => {
     if (autoplayRef.current) return;
@@ -48,7 +48,6 @@ function GraphView() {
       if (firstEvt) {
         state.setEventIndex(0);
         useGraphStore.getState().setActiveEdge(firstEvt.delibID);
-        // Small delay so the edge change triggers useAnimationPhase
         setTimeout(() => useScrubberStore.getState().setPlaying(true), 50);
       }
     }, 200);
@@ -64,12 +63,34 @@ function GraphView() {
   );
 }
 
+function isDemo(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return params.has('demo') || params.has('multi');
+}
+
+function isWatchPath(): boolean {
+  return window.location.pathname.startsWith('/watch/');
+}
+
 export function App() {
   const theme = useThemeStore((s) => s.activeTheme);
+  const [bootDone, setBootDone] = useState(false);
+  const showDemo = isDemo() || isWatchPath();
+
   useSSE();
+
+  // Skip boot for landing page
+  if (!showDemo && !bootDone) {
+    return (
+      <div id="screen" className={`theme-${theme}`} style={{ width: '100vw', height: '100vh' }}>
+        <LandingPage />
+      </div>
+    );
+  }
 
   return (
     <div id="screen" className={`theme-${theme}`} style={{ width: '100vw', height: '100vh' }}>
+      {!bootDone && <BootOverlay onComplete={() => setBootDone(true)} />}
       <Header />
       <ReactFlowProvider>
         <Routes>
