@@ -59,6 +59,17 @@ function GraphView() {
     return () => clearInterval(interval);
   }, []);
 
+  const hasData = Object.keys(deliberations).length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="loading-skeleton">
+        <div className="loading-pulse" />
+        <div className="loading-text">Waiting for deliberation data...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <GraphCanvas />
