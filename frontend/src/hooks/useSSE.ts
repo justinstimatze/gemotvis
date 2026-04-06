@@ -17,8 +17,11 @@ export function useSSE(config: SSEConfig = {}) {
   const setConfig = useSessionStore((s) => s.setConfig);
   const configFetched = useRef(false);
 
-  const eventsURL = config.eventsURL ?? '/api/events';
-  const stateURL = config.stateURL ?? '/api/state';
+  // Pass ?data= param from URL to SSE/state endpoints for dataset selection
+  const dataParam = new URLSearchParams(window.location.search).get('data');
+  const dataSuffix = dataParam ? `?data=${encodeURIComponent(dataParam)}` : '';
+  const eventsURL = config.eventsURL ?? `/api/events${dataSuffix}`;
+  const stateURL = config.stateURL ?? `/api/state${dataSuffix}`;
 
   // Fetch server config once
   useEffect(() => {

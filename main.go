@@ -74,9 +74,47 @@ func cmdDemo() {
 	serviceKey := fs.String("service-key", envOr("GEMOTVIS_SERVICE_KEY", ""), "gemot API key for live watching")
 	fs.Parse(os.Args[1:])
 
-	s := server.NewDemo(*cycle, *gemotURL, *serviceKey)
-	log.Printf("gemotvis demo on %s (cycle: %s)", *addr, *cycle)
+	// Load any testdata files as additional named datasets
+	extra := loadTestdata("testdata", "/data")
+
+	s := server.NewDemo(*cycle, *gemotURL, *serviceKey, extra)
+	if len(extra) > 0 {
+		log.Printf("gemotvis demo on %s (cycle: %s, %d extra datasets)", *addr, *cycle, len(extra))
+	} else {
+		log.Printf("gemotvis demo on %s (cycle: %s)", *addr, *cycle)
+	}
 	serve(*addr, s, s)
+}
+
+// loadTestdata scans directories for .json snapshot files and returns them as named datasets.
+func loadTestdata(dirs ...string) map[string]*poller.Snapshot {
+	datasets := make(map[string]*poller.Snapshot)
+	for _, dir := range dirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue // directory doesn't exist, skip
+		}
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+				continue
+			}
+			path := dir + "/" + e.Name()
+			data, err := os.ReadFile(path)
+			if err != nil {
+				continue
+			}
+			var snap poller.Snapshot
+			if err := json.Unmarshal(data, &snap); err != nil || len(snap.Deliberations) == 0 {
+				continue
+			}
+			name := strings.TrimSuffix(e.Name(), ".json")
+			name = strings.TrimPrefix(name, "v9-")
+			name = strings.TrimPrefix(name, "hermes-")
+			datasets[name] = &snap
+			log.Printf("  loaded dataset %q from %s (%d deliberations)", name, path, len(snap.Deliberations))
+		}
+	}
+	return datasets
 }
 
 func cmdWatch() {

@@ -49,10 +49,19 @@ func New(p *poller.Poller, h *hub.Hub) *Server {
 
 // NewDemo creates a server with built-in sample data and optional auto-cycling.
 // If gemotURL and serviceKey are provided, live watching via join codes is also enabled.
-func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string) *Server {
+func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string, extraDatasets map[string]*poller.Snapshot) *Server {
+	datasets := map[string]*poller.Snapshot{
+		"demo": demoSnapshot(),
+	}
+	for name, snap := range extraDatasets {
+		datasets[name] = snap
+	}
+
 	s := &Server{
 		mux:           http.NewServeMux(),
-		snapshot:      demoSnapshot(),
+		snapshot:      datasets["demo"],
+		datasets:      datasets,
+		defaultData:   "demo",
 		cycleInterval: cycleInterval,
 	}
 	if gemotURL != "" && serviceKey != "" {

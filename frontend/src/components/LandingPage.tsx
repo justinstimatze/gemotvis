@@ -1,23 +1,33 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
 import { useThemeStore } from '../stores/theme';
 import type { Theme } from '../types';
 
 export function LandingPage() {
   const theme = useThemeStore((s) => s.activeTheme);
   const setTheme = useThemeStore((s) => s.setTheme);
-  const navigate = useNavigate();
   const [watchCode, setWatchCode] = useState('');
+  const [datasets, setDatasets] = useState<string[]>([]);
+  const [selectedDataset, setSelectedDataset] = useState('demo');
+
+  // Fetch available datasets
+  useEffect(() => {
+    fetch('/api/datasets')
+      .then((r) => r.json() as Promise<{ datasets: string[]; active: string }>)
+      .then((d) => {
+        setDatasets(d.datasets);
+        if (d.active) setSelectedDataset(d.active);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleThemeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setTheme(e.target.value as Theme);
   }, [setTheme]);
 
   const startDemo = useCallback(() => {
-    navigate(`/?demo=1&multi=true&theme=${theme}`);
-    // Force a reload to trigger SSE connection with demo param
-    window.location.href = `/?demo=1&multi=true&theme=${theme}`;
-  }, [theme, navigate]);
+    const dataParam = selectedDataset !== 'demo' ? `&data=${selectedDataset}` : '';
+    window.location.href = `/?demo=1&multi=true&theme=${theme}${dataParam}`;
+  }, [theme, selectedDataset]);
 
   const watchLive = useCallback(() => {
     if (watchCode.trim()) {
@@ -39,6 +49,21 @@ export function LandingPage() {
             <option value="gastown">Gastown</option>
           </select>
         </div>
+
+        {datasets.length > 1 && (
+          <div className="landing-section">
+            <label className="landing-label">Dataset</label>
+            <select
+              className="landing-select"
+              value={selectedDataset}
+              onChange={(e) => setSelectedDataset(e.target.value)}
+            >
+              {datasets.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="landing-section">
           <button className="landing-btn landing-btn-primary" onClick={startDemo}>
