@@ -128,17 +128,25 @@ function GroupMode() {
 
 /** Dashboard mode: login with API key, then view all deliberations. */
 function DashboardMode() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null); // null = checking
+
+  // Check for existing session on mount
+  useEffect(() => {
+    fetch('/api/dashboard/state')
+      .then((r) => {
+        if (r.ok) setLoggedIn(true);
+        else setLoggedIn(false);
+      })
+      .catch(() => setLoggedIn(false));
+  }, []);
 
   const handleLogin = useCallback(() => {
     setLoggedIn(true);
   }, []);
 
-  if (!loggedIn) {
-    return <LoginForm onLogin={handleLogin} />;
-  }
+  if (loggedIn === null) return null; // checking session
+  if (!loggedIn) return <LoginForm onLogin={handleLogin} />;
 
-  // After login, use dashboard SSE endpoints
   return <DashboardView />;
 }
 
