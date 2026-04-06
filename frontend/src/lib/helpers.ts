@@ -11,7 +11,7 @@ export function shortAgentID(id: string): string {
   const parts = id.split(':');
   let name = parts[parts.length - 1]!;
   name = name.replace(/-agent$/, '').replace(/_agent$/, '');
-  return name.length > 18 ? name.slice(0, 16) + '..' : name;
+  return name.length > 24 ? name.slice(0, 22) + '..' : name;
 }
 
 export function truncate(s: string, n: number): string {
