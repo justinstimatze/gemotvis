@@ -1252,10 +1252,10 @@ footer {
     text-align: center;
     z-index: 2;
     cursor: pointer;
-    transition: left 3s cubic-bezier(0.22, 0.61, 0.36, 1),
-                top 3s cubic-bezier(0.22, 0.61, 0.36, 1),
-                transform 3s cubic-bezier(0.22, 0.61, 0.36, 1),
-                opacity 2s ease;
+    /* Position animated via Web Animations API (app.js animateNodesToPositions).
+       CSS only handles visual state transitions (scale, opacity). */
+    transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 0.6s ease;
 }
 
 .graph-node:hover {
