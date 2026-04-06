@@ -398,7 +398,8 @@
 
 .chat-left {
   align-self: flex-start;
-  background: var(--vis-bg, #f5f5f5);
+  background: var(--vis-panel, #fff);
+  border: 1px solid var(--vis-panel-border, #e0e0e0);
   border-bottom-left-radius: 4px;
 }
 
@@ -1365,14 +1366,10 @@
   color: #e0e0e0; /* light gray for readability on dark */
 }
 
-.theme-magi .chat-left {
-  background: rgba(0, 255, 65, 0.1);
-  border-color: #00ff41;
-}
-
+.theme-magi .chat-left,
 .theme-magi .chat-right {
-  background: rgba(0, 255, 255, 0.1);
-  border-color: #00ffff;
+  background: rgba(255, 140, 0, 0.05);
+  border-color: #333;
 }
 
 .theme-magi .chat-name {
@@ -1525,12 +1522,7 @@
   background: #f5e6d3;
 }
 
-.theme-gastown .chat-left {
-  background: #efe3cf;
-  border-left: 3px solid #cd7f32;
-  border-color: #cd7f32;
-}
-
+.theme-gastown .chat-left,
 .theme-gastown .chat-right {
   background: #f5edd8;
   border-color: #c4a882;
@@ -1641,15 +1633,11 @@
 }
 
 /* Chat: pill-shaped, tinted backgrounds */
-.theme-minimal .chat-left {
-  background: #f0f4ff;
-  border-radius: 12px 12px 12px 4px;
-}
-
+.theme-minimal .chat-left,
 .theme-minimal .chat-right {
-  background: #faf5ff;
-  border-color: #e9d5ff;
-  border-radius: 12px 12px 4px 12px;
+  background: #fafafa;
+  border-color: #e5e5e5;
+  border-radius: 12px;
 }
 
 .theme-minimal .chat-name {
