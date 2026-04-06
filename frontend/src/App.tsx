@@ -97,6 +97,8 @@ function WatchMode() {
 
   useWatchSSE(codes);
 
+  useEffect(() => { useSessionStore.setState({ mode: 'live' }); }, []);
+
   return (
     <>
       {code && (
@@ -113,6 +115,8 @@ function WatchMode() {
 function GroupMode() {
   const { groupId } = useParams<{ groupId: string }>();
   useGroupSSE(groupId ?? '');
+
+  useEffect(() => { useSessionStore.setState({ mode: 'live' }); }, []);
 
   return (
     <>
@@ -139,6 +143,12 @@ function DashboardMode() {
 }
 
 function DashboardView() {
+  // Override mode to 'live' for dashboard (server may report 'demo')
+  useEffect(() => {
+    useSessionStore.getState().setConnected(true);
+    useSessionStore.setState({ mode: 'live' });
+  }, []);
+
   useSSE({
     stateURL: '/api/dashboard/state',
     eventsURL: '/api/dashboard/events',
