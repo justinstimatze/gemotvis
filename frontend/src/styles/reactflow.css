@@ -86,9 +86,11 @@
   fill: var(--vis-text-dim, #888);
 }
 
-/* Graph view container */
+/* Graph view container — account for header (32px) and scrubber (36px) */
 .graph-view {
   background: var(--vis-bg, #fafafa);
+  padding-top: 32px;
+  padding-bottom: 36px;
 }
 
 /* Center panel overlay — positioned over the React Flow canvas */
@@ -325,3 +327,77 @@
 .analysis-item { padding: 8px; background: var(--vis-bg, #f5f5f5); border-radius: 6px; margin-bottom: 6px; }
 .analysis-content { font-size: 12px; color: var(--vis-text, #333); line-height: 1.5; }
 .analysis-meta { font-size: 10px; color: var(--vis-text-dim, #888); margin-top: 4px; }
+
+/* ===== Header ===== */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background: var(--vis-panel, #fff);
+  border-bottom: 1px solid var(--vis-panel-border, #e0e0e0);
+  font-size: 11px;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-system {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--vis-text, #333);
+}
+
+.header-status {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.header-status.online {
+  color: var(--vis-green, #4caf50);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.header-status.offline {
+  color: var(--vis-red, #f44336);
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.header-topic {
+  font-weight: 500;
+  color: var(--vis-text, #333);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 500px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-mode {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--vis-text-dim, #888);
+}
+
+.theme-switcher {
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid var(--vis-panel-border, #ddd);
+  border-radius: 4px;
+  background: var(--vis-panel, #fff);
+  color: var(--vis-text, #333);
+  cursor: pointer;
+}

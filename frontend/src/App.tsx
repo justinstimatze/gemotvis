@@ -10,6 +10,7 @@ import { buildGlobalTimeline } from './lib/buildTimeline';
 import { GraphCanvas } from './components/graph/GraphCanvas';
 import { ScrubberBar } from './components/scrubber/ScrubberBar';
 import { Footer } from './components/panels/Footer';
+import { Header } from './components/Header';
 import { useEffect, useRef } from 'react';
 
 // Expose stores for debugging (remove in production)
@@ -69,6 +70,7 @@ export function App() {
 
   return (
     <div id="screen" className={`theme-${theme}`} style={{ width: '100vw', height: '100vh' }}>
+      <Header />
       <ReactFlowProvider>
         <Routes>
           <Route path="/*" element={<GraphView />} />
