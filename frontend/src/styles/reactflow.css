@@ -250,7 +250,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 520px;
-  max-height: calc(100vh - 36px - var(--bottom-bar-h, 44px) - 8px);
+  max-height: min(55vh, calc(100vh - 36px - var(--bottom-bar-h, 44px) - 8px));
   z-index: 50;
   background: var(--vis-panel, #fff);
   border: 1px solid var(--vis-panel-border, #e0e0e0);
@@ -300,8 +300,9 @@
 }
 
 .theme-gastown .chat-panel-side {
-  border-left: 2px solid #c4a882;
-  box-shadow: -3px 0 8px rgba(0,0,0,0.12);
+  border-left: 3px solid #8b5e3c;
+  background: #f5e6d3;
+  box-shadow: -3px 0 10px rgba(0,0,0,0.15);
 }
 
 .theme-minimal .chat-panel-side {
@@ -1579,39 +1580,62 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  border: 4px solid #cd7f32;
-  background: linear-gradient(160deg, #f5e6d3 0%, #e8dcc8 40%, #d4c4a8 100%);
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.2), inset 0 0 8px rgba(205,127,50,0.1),
-              0 0 0 1px #8b5e3c; /* dark outer ring */
+  border: 5px solid #b8860b;
+  background: radial-gradient(circle at 40% 35%, #f5edd8 0%, #e8dcc8 50%, #d4c4a8 100%);
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.3),
+              inset 0 2px 6px rgba(0,0,0,0.15),
+              inset 0 -1px 3px rgba(255,255,255,0.2),
+              0 0 0 1px #6d4c25,
+              0 0 0 2px rgba(205,127,50,0.3);
 }
 
 .theme-gastown .agent-node-letter {
-  color: #5a3e28;
+  color: #3e2723;
   font-family: 'Cinzel', serif;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
 }
 
 .theme-gastown .agent-node-active .agent-node-icon {
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+  border-color: #daa520;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.35),
+              inset 0 2px 6px rgba(0,0,0,0.15),
+              0 0 12px rgba(218,165,32,0.2);
 }
 
 .theme-gastown .agent-node:hover .agent-node-icon {
-  outline-color: #b8860b;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+  border-color: #daa520;
 }
 
 .theme-gastown .agent-node-name {
   font-family: 'Cinzel', serif;
   letter-spacing: 1px;
   color: #5a3e28;
+  font-weight: 600;
 }
 
 .theme-gastown .agent-node-stats {
   font-family: 'Crimson Text', serif;
+  color: #8b7355;
 }
 
-/* Header with brass rivets */
+/* Vote badges: brass nameplate */
+.theme-gastown .agent-node-vote {
+  border-radius: 2px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  border: 1px solid #b8860b;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+.theme-gastown .agent-node-vote.vote-agree { color: #2e5a1e; background: #d4e8c8; border-color: #5d8a4a; }
+.theme-gastown .agent-node-vote.vote-disagree { color: #8b2500; background: #f0d4c4; border-color: #a0522d; }
+.theme-gastown .agent-node-vote.vote-neutral { color: #6d4c25; background: #e8dcc8; border-color: #b8860b; }
+
+/* Header — brass nameplate on iron plate */
 .theme-gastown .app-header {
-  border-bottom: 2px solid #8b5e3c;
+  border-bottom: 3px solid #8b5e3c;
+  background: linear-gradient(180deg, #d4c4a8 0%, #c4b498 100%);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .theme-gastown .app-header::before,
@@ -1636,91 +1660,130 @@
 .theme-gastown .header-system::before { content: '\2014\00a0'; color: #cd7f32; }
 .theme-gastown .header-system::after { content: '\00a0\2014'; color: #cd7f32; }
 
-/* Center panel: sharp rectangles, offset shadow */
+/* Center panel: parchment with ornate border */
 .theme-gastown .center-panel-overlay {
-  border: 2px solid #c4a882;
+  border: 2px solid #b8860b;
   border-radius: 0;
-  box-shadow: 3px 3px 8px rgba(0,0,0,0.12);
+  box-shadow: 3px 4px 12px rgba(0,0,0,0.2), inset 0 0 20px rgba(139,94,60,0.05);
+  background: #f5e6d3;
 }
 
-/* Chat: sharp corners, brass left-border */
+.theme-gastown .center-panel-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(196,168,130,0.5);
+  pointer-events: none;
+}
+
+/* Chat: sharp corners, serif text */
 .theme-gastown .chat-bubble {
   border-radius: 0;
   font-family: 'Crimson Text', serif;
   color: #2c1810;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .theme-gastown .center-header {
   color: #2c1810;
   font-family: 'Cinzel', serif;
-  border-bottom-color: #c4a882;
-  background: #f5e6d3;
+  border-bottom: 2px solid #c4a882;
+  background: linear-gradient(180deg, #f5e6d3 0%, #eedcc4 100%);
+  letter-spacing: 1px;
 }
 
 .theme-gastown .center-content {
   background: #f5e6d3;
 }
 
-.theme-gastown .center-panel-overlay {
-  background: #f5e6d3;
-}
-
 .theme-gastown .chat-left,
 .theme-gastown .chat-right {
-  background: #f5edd8;
+  background: #f0e4ce;
   border-color: #c4a882;
 }
 
 .theme-gastown .chat-name {
   font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
-/* Active edge: brass to copper gradient */
-/* Gastown edges: copper pipe aesthetic */
+/* Edges: copper pipe aesthetic */
 .theme-gastown .graph-edge-path {
   stroke: #b87333;
   stroke-width: 2.5px;
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
 .theme-gastown .graph-edge-path.graph-edge-active {
   stroke-width: 4px;
-  opacity: 0.6;
+  opacity: 0.65;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
 }
 
 .theme-gastown .graph-edge-path.graph-edge-empty {
   stroke: #c4a882;
   stroke-width: 1.5px;
-  opacity: 0.15;
+  opacity: 0.12;
 }
 
 .theme-gastown .edge-label-badge {
   background: #f5e6d3;
-  border-color: #c4a882;
+  border: 1px solid #b8860b;
   color: #5d4037;
   font-family: 'Cinzel', serif;
+  font-size: 9px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
 }
 
-/* Footer */
+/* Footer — dark iron plate */
 .theme-gastown .graph-footer {
-  background: #8b5e3c;
+  background: linear-gradient(180deg, #6d4c25 0%, #5a3e28 100%);
+  border-top: 3px solid #8b5e3c;
+}
+
+.theme-gastown .footer-panel {
+  background: rgba(245,230,211,0.08);
+  border: 1px solid rgba(196,168,130,0.3);
 }
 
 .theme-gastown .footer-panel-title {
   font-family: 'Cinzel', serif;
+  color: #cd9b1d;
+  letter-spacing: 1px;
 }
 
-/* Scrubber */
+.theme-gastown .footer-panel-empty { color: #b8a088; }
+
+/* Metrics — brass plate values */
+.theme-gastown .metrics-stat-value { color: #3e2723; font-family: 'Cinzel', serif; }
+.theme-gastown .metrics-status-open { color: #2e5a1e; background: #d4e8c8; border-radius: 2px; }
+.theme-gastown .metrics-status-closed { color: #5d4037; background: #d4c4a8; border-radius: 2px; }
+
+/* Scrubber — brass track */
 .theme-gastown .scrubber-bar {
-  border-top: 2px solid #8b5e3c;
-  background: #f5e6d3;
+  border-top: 3px solid #8b5e3c;
+  background: linear-gradient(180deg, #e8dcc8 0%, #ddd0b8 100%);
 }
 
-.theme-gastown .scrubber-controls { border-right-color: #c4a882; }
-.theme-gastown .scrubber-track { background: #d4c4a8; }
-.theme-gastown .scrubber-progress { background: #cd7f32; }
-.theme-gastown .scrubber-marker.position { background: #cd7f32; }
-.theme-gastown .scrubber-marker.vote { background: #2e7d32; }
+.theme-gastown .scrubber-controls {
+  border-right-color: #c4a882;
+  font-family: 'Cinzel', serif;
+}
+.theme-gastown .scrubber-track { background: #c4b498; border-radius: 2px; }
+.theme-gastown .scrubber-progress { background: #b8860b; }
+.theme-gastown .scrubber-marker.position { background: #b87333; }
+.theme-gastown .scrubber-marker.vote { background: #2e5a1e; }
+.theme-gastown .scrubber-label { color: #5d4037; font-family: 'Crimson Text', serif; }
+
+/* Chat bubble readability — base 60% opacity too dim on parchment */
+.theme-gastown .chat-bubble { opacity: 0.85; }
+
+/* Audit log */
+.theme-gastown .audit-entry { font-family: 'Crimson Text', serif; }
+.theme-gastown .audit-agent { color: #8b5e3c; font-weight: 600; }
 
 /* =====================================================================
    MINIMAL THEME — Vercel / Linear / Geist
