@@ -54,3 +54,4 @@ jobs:
       # Start server and run visual tests
       - run: ./gemotvis demo &
       - run: sleep 3 && node test_visual.js
+      - run: node test_visual_qa.js

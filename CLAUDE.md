@@ -159,6 +159,23 @@ Shareable links via URL params. Updated on user-initiated actions (click/keyboar
 - Agents sorted by ID for deterministic ordering.
 - Hub channels closed under write lock to prevent send-on-closed panics.
 
+## MANDATORY: Before Adding Derived State
+
+Before computing agent lists, colors, layout decisions, or any state derived from deliberation data:
+1. **Grep first**: search for the pattern in `lib/`, `hooks/`, `components/` — a helper likely exists
+2. **Single source of truth**: agent colors come from `agentColor(graphNodes.indexOf(id), graphNodes.length, theme)` where `graphNodes` is stored in the graph store. Never recompute agent ordering independently.
+3. **Shared helpers exist for**: `isSingleDelibGraph()`, `countBilaterals()`, `collectAgentsWithCoords()`, `getPositionCount()`, `findInDelibs()`, `useFocusedDelib()`, `classNames()`
+
+## MANDATORY: Visual QA After Changes
+
+After any visual change, run `node test_visual_qa.js` which tests:
+- Color consistency between graph nodes and chat bubbles across all 3 layout modes
+- Footer panels visible and not clipped
+- Side panel not overlapping bottom bar
+- Graph fitting within viewport (no overflow)
+
+Manual verification: load `?demo=1&data=showcase&theme=minimal` and `?demo=1&data=diplomacy&theme=minimal`, advance scrubber, and visually confirm colors match between node rings and chat bubble borders.
+
 ## Adaptive Layouts
 
 Layout computed in `lib/layout.ts`, positions passed to React Flow nodes.
