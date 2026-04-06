@@ -8,8 +8,15 @@ import { useScrubberStore } from '../../stores/scrubber';
 interface ChatThreadProps {
   positions: PositionType[];
   agents: AgentInfo[];
-  allAgents: AgentInfo[]; // from all deliberations, for mention highlighting
+  allAgents: AgentInfo[];
   searchQuery?: string;
+}
+
+function searchClasses(query: string, content: string, agentId: string): string {
+  if (!query) return '';
+  const q = query.toLowerCase();
+  const matches = content.toLowerCase().includes(q) || agentId.toLowerCase().includes(q);
+  return matches ? 'chat-bubble-search-match' : 'chat-bubble-search-dim';
 }
 
 export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatThreadProps) {
@@ -27,21 +34,15 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
 
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
+  const typingSpeed = useMemo(() => Math.max(20, speed / 200), [speed]);
 
-  // Typing speed: derive from scrubber speed
-  const typingSpeed = useMemo(() => {
-    // ~60ms per word at 1x, faster at higher speeds
-    return Math.max(20, speed / 200);
-  }, [speed]);
-
-  // Auto-scroll: use a sentinel div at the bottom that scrolls into view
+  // Auto-scroll on new positions
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // Scroll on position count change
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [positions.length]);
 
-  // Also scroll periodically during typing to keep up with word reveal
+  // Periodic scroll during typing
   useEffect(() => {
     if (!playing) return;
     const interval = setInterval(() => {
@@ -68,31 +69,23 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
 
   if (positions.length === 0) return null;
 
+  const query = searchQuery ?? '';
+
   return (
     <div className="center-content" ref={contentRef}>
       <div className="chat-thread">
         {positions.map((p, idx) => {
-          const agentIdx = agentIDs.indexOf(p.agent_id);
-          const isLeft = agentIdx % 2 === 0;
+          const isLeft = agentIDs.indexOf(p.agent_id) % 2 === 0;
           const isNewest = idx === positions.length - 1;
-          const isNewlyAdded = idx >= prevCountRef.current;
-          const shouldType = isNewest && isNewlyAdded && playing && animationPhase === 'ready';
-          const isHighlighted = activeNode === p.agent_id;
-          const query = searchQuery?.toLowerCase() ?? '';
-          const matchesSearch = query && (
-            p.content.toLowerCase().includes(query) ||
-            p.agent_id.toLowerCase().includes(query)
-          );
-          const dimmedBySearch = query && !matchesSearch;
+          const shouldType = isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
 
           return (
             <div
               key={p.position_id}
               ref={(el) => setBubbleRef(idx, el)}
               className={[
-                isHighlighted && 'chat-bubble-highlighted',
-                matchesSearch && 'chat-bubble-search-match',
-                dimmedBySearch && 'chat-bubble-search-dim',
+                activeNode === p.agent_id && 'chat-bubble-highlighted',
+                searchClasses(query, p.content, p.agent_id),
               ].filter(Boolean).join(' ')}
             >
               <ChatBubble
