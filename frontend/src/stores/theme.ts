@@ -20,24 +20,39 @@ interface ThemeState {
   setTheme: (theme: Theme) => void;
 }
 
-function getThemeFromURL(): Theme {
+const VALID_THEMES = ['magi', 'minimal', 'gastown'] as const;
+
+function getTheme(): Theme {
+  // URL param takes priority
   const params = new URLSearchParams(window.location.search);
-  const t = params.get('theme');
-  if (t === 'magi' || t === 'minimal' || t === 'gastown') return t;
+  const urlTheme = params.get('theme');
+  if (urlTheme && VALID_THEMES.includes(urlTheme as Theme)) return urlTheme as Theme;
+
+  // Then cookie
+  const match = document.cookie.match(/(?:^|; )gemotvis_theme=(\w+)/);
+  if (match && VALID_THEMES.includes(match[1] as Theme)) return match[1] as Theme;
+
   return 'minimal';
 }
 
+function saveThemeCookie(theme: Theme) {
+  document.cookie = `gemotvis_theme=${theme}; path=/; max-age=${365 * 24 * 60 * 60}; SameSite=Lax`;
+}
+
 export const useThemeStore = create<ThemeState>((set) => {
-  const initial = getThemeFromURL();
+  const initial = getTheme();
+  saveThemeCookie(initial);
   return {
     activeTheme: initial,
     voteLabels: VOTE_LABELS[initial],
     statusLabels: STATUS_LABELS[initial],
-    setTheme: (theme) =>
+    setTheme: (theme) => {
+      saveThemeCookie(theme);
       set({
         activeTheme: theme,
         voteLabels: VOTE_LABELS[theme],
         statusLabels: STATUS_LABELS[theme],
-      }),
+      });
+    },
   };
 });
