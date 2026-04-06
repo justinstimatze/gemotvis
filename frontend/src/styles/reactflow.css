@@ -679,29 +679,20 @@
 .login-btn:hover { opacity: 0.9; }
 .login-btn:disabled { opacity: 0.4; cursor: default; }
 
-/* ===== Theme-Specific Node Shapes ===== */
+/* ====================================================================
+   THEME-SPECIFIC POLISH
+   ====================================================================
+   Reference aesthetics:
+   - MAGI: Evangelion NERV terminals, CRT phosphor, tactical HUD
+   - Gastown: Mad Max Fury Road, brass gauges, steam pipes, riveted iron
+   - Minimal: Vercel/Linear, Geist/shadcn, Inter font, clean whitespace
+   ==================================================================== */
 
-/* MAGI: Diamond-shaped nodes */
-.theme-magi .agent-node-icon {
-  border-radius: 0;
-  transform: rotate(45deg);
-  border-color: var(--vis-amber, #ff8c00);
-}
+/* =====================================================================
+   MAGI THEME — CRT / Evangelion / NERV
+   ===================================================================== */
 
-.theme-magi .agent-node-icon > * {
-  transform: rotate(-45deg);
-}
-
-.theme-magi .agent-node-active .agent-node-icon {
-  box-shadow: 0 0 16px var(--vis-amber, #ff8c00), 0 0 32px rgba(255, 140, 0, 0.3);
-}
-
-.theme-magi .agent-node-name {
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1.5px;
-}
-
-/* MAGI: Scanline effect on graph */
+/* Scanlines: full-screen repeating gradient */
 .theme-magi .graph-view::after {
   content: '';
   position: fixed;
@@ -709,76 +700,361 @@
   pointer-events: none;
   z-index: 100;
   background: repeating-linear-gradient(
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
+    transparent 0px, transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px, rgba(0, 0, 0, 0.06) 4px
   );
 }
 
-/* MAGI: Active edge glow */
-.theme-magi .graph-edge-path.graph-edge-active {
-  stroke: var(--vis-green, #00ff41);
-  filter: drop-shadow(0 0 4px var(--vis-green, #00ff41));
+/* Scanline sweep animation */
+.theme-magi .graph-view::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 101;
+  background: linear-gradient(
+    transparent 0%, rgba(255, 140, 0, 0.03) 48%,
+    rgba(255, 140, 0, 0.06) 50%, transparent 52%
+  );
+  animation: scanSweep 8s linear infinite;
 }
 
-/* MAGI: Chat bubble styling */
+@keyframes scanSweep {
+  from { transform: translateY(-100vh); }
+  to { transform: translateY(100vh); }
+}
+
+/* CRT vignette (darkened edges) */
+.theme-magi #screen::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Screen flicker */
+.theme-magi #screen {
+  animation: flicker 8s infinite;
+}
+
+@keyframes flicker {
+  0%, 92%, 94%, 96%, 98%, 100% { opacity: 1; }
+  93% { opacity: 0.97; }
+  95% { opacity: 0.95; }
+  97% { opacity: 0.98; }
+}
+
+/* Hex grid background on graph */
+.theme-magi .graph-view {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34.64' height='60'%3E%3Cpath d='M17.32 0L34.64 10v20L17.32 40 0 30V10z' fill='none' stroke='%23ff8c00' stroke-width='0.5' opacity='0.12'/%3E%3C/svg%3E");
+  background-size: 34.64px 60px;
+}
+
+/* Diamond nodes with dark gradient fill + crosshair */
+.theme-magi .agent-node-icon {
+  border-radius: 0;
+  transform: rotate(45deg);
+  border: 2px solid #ff8c00;
+  background: linear-gradient(135deg, #1a1200 0%, #0c0c0c 100%);
+  box-shadow: 0 0 20px rgba(255,140,0,0.4), 0 0 40px rgba(255,140,0,0.15),
+              inset 0 0 10px rgba(255,140,0,0.15);
+}
+
+.theme-magi .agent-node-icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, transparent 49%, rgba(255,140,0,0.06) 49%, rgba(255,140,0,0.06) 51%, transparent 51%),
+    linear-gradient(to bottom, transparent 49%, rgba(255,140,0,0.06) 49%, rgba(255,140,0,0.06) 51%, transparent 51%);
+  pointer-events: none;
+}
+
+.theme-magi .agent-node-icon > * {
+  transform: rotate(-45deg);
+  text-shadow: 0 0 6px rgba(255, 140, 0, 0.8);
+}
+
+/* Active left node: green phosphor */
+.theme-magi .agent-node-active.graph-node-left .agent-node-icon {
+  border-color: #00ff41;
+  box-shadow: 0 0 20px rgba(0,255,65,0.5), 0 0 40px rgba(0,255,65,0.2),
+              inset 0 0 10px rgba(0,255,65,0.15);
+}
+
+/* Active right node: cyan phosphor */
+.theme-magi .agent-node-active.graph-node-right .agent-node-icon {
+  border-color: #00ffff;
+  box-shadow: 0 0 20px rgba(0,255,255,0.5), 0 0 40px rgba(0,255,255,0.2),
+              inset 0 0 10px rgba(0,255,255,0.15);
+}
+
+.theme-magi .agent-node-name {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 4px rgba(255, 140, 0, 0.6);
+}
+
+.theme-magi .agent-node-stats {
+  text-shadow: 0 0 3px rgba(255, 140, 0, 0.4);
+}
+
+/* Active edge: animated green→cyan scan */
+.theme-magi .graph-edge-path.graph-edge-active {
+  stroke: #00ff41;
+  filter: drop-shadow(0 0 6px rgba(0,255,65,0.4)) drop-shadow(0 0 12px rgba(0,255,255,0.2));
+}
+
+/* Targeting brackets on center panel */
+.theme-magi .center-panel-overlay {
+  border: 1px solid #ff8c00;
+  border-radius: 0;
+  box-shadow: 0 0 16px rgba(255,140,0,0.2), inset 0 0 20px rgba(255,140,0,0.05);
+}
+
+.theme-magi .center-panel-overlay::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(255, 140, 0, 0.3);
+  pointer-events: none;
+}
+
+.theme-magi .center-panel-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(255, 140, 0, 0.15);
+  pointer-events: none;
+}
+
+/* Chat bubbles */
 .theme-magi .chat-bubble {
-  border: 1px solid var(--vis-amber, #ff8c00);
+  border: 1px solid #ff8c00;
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
 }
 
 .theme-magi .chat-left {
-  background: rgba(0, 255, 65, 0.1);
-  border-color: var(--vis-green, #00ff41);
+  background: rgba(0, 255, 65, 0.08);
+  border-color: #00ff41;
 }
 
 .theme-magi .chat-right {
-  background: rgba(0, 255, 255, 0.1);
-  border-color: var(--vis-cyan, #00ffff);
+  background: rgba(0, 255, 255, 0.08);
+  border-color: #00ffff;
 }
 
-/* Gastown: Diamond nodes with copper border */
+.theme-magi .chat-name {
+  text-shadow: 0 0 4px currentColor;
+}
+
+/* Header */
+.theme-magi .app-header {
+  border-bottom-color: #ff8c00;
+}
+
+.theme-magi .header-system {
+  text-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
+}
+
+/* Footer */
+.theme-magi .graph-footer {
+  background: rgba(255, 140, 0, 0.3);
+}
+
+.theme-magi .footer-panel-title {
+  text-shadow: 0 0 4px rgba(255, 140, 0, 0.5);
+}
+
+/* Scrubber */
+.theme-magi .scrubber-bar {
+  border-top-color: #ff8c00;
+}
+
+/* =====================================================================
+   GASTOWN THEME — Steampunk / Industrial / Brass
+   =====================================================================
+   Reference: Mad Max Fury Road Gastown, Victorian brass instruments,
+   pressure gauges, riveted iron plates, steam pipes
+   ===================================================================== */
+
+/* Octagonal gauge nodes (steampunk pressure gauge shape) */
 .theme-gastown .agent-node-icon {
   border-radius: 0;
-  transform: rotate(45deg);
-  border-color: var(--vis-amber, #cd9b1d);
-  border-width: 3px;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  border: none;
+  background: linear-gradient(135deg, #f5e6d3 0%, #e8dcc8 50%, #d4c4a8 100%);
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+  outline: 3px solid #cd7f32;
+  outline-offset: -3px;
 }
 
 .theme-gastown .agent-node-icon > * {
-  transform: rotate(-45deg);
+  color: #5a3e28;
+  font-family: 'Cinzel', serif;
 }
 
 .theme-gastown .agent-node-active .agent-node-icon {
-  box-shadow: 0 0 12px rgba(205, 155, 29, 0.5);
+  background: linear-gradient(135deg, #cd7f32 0%, #b8860b 100%);
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+}
+
+.theme-gastown .agent-node-active .agent-node-icon > * {
+  color: #f5e6d3;
+}
+
+.theme-gastown .agent-node:hover .agent-node-icon {
+  outline-color: #b8860b;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
 }
 
 .theme-gastown .agent-node-name {
   font-family: 'Cinzel', serif;
   letter-spacing: 1px;
+  color: #5a3e28;
 }
 
-/* Gastown: Warm edge styling */
-.theme-gastown .graph-edge-path.graph-edge-active {
-  stroke: var(--vis-amber, #cd9b1d);
+.theme-gastown .agent-node-stats {
+  font-family: 'Crimson Text', serif;
 }
 
-/* Gastown: Chat styling */
+/* Header with brass rivets */
+.theme-gastown .app-header {
+  border-bottom: 2px solid #8b5e3c;
+}
+
+.theme-gastown .app-header::before,
+.theme-gastown .app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #d4a574 0%, #cd7f32 50%, #8b4513 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.theme-gastown .app-header::before { left: 24px; }
+.theme-gastown .app-header::after { right: 24px; }
+
+.theme-gastown .header-system {
+  font-family: 'Cinzel', serif;
+}
+
+.theme-gastown .header-system::before { content: '\2014\00a0'; color: #cd7f32; }
+.theme-gastown .header-system::after { content: '\00a0\2014'; color: #cd7f32; }
+
+/* Center panel: sharp rectangles, offset shadow */
+.theme-gastown .center-panel-overlay {
+  border: 2px solid #c4a882;
+  border-radius: 0;
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.12);
+}
+
+/* Chat: sharp corners, brass left-border */
+.theme-gastown .chat-bubble {
+  border-radius: 0;
+  font-family: 'Crimson Text', serif;
+}
+
 .theme-gastown .chat-left {
-  background: rgba(205, 155, 29, 0.08);
-  border-color: var(--vis-amber, #cd9b1d);
+  background: #efe3cf;
+  border-left: 3px solid #cd7f32;
+  border-color: #cd7f32;
 }
 
-/* Minimal: Clean circle nodes (default) */
-.theme-minimal .agent-node-active .agent-node-icon {
-  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.2);
+.theme-gastown .chat-right {
+  background: #f5edd8;
+  border-color: #c4a882;
 }
 
+.theme-gastown .chat-name {
+  font-family: 'Cinzel', serif;
+}
+
+/* Active edge: brass to copper gradient */
+.theme-gastown .graph-edge-path.graph-edge-active {
+  stroke: #cd7f32;
+}
+
+/* Footer */
+.theme-gastown .graph-footer {
+  background: #8b5e3c;
+}
+
+.theme-gastown .footer-panel-title {
+  font-family: 'Cinzel', serif;
+}
+
+/* Scrubber */
+.theme-gastown .scrubber-bar {
+  border-top: 2px solid #8b5e3c;
+}
+
+.theme-gastown .scrubber-dot.position { background: #cd7f32; }
+.theme-gastown .scrubber-dot.vote { background: #b87333; }
+
+/* =====================================================================
+   MINIMAL THEME — Vercel / Linear / Geist
+   =====================================================================
+   Reference: Linear app, Vercel dashboard, shadcn/ui, Inter font
+   ===================================================================== */
+
+/* Clean circle nodes with subtle hover ring */
+.theme-minimal .agent-node-icon {
+  border: 1.5px solid #d4d4d4;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.theme-minimal .agent-node:hover .agent-node-icon {
+  box-shadow: 0 0 0 3px rgba(0,112,243,0.12), 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Active left: blue ring + shadow */
+.theme-minimal .agent-node-active.graph-node-left .agent-node-icon {
+  border-color: #0070f3;
+  box-shadow: 0 0 0 3px rgba(0,112,243,0.2), 0 2px 8px rgba(0,112,243,0.15);
+}
+
+/* Active right: purple ring + shadow */
+.theme-minimal .agent-node-active.graph-node-right .agent-node-icon {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.2), 0 2px 8px rgba(124,58,237,0.15);
+}
+
+/* Text glow on light background */
+.theme-minimal .agent-node-name {
+  text-shadow: 0 0 8px #f5f5f5, 0 0 16px #f5f5f5;
+}
+
+/* Center panel: shadcn-style layered shadow */
+.theme-minimal .center-panel-overlay {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+/* Active edge: blue→purple gradient */
 .theme-minimal .graph-edge-path.graph-edge-active {
-  stroke: var(--vis-blue, #0070f3);
+  stroke: #0070f3;
 }
 
-/* Minimal: subtle gradient active edge */
+/* Chat: pill-shaped, tinted backgrounds */
 .theme-minimal .chat-left {
   background: #f0f4ff;
+  border-radius: 12px 12px 12px 4px;
+}
+
+.theme-minimal .chat-right {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+  border-radius: 12px 12px 4px 12px;
+}
+
+.theme-minimal .chat-name {
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
