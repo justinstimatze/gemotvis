@@ -123,15 +123,20 @@ function GraphCanvasInner() {
 
   // Build React Flow edges
   const rfEdges = useMemo((): Edge<DelibEdgeData>[] => {
+    const uniqueDelibIDs = new Set(graph.edges.map(e => e.delibID));
+    const isSingleDelib = uniqueDelibIDs.size <= 1;
+
     return graph.edges.map((edge) => {
       const ds = filteredDelibs[edge.delibID];
       const posCount = (ds?.positions ?? []).length;
+      // Only highlight in multi-delib mode (where each edge = different bilateral)
+      const highlighted = !isSingleDelib && edge.delibID === activeEdge;
       return {
         id: `${edge.delibID}-${edge.a}-${edge.b}`,
         source: edge.a,
         target: edge.b,
         type: 'delib' as const,
-        data: { delibID: edge.delibID, posCount },
+        data: { delibID: edge.delibID, posCount, highlighted },
       };
     });
   }, [graph.edges, filteredDelibs]);

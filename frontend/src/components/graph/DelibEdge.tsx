@@ -11,6 +11,7 @@ import { useGraphStore } from '../../stores/graph';
 export interface DelibEdgeData extends Record<string, unknown> {
   delibID: string;
   posCount: number;
+  highlighted: boolean;
 }
 
 type DelibEdgeType = Edge<DelibEdgeData, 'delib'>;
@@ -26,7 +27,7 @@ function DelibEdgeComponent({
   const activeEdge = useGraphStore((s) => s.activeEdge);
   const animationPhase = useGraphStore((s) => s.animationPhase);
 
-  const isActive = data?.delibID === activeEdge && animationPhase === 'ready';
+  const isActive = (data?.highlighted ?? false) && animationPhase === 'ready';
   const isEmpty = (data?.posCount ?? 0) === 0;
   const posCount = data?.posCount ?? 0;
 
