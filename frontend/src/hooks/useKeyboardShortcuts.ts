@@ -64,6 +64,24 @@ function handleTabCycle({ scrub, graph }: Stores, shiftKey: boolean) {
   }
 }
 
+function handleDelibJump({ scrub, graph }: Stores, index: number) {
+  const seen = new Set<string>();
+  const delibs: { id: string; firstIdx: number }[] = [];
+  for (let i = 0; i < scrub.events.length; i++) {
+    const id = scrub.events[i]!.delibID;
+    if (!seen.has(id)) {
+      seen.add(id);
+      delibs.push({ id, firstIdx: i });
+    }
+  }
+  if (index < delibs.length) {
+    const d = delibs[index]!;
+    scrub.setPlaying(false);
+    graph.setActiveEdge(d.id);
+    scrub.setEventIndex(d.firstIdx);
+  }
+}
+
 function handleSearch(e: KeyboardEvent) {
   const searchInput = document.querySelector('.center-search-input') as HTMLInputElement;
   const searchBtn = document.querySelector('.center-search-btn') as HTMLButtonElement;
@@ -109,6 +127,16 @@ export function useKeyboardShortcuts() {
         case '2':       stores.scrub.setSpeedByIndex(1); break;
         case '3':       stores.scrub.setSpeedByIndex(2); break;
         case '4':       stores.scrub.setSpeedByIndex(3); break;
+        // Shift+digit: jump to nth deliberation (e.code works regardless of keyboard layout)
+        case '!': handleDelibJump(stores, 0); break;
+        case '@': handleDelibJump(stores, 1); break;
+        case '#': handleDelibJump(stores, 2); break;
+        case '$': handleDelibJump(stores, 3); break;
+        case '%': handleDelibJump(stores, 4); break;
+        case '^': handleDelibJump(stores, 5); break;
+        case '&': handleDelibJump(stores, 6); break;
+        case '*': handleDelibJump(stores, 7); break;
+        case '(': handleDelibJump(stores, 8); break;
       }
     }
 

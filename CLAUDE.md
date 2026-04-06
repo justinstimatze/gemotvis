@@ -99,6 +99,7 @@ When scrubbing in multi-view, the focused deliberation renders as a **full singl
 | Space | Play/pause |
 | Arrow Right/Left | Step forward/back one event |
 | S | Skip to next deliberation |
+| Shift+1-9 | Jump to nth deliberation (pauses playback) |
 | Tab / Shift+Tab | Cycle through agents (focuses bilateral in multi-delib) |
 | / | Open chat search |
 | F | Cycle event type filter |

@@ -89,10 +89,12 @@ export function ScrubberBar() {
     return list;
   }, [events, deliberations]);
 
+  const setPlaying = useScrubberStore((s) => s.setPlaying);
   const jumpToDelib = useCallback((delibId: string, firstIdx: number) => {
+    setPlaying(false);
     setEventIndex(firstIdx);
     setActiveEdge(delibId);
-  }, [setEventIndex, setActiveEdge]);
+  }, [setPlaying, setEventIndex, setActiveEdge]);
 
   if (events.length === 0) return null;
 
