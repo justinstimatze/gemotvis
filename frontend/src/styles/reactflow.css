@@ -1920,8 +1920,16 @@
   .agent-node-name { font-size: 10px; max-width: 100px; }
   .agent-node-stats { font-size: 8px; }
 
+  /* Header: truncate topic, hide mode label */
   .app-header { font-size: 11px; }
-  .header-topic { font-size: 11px; }
+  .header-topic { font-size: 11px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .header-mode { display: none; }
+
+  /* Delib nav: scroll horizontally */
+  .scrubber-delib-nav { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Footer: ensure text-overflow on agent names */
+  .audit-entry { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* Mobile: stack everything vertically */
@@ -1939,9 +1947,13 @@
   .center-content { padding: 8px; }
   .chat-bubble { font-size: 11px; padding: 6px 10px; }
 
-  .scrubber-bar { height: 36px; }
-  .scrubber-controls { gap: 4px; padding: 0 6px; }
-  .scrubber-controls button { font-size: 12px; min-width: 24px; }
+  .scrubber-bar { font-size: 10px; }
+  .scrubber-controls { gap: 2px; padding: 0 4px; }
+  .scrubber-controls button { font-size: 11px; min-width: 22px; }
+
+  /* Delib nav: smaller pills, scroll */
+  .scrubber-delib-nav { gap: 3px; padding: 3px 6px; }
+  .scrubber-delib-pill { font-size: 8px; padding: 1px 5px; }
 
   .graph-footer { height: 70px; }
   .footer-panel { padding: 6px 8px; font-size: 10px; }
@@ -1950,6 +1962,13 @@
   .agent-node-letter { font-size: 16px; }
   .agent-node-name { font-size: 9px; max-width: 80px; }
 
+  /* Header: hide topic, show only system name + status */
   .app-header { height: 28px; padding: 0 8px; }
-  .header-system { font-size: 12px; }
+  .header-system { font-size: 11px; }
+  .header-topic { display: none; }
+  .header-mode { display: none; }
+  .theme-switcher { font-size: 10px; padding: 1px 4px; }
+
+  /* MAGI header prefix too wide on mobile */
+  .theme-magi .header-system::before { content: ''; }
 }
