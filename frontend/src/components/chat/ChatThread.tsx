@@ -35,6 +35,10 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
   }, []);
 
   const theme = useThemeStore((s) => s.activeTheme);
+  const isLive = useMemo(() =>
+    window.location.pathname.startsWith('/dashboard') ||
+    window.location.pathname.startsWith('/watch/') ||
+    window.location.pathname.startsWith('/g/'), []);
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
   // Read graph node list from store — exact same ordering as AgentNode colors
@@ -92,7 +96,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
         {positions.map((p, idx) => {
           const isLeft = agentIDs.indexOf(p.agent_id) % 2 === 0;
           const isNewest = idx === positions.length - 1;
-          const shouldType = isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
+          const shouldType = !isLive && isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
           const colorIdx = graphNodes.indexOf(p.agent_id);
           const color = agentColor(colorIdx >= 0 ? colorIdx : 0, agentCount, theme);
 
