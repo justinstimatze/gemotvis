@@ -43,8 +43,8 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
   const clusterColor = data.clusterId != null ? clusterColors[data.clusterId % clusterColors.length] : undefined;
 
   // Scale icon size: fewer agents = bigger icons
-  const iconSize = data.agentCount <= 3 ? 96 : data.agentCount <= 5 ? 84 : 72;
-  const fontSize = data.agentCount <= 3 ? 32 : data.agentCount <= 5 ? 28 : 24;
+  const iconSize = data.agentCount <= 3 ? 110 : data.agentCount <= 5 ? 96 : 80;
+  const fontSize = data.agentCount <= 3 ? 36 : data.agentCount <= 5 ? 32 : 26;
 
   return (
     <div className={classes}>

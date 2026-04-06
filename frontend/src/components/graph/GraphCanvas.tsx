@@ -54,15 +54,20 @@ function GraphCanvasInner() {
   const rfNodes = useRFNodes(nodePositions, graph, filteredDelibs, activeEdge);
   const rfEdges = useRFEdges(graph, filteredDelibs, activeEdge);
 
-  // fitView on node count change
+  // fitView on node count change or animation phase change (panel appear/disappear)
+  const animationPhase = useGraphStore((s) => s.animationPhase);
   const prevNodeCount = useRef(rfNodes.length);
+  const prevPhase = useRef(animationPhase);
   useEffect(() => {
-    if (rfNodes.length !== prevNodeCount.current) {
-      prevNodeCount.current = rfNodes.length;
-      const timer = setTimeout(() => fitView({ padding: 0.35, duration: 600 }), 150);
+    const nodeCountChanged = rfNodes.length !== prevNodeCount.current;
+    const phaseChanged = animationPhase !== prevPhase.current;
+    prevNodeCount.current = rfNodes.length;
+    prevPhase.current = animationPhase;
+    if (nodeCountChanged || phaseChanged) {
+      const timer = setTimeout(() => fitView({ padding: 0.15, duration: 600 }), 200);
       return () => clearTimeout(timer);
     }
-  }, [rfNodes.length, fitView]);
+  }, [rfNodes.length, animationPhase, fitView]);
 
   // Node hover → highlight connected edges
   const setActiveNode = useGraphStore((s) => s.setActiveNode);
@@ -116,7 +121,7 @@ function GraphCanvasInner() {
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
         fitView
-        fitViewOptions={{ padding: 0.35 }}
+        fitViewOptions={{ padding: 0.15 }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}

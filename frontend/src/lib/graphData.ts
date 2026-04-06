@@ -79,8 +79,8 @@ export function buildRFNodes(
     }
 
     // Scale node dimensions with icon size
-    const nodeW = graph.nodes.length <= 3 ? 160 : graph.nodes.length <= 5 ? 145 : 130;
-    const nodeH = graph.nodes.length <= 3 ? 150 : graph.nodes.length <= 5 ? 135 : 120;
+    const nodeW = graph.nodes.length <= 3 ? 180 : graph.nodes.length <= 5 ? 160 : 140;
+    const nodeH = graph.nodes.length <= 3 ? 170 : graph.nodes.length <= 5 ? 155 : 135;
 
     return {
       id: np.id,
