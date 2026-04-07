@@ -212,40 +212,72 @@ func cmdExport() {
 	fs := flag.NewFlagSet("export", flag.ExitOnError)
 	gemotURL := fs.String("gemot-url", envOr("GEMOTVIS_GEMOT_URL", "http://localhost:8080"), "gemot instance URL")
 	apiKey := fs.String("api-key", envOr("GEMOTVIS_API_KEY", ""), "gemot API key")
-	delibID := fs.String("deliberation", "", "deliberation ID to export (required)")
+	delibID := fs.String("deliberation", "", "deliberation ID to export")
+	groupID := fs.String("group", "", "group ID to export (all deliberations in group)")
 	fs.Parse(os.Args[1:])
 
 	if *apiKey == "" {
 		log.Fatal("--api-key required")
 	}
-	if *delibID == "" {
-		log.Fatal("--deliberation required")
+	if *delibID == "" && *groupID == "" {
+		log.Fatal("--deliberation or --group required")
 	}
 
 	warnIfInsecure(*gemotURL)
 
 	client := gemot.NewClient(*gemotURL, *apiKey)
 
-	// Fetch all data for this deliberation
-	delib, err := client.GetDeliberation(*delibID)
-	if err != nil {
-		log.Fatalf("get deliberation: %v", err)
+	// Collect deliberation IDs to export
+	var delibIDs []string
+	if *groupID != "" {
+		delibs, err := client.ListByGroup(*groupID)
+		if err != nil {
+			log.Fatalf("list group %s: %v", *groupID, err)
+		}
+		for _, d := range delibs {
+			delibIDs = append(delibIDs, d.ID)
+		}
+		log.Printf("exporting %d deliberations from group %s", len(delibIDs), *groupID)
+	} else {
+		delibIDs = []string{*delibID}
 	}
 
-	positions, err := client.GetPositions(*delibID)
-	if err != nil {
-		log.Fatalf("get positions: %v", err)
+	snapshot := poller.Snapshot{
+		Deliberations: make(map[string]*poller.DelibState),
+		FetchedAt:     time.Now(),
 	}
 
-	votes, err := client.GetVotes(*delibID)
-	if err != nil {
-		log.Fatalf("get votes: %v", err)
+	for _, id := range delibIDs {
+		ds := exportDelib(client, id)
+		if ds != nil {
+			snapshot.Deliberations[id] = ds
+		}
 	}
 
-	analysis, _ := client.GetAnalysisResult(*delibID)
-	auditLog, _ := client.GetAuditLog(*delibID)
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(snapshot); err != nil {
+		log.Fatalf("encode: %v", err)
+	}
+}
 
-	// Build agent info from positions
+func exportDelib(client *gemot.Client, id string) *poller.DelibState {
+	delib, err := client.GetDeliberation(id)
+	if err != nil {
+		log.Printf("  skip %s: %v", id, err)
+		return nil
+	}
+
+	positions, err := client.GetPositions(id)
+	if err != nil {
+		log.Printf("  skip %s: %v", id, err)
+		return nil
+	}
+
+	votes, _ := client.GetVotes(id)
+	analysis, _ := client.GetAnalysisResult(id)
+	auditLog, _ := client.GetAuditLog(id)
+
 	agentMap := make(map[string]*poller.AgentInfo)
 	for _, pos := range positions {
 		if _, exists := agentMap[pos.AgentID]; !exists {
@@ -272,24 +304,15 @@ func cmdExport() {
 	}
 	sort.Slice(agents, func(i, j int) bool { return agents[i].ID < agents[j].ID })
 
-	snapshot := poller.Snapshot{
-		Deliberations: map[string]*poller.DelibState{
-			*delibID: {
-				Deliberation: delib,
-				Positions:    positions,
-				Votes:        votes,
-				Analysis:     analysis,
-				AuditLog:     auditLog,
-				Agents:       agents,
-			},
-		},
-		FetchedAt: time.Now(),
-	}
+	log.Printf("  %s: %d positions, %d votes, %d agents", id, len(positions), len(votes), len(agents))
 
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(snapshot); err != nil {
-		log.Fatalf("encode: %v", err)
+	return &poller.DelibState{
+		Deliberation: delib,
+		Positions:    positions,
+		Votes:        votes,
+		Analysis:     analysis,
+		AuditLog:     auditLog,
+		Agents:       agents,
 	}
 }
 
