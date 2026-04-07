@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,7 +27,13 @@ const (
 	dashboardSessionTimeout = 24 * time.Hour
 	dashboardPollInterval   = 10 * time.Second
 	sessionCookieName       = "gemotvis_session"
+
+	loginRateLimit    = 5
+	loginRateWindow   = 60 * time.Second
 )
+
+// loginRateLimiter tracks failed login attempts per IP.
+var loginFailures sync.Map // IP string -> *[]time.Time
 
 type dashboardSession struct {
 	id           string
@@ -140,7 +147,7 @@ func (dm *dashboardManager) decrypt(ciphertext []byte) (string, error) {
 func (dm *dashboardManager) createSession(apiKey string) (string, error) {
 	// Validate the key by trying list_deliberations
 	client := gemot.NewClient(dm.gemotURL, apiKey)
-	_, err := client.ListDeliberations()
+	_, err := client.ListDeliberations(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("invalid API key: %w", err)
 	}
@@ -207,11 +214,48 @@ func (dm *dashboardManager) deleteSession(sessionID string) {
 	}
 }
 
+// checkLoginRate returns true if the IP has exceeded the login rate limit.
+// It lazily prunes old entries.
+func checkLoginRate(ip string) bool {
+	val, _ := loginFailures.LoadOrStore(ip, &[]time.Time{})
+	times := val.(*[]time.Time)
+	now := time.Now()
+	cutoff := now.Add(-loginRateWindow)
+
+	// Prune old entries
+	fresh := (*times)[:0]
+	for _, t := range *times {
+		if t.After(cutoff) {
+			fresh = append(fresh, t)
+		}
+	}
+	*times = fresh
+	return len(fresh) >= loginRateLimit
+}
+
+// recordLoginFailure records a failed login attempt for rate limiting.
+func recordLoginFailure(ip string) {
+	val, _ := loginFailures.LoadOrStore(ip, &[]time.Time{})
+	times := val.(*[]time.Time)
+	*times = append(*times, time.Now())
+}
+
 // ---- HTTP Handlers ----
 
 func (s *Server) handleSessionCreate(w http.ResponseWriter, r *http.Request) {
 	if s.dashboards == nil {
 		http.Error(w, "dashboard not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	// Rate limit login attempts per IP
+	ip := r.RemoteAddr
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		ip = strings.SplitN(fwd, ",", 2)[0]
+		ip = strings.TrimSpace(ip)
+	}
+	if checkLoginRate(ip) {
+		http.Error(w, "too many login attempts, try again later", http.StatusTooManyRequests)
 		return
 	}
 
@@ -225,7 +269,8 @@ func (s *Server) handleSessionCreate(w http.ResponseWriter, r *http.Request) {
 
 	sessionID, err := s.dashboards.createSession(req.APIKey)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		recordLoginFailure(ip)
+		http.Error(w, "authentication failed", http.StatusUnauthorized)
 		return
 	}
 
@@ -284,12 +329,12 @@ func (s *Server) handleDashboardEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	current := s.sseClients.Add(1)
-	defer s.sseClients.Add(-1)
-	if current > maxSSEClients {
+	if s.sseClients.Add(1) > maxSSEClients {
+		s.sseClients.Add(-1)
 		http.Error(w, "too many connections", http.StatusServiceUnavailable)
 		return
 	}
+	defer s.sseClients.Add(-1)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {

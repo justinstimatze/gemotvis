@@ -67,6 +67,7 @@ export function CenterPanel() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus
+            aria-label="Search messages"
           />
           {searchQuery && (
             <button className="center-search-clear" onClick={() => setSearchQuery('')}>&times;</button>

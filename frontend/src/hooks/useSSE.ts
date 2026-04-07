@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSessionStore } from '../stores/session';
 import { useGraphStore } from '../stores/graph';
+import { isLiveRoute } from '../lib/helpers';
 import type { Snapshot, DelibState, ServerConfig } from '../types';
 
 interface SSEConfig {
@@ -31,9 +32,7 @@ export function useSSE(config: SSEConfig = {}) {
   const configFetched = useRef(false);
 
   // Live mode: auto-focus updated bilaterals
-  const isLive = window.location.pathname.startsWith('/dashboard') ||
-                 window.location.pathname.startsWith('/watch/') ||
-                 window.location.pathname.startsWith('/g/');
+  const isLive = isLiveRoute();
 
   // Pass ?data= param from URL to SSE/state endpoints for dataset selection
   const dataParam = new URLSearchParams(window.location.search).get('data');

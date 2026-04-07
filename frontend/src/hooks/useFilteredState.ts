@@ -3,6 +3,7 @@ import { useSessionStore } from '../stores/session';
 import { useScrubberStore } from '../stores/scrubber';
 import { useGraphStore } from '../stores/graph';
 import { filterToTime } from '../lib/filterToTime';
+import { isLiveRoute } from '../lib/helpers';
 import type { DelibState } from '../types';
 
 /**
@@ -19,9 +20,7 @@ export function useFilteredState(): Record<string, DelibState> {
 
   return useMemo(() => {
     // Skip filtering for live views (dashboard, watch, group) — show all data immediately
-    const isLive = window.location.pathname.startsWith('/dashboard') ||
-                   window.location.pathname.startsWith('/watch/') ||
-                   window.location.pathname.startsWith('/g/');
+    const isLive = isLiveRoute();
     if (isLive || !scrubberEnabled || scrubberEventIndex == null) return deliberations;
 
     const currentEvent = scrubberEvents[scrubberEventIndex];

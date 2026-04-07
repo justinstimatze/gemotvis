@@ -81,11 +81,7 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* ===== ANIMATIONS ===== */
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
+/* Note: @keyframes pulse is defined in reactflow.css (with scale + opacity) */
 
 /* ===== ACCESSIBILITY ===== */
 

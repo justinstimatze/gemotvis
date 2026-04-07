@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useScrubberStore } from '../../stores/scrubber';
 import { useGraphStore } from '../../stores/graph';
 import { useSessionStore } from '../../stores/session';
-import { useScrubberPlayback } from '../../hooks/useScrubberPlayback';
+import { startPlaybackAction, stopPlaybackAction, skipForwardAction } from '../../hooks/useScrubberPlayback';
 import { truncate } from '../../lib/helpers';
 
 export function ScrubberBar() {
@@ -16,12 +16,10 @@ export function ScrubberBar() {
   const setEventIndex = useScrubberStore((s) => s.setEventIndex);
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
 
-  const { startPlayback, stopPlayback, skipForward } = useScrubberPlayback();
-
   const togglePlay = useCallback(() => {
-    if (playing) stopPlayback();
-    else startPlayback();
-  }, [playing, startPlayback, stopPlayback]);
+    if (playing) stopPlaybackAction();
+    else startPlaybackAction();
+  }, [playing]);
 
   const scrubTo = useCallback((index: number) => {
     setEventIndex(index);
@@ -117,10 +115,10 @@ export function ScrubberBar() {
       )}
       {/* Controls */}
       <div className="scrubber-controls">
-        <button className="scrubber-btn scrubber-play" onClick={togglePlay} title={playing ? 'Pause (Space)' : 'Play (Space)'}>
+        <button className="scrubber-btn scrubber-play" onClick={togglePlay} title={playing ? 'Pause (Space)' : 'Play (Space)'} aria-label={playing ? 'Pause playback' : 'Start playback'}>
           {playing ? '\u23F8' : '\u25B6'}
         </button>
-        <button className="scrubber-btn" onClick={skipForward} title="Skip to next conversation (S)">
+        <button className="scrubber-btn" onClick={skipForwardAction} title="Skip to next conversation (S)" aria-label="Skip to next conversation">
           {'\u23ED'}
         </button>
         <button className="scrubber-btn scrubber-speed" onClick={cycleSpeed} title="Speed (1-4)">

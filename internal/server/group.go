@@ -117,7 +117,7 @@ func (gm *groupManager) getOrCreate(groupID string) (*groupSession, error) {
 
 	// Verify the group exists by fetching its deliberations
 	client := gemot.NewClient(gm.gemotURL, gm.apiKey)
-	delibs, err := client.ListByGroup(groupID)
+	delibs, err := client.ListByGroup(context.Background(), groupID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch group: %w", err)
 	}

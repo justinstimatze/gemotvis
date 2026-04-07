@@ -112,12 +112,11 @@ func (p *Poller) Run(ctx context.Context) {
 // whenever a relevant event arrives. Reconnects automatically on failure.
 func (p *Poller) listenSSE(ctx context.Context, notify chan<- struct{}) {
 	baseURL := p.client.BaseURL()
-	token := p.client.BearerToken()
 
 	// Build the events URL with optional deliberation filter
-	eventsURL := baseURL + "/events?token=" + token
+	eventsURL := baseURL + "/events"
 	if p.delibID != "" {
-		eventsURL += "&deliberation_id=" + p.delibID
+		eventsURL += "?deliberation_id=" + p.delibID
 	}
 
 	for {
@@ -148,6 +147,9 @@ func (p *Poller) readSSEStream(ctx context.Context, url string, notify chan<- st
 	}
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
+	if token := p.client.BearerToken(); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -208,7 +210,7 @@ func (p *Poller) poll(ctx context.Context) {
 	} else if len(p.delibIDs) > 0 {
 		ids = p.delibIDs
 	} else {
-		delibs, err := p.client.ListDeliberations()
+		delibs, err := p.client.ListDeliberations(ctx)
 		if err != nil {
 			log.Printf("poller: list deliberations: %v", err)
 			return
@@ -227,7 +229,7 @@ func (p *Poller) poll(ctx context.Context) {
 	// With many deliberations, we may exceed the limit. Fetch sequentially
 	// so we get at least the first few updated even if later ones fail.
 	for _, id := range ids {
-		state, err := p.fetchDelibState(id)
+		state, err := p.fetchDelibState(ctx, id)
 		if err != nil {
 			log.Printf("poller: fetch %s: %v", id, err)
 			// Keep previous state if fetch fails
@@ -260,24 +262,24 @@ func (p *Poller) poll(ctx context.Context) {
 	}
 }
 
-func (p *Poller) fetchDelibState(id string) (*DelibState, error) {
-	delib, err := p.client.GetDeliberation(id)
+func (p *Poller) fetchDelibState(ctx context.Context, id string) (*DelibState, error) {
+	delib, err := p.client.GetDeliberation(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get deliberation: %w", err)
 	}
 
-	positions, err := p.client.GetPositions(id)
+	positions, err := p.client.GetPositions(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get positions: %w", err)
 	}
 
-	votes, err := p.client.GetVotes(id)
+	votes, err := p.client.GetVotes(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get votes: %w", err)
 	}
 
-	analysis, _ := p.client.GetAnalysisResult(id)
-	auditLog, _ := p.client.GetAuditLog(id)
+	analysis, _ := p.client.GetAnalysisResult(ctx, id)
+	auditLog, _ := p.client.GetAuditLog(ctx, id)
 
 	// Derive agent info from positions
 	agentMap := make(map[string]*AgentInfo)

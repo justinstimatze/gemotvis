@@ -101,3 +101,39 @@ export function useScrubberPlayback() {
 
   return { startPlayback, stopPlayback, skipForward };
 }
+
+/** Standalone action: start playback (for use outside the hook). */
+export function startPlaybackAction() {
+  const state = useScrubberStore.getState();
+  if (state.events.length < 2) return;
+
+  if (state.eventIndex == null) {
+    state.setEventIndex(0);
+  }
+  const firstEvt = state.events[state.eventIndex ?? 0];
+  if (firstEvt) useGraphStore.getState().setActiveEdge(firstEvt.delibID);
+
+  state.setPlaying(true);
+}
+
+/** Standalone action: stop playback (for use outside the hook). */
+export function stopPlaybackAction() {
+  useScrubberStore.getState().setPlaying(false);
+}
+
+/** Standalone action: skip to next deliberation (for use outside the hook). */
+export function skipForwardAction() {
+  const state = useScrubberStore.getState();
+  const { events: evts, eventIndex: idx } = state;
+  if (idx == null || evts.length === 0) return;
+
+  const currentDelibID = evts[idx]?.delibID;
+  let next = idx + 1;
+  while (next < evts.length && evts[next]?.delibID === currentDelibID) next++;
+
+  if (next < evts.length) {
+    const nextEvt = evts[next]!;
+    useGraphStore.getState().setActiveEdge(nextEvt.delibID);
+    state.setEventIndex(next);
+  }
+}

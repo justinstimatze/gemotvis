@@ -230,7 +230,7 @@ func cmdExport() {
 	// Collect deliberation IDs to export
 	var delibIDs []string
 	if *groupID != "" {
-		delibs, err := client.ListByGroup(*groupID)
+		delibs, err := client.ListByGroup(context.Background(), *groupID)
 		if err != nil {
 			log.Fatalf("list group %s: %v", *groupID, err)
 		}
@@ -262,21 +262,22 @@ func cmdExport() {
 }
 
 func exportDelib(client *gemot.Client, id string) *poller.DelibState {
-	delib, err := client.GetDeliberation(id)
+	ctx := context.Background()
+	delib, err := client.GetDeliberation(ctx, id)
 	if err != nil {
 		log.Printf("  skip %s: %v", id, err)
 		return nil
 	}
 
-	positions, err := client.GetPositions(id)
+	positions, err := client.GetPositions(ctx, id)
 	if err != nil {
 		log.Printf("  skip %s: %v", id, err)
 		return nil
 	}
 
-	votes, _ := client.GetVotes(id)
-	analysis, _ := client.GetAnalysisResult(id)
-	auditLog, _ := client.GetAuditLog(id)
+	votes, _ := client.GetVotes(ctx, id)
+	analysis, _ := client.GetAnalysisResult(ctx, id)
+	auditLog, _ := client.GetAuditLog(ctx, id)
 
 	agentMap := make(map[string]*poller.AgentInfo)
 	for _, pos := range positions {

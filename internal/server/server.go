@@ -131,6 +131,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("X-Frame-Options", "DENY")
 	h.Set("Referrer-Policy", "no-referrer")
+	h.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+	h.Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 	h.Set("Content-Security-Policy", "default-src 'self'; style-src 'self' https://fonts.googleapis.com; script-src 'self'; connect-src 'self' https://gemot.dev; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com")
 	s.mux.ServeHTTP(w, r)
 }
@@ -260,12 +262,12 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
-	current := s.sseClients.Add(1)
-	defer s.sseClients.Add(-1)
-	if current > maxSSEClients {
+	if s.sseClients.Add(1) > maxSSEClients {
+		s.sseClients.Add(-1)
 		http.Error(w, "too many connections", http.StatusServiceUnavailable)
 		return
 	}
+	defer s.sseClients.Add(-1)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {

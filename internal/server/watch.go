@@ -248,12 +248,12 @@ func (s *Server) handleWatchEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Rate limit SSE connections
-	current := s.sseClients.Add(1)
-	defer s.sseClients.Add(-1)
-	if current > maxSSEClients {
+	if s.sseClients.Add(1) > maxSSEClients {
+		s.sseClients.Add(-1)
 		http.Error(w, "too many connections", http.StatusServiceUnavailable)
 		return
 	}
+	defer s.sseClients.Add(-1)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {

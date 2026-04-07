@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Position as PositionType, AgentInfo } from '../../types';
-import { collectAgentNames, classNames } from '../../lib/helpers';
+import { collectAgentNames, classNames, isLiveRoute } from '../../lib/helpers';
 import { agentColor } from '../../lib/color';
 import { ChatBubble } from './ChatBubble';
 import { useGraphStore } from '../../stores/graph';
@@ -35,10 +35,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
   }, []);
 
   const theme = useThemeStore((s) => s.activeTheme);
-  const isLive = useMemo(() =>
-    window.location.pathname.startsWith('/dashboard') ||
-    window.location.pathname.startsWith('/watch/') ||
-    window.location.pathname.startsWith('/g/'), []);
+  const isLive = useMemo(() => isLiveRoute(), []);
   const agentIDs = useMemo(() => agents.map((a) => a.id), [agents]);
   const agentNames = useMemo(() => collectAgentNames(allAgents), [allAgents]);
   // Read graph node list from store — exact same ordering as AgentNode colors
@@ -63,6 +60,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
 
   // Track position count for "is new" detection + set speaking agent
   const setSpeakingAgent = useGraphStore((s) => s.setSpeakingAgent);
+  const clearSpeakingAgent = useCallback(() => setSpeakingAgent(null), [setSpeakingAgent]);
   useEffect(() => {
     const isNewPosition = positions.length > prevCountRef.current;
     // Only pulse when actively typing a new message (not when scrubbing reveals old ones)
@@ -117,7 +115,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
                 agentNames={agentNames}
                 typingSpeed={typingSpeed}
                 agentColor={color}
-                onTypingComplete={shouldType ? () => setSpeakingAgent(null) : undefined}
+                onTypingComplete={shouldType ? clearSpeakingAgent : undefined}
               />
             </div>
           );

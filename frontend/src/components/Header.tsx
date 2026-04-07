@@ -1,11 +1,11 @@
 import { useSessionStore } from '../stores/session';
 import { useThemeStore } from '../stores/theme';
 import { useFocusedDelib } from '../hooks/useFocusedDelib';
+import { isLiveRoute } from '../lib/helpers';
 import type { Theme } from '../types';
 
 function getRouteMode(): 'demo' | 'live' | 'replay' {
-  const path = window.location.pathname;
-  if (path.startsWith('/dashboard') || path.startsWith('/watch/') || path.startsWith('/g/')) return 'live';
+  if (isLiveRoute()) return 'live';
   return 'demo';
 }
 
@@ -55,6 +55,7 @@ export function Header() {
           id="theme-switcher"
           value={theme}
           onChange={handleThemeChange}
+          aria-label="Select visual theme"
         >
           <option value="minimal">Minimal</option>
           <option value="gastown">Gastown</option>

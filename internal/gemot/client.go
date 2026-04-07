@@ -2,6 +2,7 @@ package gemot
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,7 +52,7 @@ type rpcError struct {
 	Message string `json:"message"`
 }
 
-func (c *Client) call(method string, params map[string]any) (json.RawMessage, error) {
+func (c *Client) call(ctx context.Context, method string, params map[string]any) (json.RawMessage, error) {
 	req := rpcRequest{
 		JSONRPC: "2.0",
 		Method:  method,
@@ -63,7 +64,7 @@ func (c *Client) call(method string, params map[string]any) (json.RawMessage, er
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
 
-	httpReq, err := http.NewRequest(http.MethodPost, c.baseURL+"/a2a", bytes.NewReader(body))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/a2a", bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("new request: %w", err)
 	}
@@ -96,8 +97,8 @@ func (c *Client) call(method string, params map[string]any) (json.RawMessage, er
 }
 
 // ListDeliberations calls gemot/deliberation action:list.
-func (c *Client) ListDeliberations() ([]Deliberation, error) {
-	raw, err := c.call("gemot/deliberation", map[string]any{"action": "list"})
+func (c *Client) ListDeliberations(ctx context.Context) ([]Deliberation, error) {
+	raw, err := c.call(ctx, "gemot/deliberation", map[string]any{"action": "list"})
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +110,8 @@ func (c *Client) ListDeliberations() ([]Deliberation, error) {
 }
 
 // GetDeliberation calls gemot/deliberation action:get.
-func (c *Client) GetDeliberation(id string) (*Deliberation, error) {
-	raw, err := c.call("gemot/deliberation", map[string]any{"action": "get", "deliberation_id": id})
+func (c *Client) GetDeliberation(ctx context.Context, id string) (*Deliberation, error) {
+	raw, err := c.call(ctx, "gemot/deliberation", map[string]any{"action": "get", "deliberation_id": id})
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +123,8 @@ func (c *Client) GetDeliberation(id string) (*Deliberation, error) {
 }
 
 // GetPositions calls gemot/participate action:get_positions.
-func (c *Client) GetPositions(deliberationID string) ([]Position, error) {
-	raw, err := c.call("gemot/participate", map[string]any{"action": "get_positions", "deliberation_id": deliberationID})
+func (c *Client) GetPositions(ctx context.Context, deliberationID string) ([]Position, error) {
+	raw, err := c.call(ctx, "gemot/participate", map[string]any{"action": "get_positions", "deliberation_id": deliberationID})
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +136,8 @@ func (c *Client) GetPositions(deliberationID string) ([]Position, error) {
 }
 
 // GetVotes calls gemot/decide action:get_commitments (votes are commitments in gemot).
-func (c *Client) GetVotes(deliberationID string) ([]Vote, error) {
-	raw, err := c.call("gemot/decide", map[string]any{"action": "get_commitments", "deliberation_id": deliberationID})
+func (c *Client) GetVotes(ctx context.Context, deliberationID string) ([]Vote, error) {
+	raw, err := c.call(ctx, "gemot/decide", map[string]any{"action": "get_commitments", "deliberation_id": deliberationID})
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +149,8 @@ func (c *Client) GetVotes(deliberationID string) ([]Vote, error) {
 }
 
 // GetAnalysisResult calls gemot/analyze action:get_result.
-func (c *Client) GetAnalysisResult(deliberationID string) (*AnalysisResult, error) {
-	raw, err := c.call("gemot/analyze", map[string]any{"action": "get_result", "deliberation_id": deliberationID})
+func (c *Client) GetAnalysisResult(ctx context.Context, deliberationID string) (*AnalysisResult, error) {
+	raw, err := c.call(ctx, "gemot/analyze", map[string]any{"action": "get_result", "deliberation_id": deliberationID})
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +165,8 @@ func (c *Client) GetAnalysisResult(deliberationID string) (*AnalysisResult, erro
 }
 
 // ListByGroup calls gemot/deliberation action:list_by_group.
-func (c *Client) ListByGroup(groupID string) ([]Deliberation, error) {
-	raw, err := c.call("gemot/deliberation", map[string]any{"action": "list_by_group", "group_id": groupID})
+func (c *Client) ListByGroup(ctx context.Context, groupID string) ([]Deliberation, error) {
+	raw, err := c.call(ctx, "gemot/deliberation", map[string]any{"action": "list_by_group", "group_id": groupID})
 	if err != nil {
 		return nil, err
 	}
@@ -177,8 +178,8 @@ func (c *Client) ListByGroup(groupID string) ([]Deliberation, error) {
 }
 
 // ListByAgent calls gemot/deliberation action:list_by_agent.
-func (c *Client) ListByAgent(agentID string) ([]Deliberation, error) {
-	raw, err := c.call("gemot/deliberation", map[string]any{"action": "list_by_agent", "agent_id": agentID})
+func (c *Client) ListByAgent(ctx context.Context, agentID string) ([]Deliberation, error) {
+	raw, err := c.call(ctx, "gemot/deliberation", map[string]any{"action": "list_by_agent", "agent_id": agentID})
 	if err != nil {
 		return nil, err
 	}
@@ -190,13 +191,13 @@ func (c *Client) ListByAgent(agentID string) ([]Deliberation, error) {
 }
 
 // ExportDeliberation calls gemot/deliberation action:export — returns full deliberation with all rounds, positions, votes, analysis.
-func (c *Client) ExportDeliberation(deliberationID string) (json.RawMessage, error) {
-	return c.call("gemot/deliberation", map[string]any{"action": "export", "deliberation_id": deliberationID})
+func (c *Client) ExportDeliberation(ctx context.Context, deliberationID string) (json.RawMessage, error) {
+	return c.call(ctx, "gemot/deliberation", map[string]any{"action": "export", "deliberation_id": deliberationID})
 }
 
 // GetAuditLog calls gemot/deliberation action:export and extracts audit data.
 // Gemot doesn't have a separate audit log endpoint — the export contains the full history.
-func (c *Client) GetAuditLog(deliberationID string) (*AuditLog, error) {
+func (c *Client) GetAuditLog(ctx context.Context, deliberationID string) (*AuditLog, error) {
 	// The export contains positions/votes/analysis which serve as the audit trail.
 	// Return an empty audit log — the poller builds the audit from state changes.
 	return &AuditLog{}, nil

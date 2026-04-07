@@ -67,6 +67,12 @@ export function getPositionCount(ds: { positions?: unknown[] } | undefined | nul
   return (ds?.positions ?? []).length;
 }
 
+/** Check if the current route is a live (non-demo) route: dashboard, watch, or group. */
+export function isLiveRoute(): boolean {
+  const path = window.location.pathname;
+  return path.startsWith('/dashboard') || path.startsWith('/watch/') || path.startsWith('/g/');
+}
+
 export function splitMentions(text: string, agentNames: string[]): TextSegment[] {
   if (agentNames.length === 0) return [{ text, isMention: false }];
 

@@ -18,6 +18,7 @@ import { LoginForm } from './components/auth/LoginForm';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useURLSync } from './hooks/useURLSync';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { getPositionCount } from './lib/helpers';
 
 // Debug: expose stores on window (only in dev)
 if (import.meta.env.DEV && typeof window !== 'undefined') {
@@ -34,12 +35,27 @@ function GraphView() {
   const setEvents = useScrubberStore((s) => s.setEvents);
   useScrubberPlayback();
 
+  // Build a fingerprint of deliberation data to avoid rebuilding timeline on every SSE message.
+  // Only rebuild when the number of deliberations, positions, votes, or analyses change.
+  const timelineFingerprint = useMemo(() => {
+    const ids = Object.keys(deliberations).sort();
+    if (ids.length === 0) return '';
+    const parts = ids.map((id) => {
+      const ds = deliberations[id]!;
+      const pc = getPositionCount(ds);
+      const vc = (ds.votes ?? []).length;
+      const ac = ds.analysis ? 1 : 0;
+      const oc = (ds.audit_log?.operations ?? []).length;
+      return `${id}:${pc}:${vc}:${ac}:${oc}`;
+    });
+    return parts.join('|');
+  }, [deliberations]);
+
   useEffect(() => {
-    const ids = Object.keys(deliberations);
-    if (ids.length === 0) return;
+    if (!timelineFingerprint) return;
     const events = buildGlobalTimeline(deliberations);
     setEvents(events);
-  }, [deliberations, setEvents]);
+  }, [timelineFingerprint, setEvents]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const autoplayRef = useRef(false);
   useEffect(() => {

@@ -28,6 +28,6 @@ export function useRFEdges(
 ): Edge<DelibEdgeData>[] {
   return useMemo(
     () => buildRFEdges(graph, filteredDelibs, activeEdge),
-    [graph.edges, filteredDelibs, activeEdge],
+    [graph, filteredDelibs, activeEdge],
   );
 }

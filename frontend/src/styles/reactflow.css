@@ -69,9 +69,9 @@
   border-radius: 10px;
   line-height: 20px;
 }
-.agent-node-vote.vote-agree { color: #16a34a; background: #dcfce7; }
-.agent-node-vote.vote-disagree { color: #dc2626; background: #fef2f2; }
-.agent-node-vote.vote-neutral { color: #737373; background: #f5f5f5; }
+.agent-node-vote.vote-agree { color: var(--vis-green, #16a34a); background: color-mix(in srgb, var(--vis-green, #16a34a) 10%, var(--vis-panel, #fff)); }
+.agent-node-vote.vote-disagree { color: var(--vis-red, #dc2626); background: color-mix(in srgb, var(--vis-red, #dc2626) 10%, var(--vis-panel, #fff)); }
+.agent-node-vote.vote-neutral { color: var(--vis-text-dim, #737373); background: var(--vis-panel, #f5f5f5); }
 
 .agent-node-bridging {
   position: absolute;
