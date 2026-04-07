@@ -244,6 +244,16 @@ function VerificationSection({ result, delibId }: { result?: VerificationResult;
   const kept = result.checked - result.downgraded;
   const scoreLabels = ['', 'No relevant quotes', 'Tangentially related', 'Interpretation', 'Clearly aligned', 'Explicitly supported'];
 
+  // Compute score_dist from details if the array is all zeros (some exports don't populate it)
+  let scoreDist = result.score_dist ?? [0, 0, 0, 0, 0, 0];
+  const distTotal = scoreDist.reduce((a, b) => a + b, 0);
+  if (distTotal === 0 && result.details && result.details.length > 0) {
+    scoreDist = [0, 0, 0, 0, 0, 0];
+    for (const d of result.details) {
+      if (d.score >= 1 && d.score <= 5) scoreDist[d.score] = (scoreDist[d.score] ?? 0) + 1;
+    }
+  }
+
   return (
     <section className="report-section" id={`delib-${delibId}-verification`}>
       <h3>Stance Verification</h3>
@@ -259,7 +269,7 @@ function VerificationSection({ result, delibId }: { result?: VerificationResult;
             <tr key={s} className={s <= result.threshold ? 'report-row-downgraded' : ''}>
               <td>{s}</td>
               <td>{scoreLabels[s]}{s <= result.threshold && <span className="report-badge report-badge-dim">downgraded</span>}</td>
-              <td>{result.score_dist?.[s] ?? 0}</td>
+              <td>{scoreDist[s] ?? 0}</td>
             </tr>
           ))}
         </tbody>
