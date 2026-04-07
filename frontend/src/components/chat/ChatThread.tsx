@@ -94,7 +94,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
         {positions.map((p, idx) => {
           const isLeft = agentIDs.indexOf(p.agent_id) % 2 === 0;
           const isNewest = idx === positions.length - 1;
-          const shouldType = !isLive && isNewest && idx >= prevCountRef.current && playing && animationPhase === 'ready';
+          const shouldType = !isLive && isNewest && playing && animationPhase === 'ready';
           const colorIdx = graphNodes.indexOf(p.agent_id);
           const color = agentColor(colorIdx >= 0 ? colorIdx : 0, agentCount, theme);
 

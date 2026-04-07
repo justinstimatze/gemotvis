@@ -78,15 +78,17 @@ function GraphView() {
     return () => clearInterval(interval);
   }, []);
 
-  // Once panel is ready (phase='ready'), start playback from event 0
+  // Once panel is ready (phase='ready'), start playback from event 0.
+  // Set playing=true FIRST so that when eventIndex changes and the first
+  // position renders, the shouldType check sees playing=true.
   const playbackStarted = useRef(false);
   useEffect(() => {
     if (!autoplayRef.current || playbackStarted.current) return;
     if (animationPhase !== 'ready') return;
     playbackStarted.current = true;
-    const state = useScrubberStore.getState();
-    state.setEventIndex(0);
-    setTimeout(() => useScrubberStore.getState().setPlaying(true), 50);
+    useScrubberStore.getState().setPlaying(true);
+    // Next frame: set eventIndex so position appears while playing is already true
+    requestAnimationFrame(() => useScrubberStore.getState().setEventIndex(0));
   }, [animationPhase]);
 
   const hasData = Object.keys(deliberations).length > 0;

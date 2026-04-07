@@ -21,7 +21,20 @@ export function useFilteredState(): Record<string, DelibState> {
   return useMemo(() => {
     // Skip filtering for live views (dashboard, watch, group) — show all data immediately
     const isLive = isLiveRoute();
-    if (isLive || !scrubberEnabled || scrubberEventIndex == null) return deliberations;
+    if (isLive) return deliberations;
+
+    // No timeline events yet: show all (data still loading)
+    if (scrubberEvents.length === 0) return deliberations;
+
+    // Timeline exists but playback not started: show empty positions
+    // (panel mounts before first position is revealed)
+    if (scrubberEventIndex == null) {
+      const empty: Record<string, DelibState> = {};
+      for (const [id, ds] of Object.entries(deliberations)) {
+        empty[id] = { ...ds, positions: [], votes: [] };
+      }
+      return empty;
+    }
 
     const currentEvent = scrubberEvents[scrubberEventIndex];
     const cutoffTime = currentEvent?.time ?? null;

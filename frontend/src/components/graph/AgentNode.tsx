@@ -75,7 +75,7 @@ function AgentNodeComponent({ data }: NodeProps<AgentNodeType>) {
           height: iconSize,
           fontSize,
           borderColor: color,
-          boxShadow: clusterColor ? `0 0 0 3px ${clusterColor}33` : undefined,
+          boxShadow: clusterColor ? `0 0 0 2px ${clusterColor}20` : undefined,
           '--agent-color': color,
         } as React.CSSProperties}
       >
