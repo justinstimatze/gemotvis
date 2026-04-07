@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { AnalysisResult } from '../../types';
 import { shortAgentID } from '../../lib/helpers';
 import { ChatBubble } from './ChatBubble';
@@ -50,8 +50,8 @@ function formatCompromise(analysis: AnalysisResult): string | null {
   return `## Compromise Proposal\n${analysis.compromise_proposal}`;
 }
 
-/** Renders analysis as sequential chat bubbles — one at a time, each types then reveals the next. */
-export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType, onTypingComplete }: AnalysisSectionProps) {
+/** Renders analysis as chat bubbles that fade in sequentially. No word-by-word typing. */
+export function AnalysisSection({ analysis, agentNames, typingSpeed, onTypingComplete }: AnalysisSectionProps) {
   const messages = useMemo(() => [
     formatConsensus(analysis),
     formatCruxes(analysis),
@@ -59,32 +59,26 @@ export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType,
     formatCompromise(analysis),
   ].filter((m): m is string => m != null), [analysis]);
 
-  const [visibleCount, setVisibleCount] = useState(shouldType ? 0 : messages.length);
+  // Stagger: reveal one bubble at a time
+  const [visibleCount, setVisibleCount] = useState(0);
 
-  // Start revealing first bubble after a short delay
   useEffect(() => {
-    if (!shouldType || visibleCount > 0 || messages.length === 0) return;
-    const timer = setTimeout(() => setVisibleCount(1), 400);
+    if (visibleCount >= messages.length) {
+      if (visibleCount > 0) onTypingComplete?.();
+      return;
+    }
+    const delay = visibleCount === 0 ? 400 : 2000;
+    const timer = setTimeout(() => setVisibleCount(c => c + 1), delay);
     return () => clearTimeout(timer);
-  }, [shouldType, visibleCount, messages.length]);
-
-  const advanceToNext = useCallback(() => {
-    setVisibleCount(c => {
-      const next = c + 1;
-      if (next >= messages.length) onTypingComplete?.();
-      return next;
-    });
-  }, [messages.length, onTypingComplete]);
+  }, [visibleCount, messages.length, onTypingComplete]);
 
   if (messages.length === 0) return null;
 
-  // If not typing, show all immediately
-  if (!shouldType) {
-    return (
-      <>
-        {messages.map((content, i) => (
+  return (
+    <>
+      {messages.slice(0, visibleCount).map((content, i) => (
+        <div key={i} style={{ animation: 'analysisReveal 0.5s ease forwards' }}>
           <ChatBubble
-            key={i}
             agentId="analysis"
             content={content}
             isLeft={true}
@@ -93,29 +87,8 @@ export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType,
             typingSpeed={typingSpeed}
             agentColor="var(--vis-accent, #4f46e5)"
           />
-        ))}
-      </>
-    );
-  }
-
-  return (
-    <>
-      {messages.slice(0, visibleCount).map((content, i) => {
-        const isLatest = i === visibleCount - 1;
-        return (
-          <ChatBubble
-            key={i}
-            agentId="analysis"
-            content={content}
-            isLeft={true}
-            shouldType={isLatest}
-            agentNames={agentNames}
-            typingSpeed={typingSpeed}
-            agentColor="var(--vis-accent, #4f46e5)"
-            onTypingComplete={isLatest ? advanceToNext : undefined}
-          />
-        );
-      })}
+        </div>
+      ))}
     </>
   );
 }
