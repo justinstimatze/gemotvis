@@ -49,6 +49,15 @@ export function Header() {
       </div>
 
       <div className="header-right">
+        <button className="header-view-toggle" onClick={() => {
+          const url = new URL(window.location.href);
+          const isReport = url.searchParams.get('view') === 'report';
+          if (isReport) url.searchParams.delete('view');
+          else url.searchParams.set('view', 'report');
+          window.location.href = url.toString();
+        }} aria-label="Toggle report view">
+          {new URLSearchParams(window.location.search).get('view') === 'report' ? 'Graph' : 'Report'}
+        </button>
         <span className="header-mode">{mode}</span>
         <select
           className="theme-switcher"
