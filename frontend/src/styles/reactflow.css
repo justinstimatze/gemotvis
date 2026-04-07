@@ -482,15 +482,15 @@ h5.chat-md-heading { font-size: 11px; }
 }
 
 .chat-md-bullet {
-  display: flex;
-  gap: 6px;
   margin: 2px 0;
   line-height: 1.5;
+  padding-left: 14px;
+  text-indent: -14px;
 }
 
 .chat-md-bullet-dot {
-  flex-shrink: 0;
   color: var(--vis-text-dim, #888);
+  margin-right: 6px;
 }
 
 /* Typing cursor */
