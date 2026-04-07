@@ -67,10 +67,14 @@ export function buildRFNodes(
       }
     }
 
+    // Check if agent participates in the active delib — either via graph edge match
+    // or by being in the delib's agent list (for multi-agent rounds/alliances)
     const isEdgeAgent = isSingleDelib
       ? activeEdge != null
-      : (activeEdge != null && graph.edges.some(e =>
-        e.delibID === activeEdge && (e.a === np.id || e.b === np.id)));
+      : (activeEdge != null && (
+        graph.edges.some(e => e.delibID === activeEdge && (e.a === np.id || e.b === np.id)) ||
+        (filteredDelibs[activeEdge]?.agents ?? []).some(a => a.id === np.id)
+      ));
 
     let sideClass = '';
     if (isEdgeAgent && activeEdge) {

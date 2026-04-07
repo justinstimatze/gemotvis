@@ -58,14 +58,25 @@ function transformSVG(svgText: string, bounds: LatLonBounds): string {
   const y1 = (90 - bounds.maxLat) / 180 * svgH;
   const y2 = (90 - bounds.minLat) / 180 * svgH;
 
-  svg.setAttribute('viewBox', `${x1} ${y1} ${x2 - x1} ${y2 - y1}`);
+  // Expand viewBox to account for the 8% margin in latLonToXY positioning.
+  // Agents are placed at 8%-92% of the container; the SVG fills 0%-100%.
+  const margin = 8;
+  const marginFrac = margin / (100 - 2 * margin); // 8/84
+  const xRange = x2 - x1;
+  const yRange = y2 - y1;
+  const adjX1 = x1 - xRange * marginFrac;
+  const adjY1 = y1 - yRange * marginFrac;
+  const adjW = xRange * (1 + 2 * marginFrac);
+  const adjH = yRange * (1 + 2 * marginFrac);
+
+  svg.setAttribute('viewBox', `${adjX1} ${adjY1} ${adjW} ${adjH}`);
   svg.setAttribute('preserveAspectRatio', 'none');
   svg.setAttribute('style', 'width:100%;height:100%;stroke-linejoin:round;stroke-linecap:round');
 
   svg.querySelectorAll('path').forEach((p) => {
     p.setAttribute('fill', 'none');
     p.setAttribute('stroke', 'currentColor');
-    p.setAttribute('stroke-width', '0.15');
+    p.setAttribute('stroke-width', '0.5');
     p.setAttribute('vector-effect', 'non-scaling-stroke');
   });
 

@@ -10,7 +10,7 @@ import { useScrubberStore } from '../../stores/scrubber';
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useAnimationPhase } from '../../hooks/useAnimationPhase';
 import { useRFNodes, useRFEdges } from '../../hooks/useGraphData';
-import { buildGraphFromDelibs, countBilaterals } from '../../lib/buildGraph';
+import { buildGraphFromDelibs } from '../../lib/buildGraph';
 import { isSingleDelibGraph } from '../../lib/graphData';
 import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
 import { AgentNode, type AgentNodeData } from './AgentNode';
@@ -31,8 +31,9 @@ function GraphCanvasInner() {
 
   // Build graph structure from deliberations
   const graph = useMemo(() => {
-    const bilateralCount = countBilaterals(rawDelibs);
-    if (bilateralCount > 1) return buildGraphFromDelibs(rawDelibs);
+    const delibCount = Object.keys(rawDelibs).length;
+    // Multiple delibs: always build full network (bilaterals or multi-agent rounds)
+    if (delibCount > 1) return buildGraphFromDelibs(rawDelibs);
     const delibs = activeEdge && rawDelibs[activeEdge]
       ? { [activeEdge]: rawDelibs[activeEdge] }
       : rawDelibs;
@@ -46,12 +47,12 @@ function GraphCanvasInner() {
   // Compute and apply layout
   const layoutResult = useMemo(() => getGraphNodePositions(graph, rawDelibs), [graph, rawDelibs]);
 
-  const nodePositions = useMemo(() => {
-    if (!activeEdge) return layoutResult.positions;
-    if (isSingleDelibGraph(graph)) return layoutResult.positions;
+  const { positions: nodePositions, isFocusedBilateral } = useMemo(() => {
+    if (!activeEdge) return { positions: layoutResult.positions, isFocusedBilateral: false };
+    if (isSingleDelibGraph(graph)) return { positions: layoutResult.positions, isFocusedBilateral: false };
     const edge = graph.edges.find(e => e.delibID === activeEdge);
-    if (edge) return computeFocusedLayout(layoutResult.positions, edge.a, edge.b);
-    return layoutResult.positions;
+    if (edge) return { positions: computeFocusedLayout(layoutResult.positions, edge.a, edge.b), isFocusedBilateral: true };
+    return { positions: layoutResult.positions, isFocusedBilateral: false };
   }, [layoutResult.positions, activeEdge, graph.edges]);
 
   // Build React Flow data
@@ -139,7 +140,7 @@ function GraphCanvasInner() {
         maxZoom={2}
       >
       </ReactFlow>
-      <WorldMap show={layoutResult.showWorldMap} />
+      <WorldMap show={layoutResult.showWorldMap && !isFocusedBilateral} />
     </>
   );
 }

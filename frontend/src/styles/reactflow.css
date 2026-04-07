@@ -1226,6 +1226,13 @@ h5.chat-md-heading { font-size: 11px; }
   color: var(--vis-text-dim, #888);
 }
 
+/* MAGI: tactical wireframe map on dark background */
+.theme-magi .world-map-bg {
+  opacity: 0.35;
+  color: #ff8c00;
+  z-index: 1;
+}
+
 /* ===== Login Form ===== */
 .login-overlay {
   position: fixed;
@@ -1376,8 +1383,8 @@ h5.chat-md-heading { font-size: 11px; }
   transform: rotate(45deg);
   border: 2px solid var(--agent-color, #ff8c00);
   background: linear-gradient(135deg,
-    color-mix(in srgb, var(--agent-color, #ff8c00) 12%, #0c0c0c) 0%,
-    #080808 100%);
+    color-mix(in srgb, var(--agent-color, #ff8c00) 22%, #111) 0%,
+    #0e0e0e 100%);
   box-shadow: 0 0 16px color-mix(in srgb, var(--agent-color, #ff8c00) 30%, transparent),
               0 0 32px color-mix(in srgb, var(--agent-color, #ff8c00) 10%, transparent),
               inset 0 0 10px color-mix(in srgb, var(--agent-color, #ff8c00) 10%, transparent);
