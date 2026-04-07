@@ -50,6 +50,7 @@ type Crux struct {
 	Explanation      string   `json:"explanation"`
 	CruxType         string   `json:"crux_type,omitempty"`
 	Resolvability    float64  `json:"resolvability,omitempty"`
+	Degenerate       bool     `json:"degenerate,omitempty"`
 }
 
 type OpinionCluster struct {
@@ -82,6 +83,7 @@ type Coalition struct {
 }
 
 type TopicSummary struct {
+	TopicID string `json:"topic_id,omitempty"`
 	Topic   string `json:"topic"`
 	Summary string `json:"summary"`
 }
@@ -97,6 +99,7 @@ type AnalysisResult struct {
 	Round                int                   `json:"round_number"`
 	Clusters             []OpinionCluster      `json:"clusters"`
 	Cruxes               []Crux                `json:"cruxes"`
+	DiscardedCruxes      []Crux                `json:"discarded_cruxes,omitempty"`
 	ConsensusStatements  []ConsensusStatement  `json:"consensus_statements"`
 	BridgingStatements   []BridgingStatement   `json:"bridging_statements,omitempty"`
 	TopicSummaries       []TopicSummary        `json:"topic_summaries"`
@@ -113,6 +116,64 @@ type AnalysisResult struct {
 	AuditLog             []AuditEntry          `json:"audit_log,omitempty"`
 	ParticipationRate    float64               `json:"participation_rate,omitempty"`
 	PerspectiveDiversity float64               `json:"perspective_diversity,omitempty"`
+	// Validation results (populated by pipelines that run validation checks)
+	NullControl  *NullControlResult  `json:"null_control,omitempty"`
+	Verification *VerificationResult `json:"verification,omitempty"`
+	Replication  *ReplicationResult  `json:"replication,omitempty"`
+	CoverageGaps []CoverageGap       `json:"coverage_gaps,omitempty"`
+}
+
+type ValidationMetrics struct {
+	CruxCount      int     `json:"crux_count"`
+	AvgControversy float64 `json:"avg_controversy"`
+	ConsensusCount int     `json:"consensus_count"`
+	BridgingCount  int     `json:"bridging_count"`
+	ClusterCount   int     `json:"cluster_count"`
+	Confidence     string  `json:"confidence"`
+}
+
+type NullControlResult struct {
+	NullDelibID   string            `json:"null_delib_id"`
+	RealMetrics   ValidationMetrics `json:"real_metrics"`
+	NullMetrics   ValidationMetrics `json:"null_metrics"`
+	FailedMetrics []string          `json:"failed_metrics,omitempty"`
+	Pass          bool              `json:"pass"`
+}
+
+type VerificationResult struct {
+	Total      int             `json:"total"`
+	Checked    int             `json:"checked"`
+	Downgraded int             `json:"downgraded"`
+	Threshold  int             `json:"threshold"`
+	ScoreDist  []int           `json:"score_dist"` // index 0-5, count per score
+	Details    []VerifyDetail  `json:"details,omitempty"`
+}
+
+type VerifyDetail struct {
+	Speaker    string `json:"speaker"`
+	Crux       string `json:"crux"`
+	OrigStance string `json:"orig_stance"`
+	Score      int    `json:"score"`
+	Reason     string `json:"reason"`
+}
+
+type ReplicationResult struct {
+	NumRuns  int                 `json:"num_runs"`
+	DelibIDs []string            `json:"delib_ids"`
+	Runs     []ValidationMetrics `json:"runs"`
+	Stability struct {
+		Tier        int     `json:"tier"`
+		CruxCV      float64 `json:"crux_cv"`
+		ControvCV   float64 `json:"controv_cv"`
+		ConsensusCV float64 `json:"consensus_cv"`
+		AllStable   bool    `json:"all_stable"`
+	} `json:"stability"`
+}
+
+type CoverageGap struct {
+	Position           string `json:"position"`
+	MissingPerspective string `json:"missing_perspective"`
+	SuggestedSource    string `json:"suggested_source"`
 }
 
 // AuditLog wraps the get_audit_log response.

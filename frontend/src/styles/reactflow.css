@@ -91,6 +91,34 @@
 .theme-gastown .report-compromise blockquote { background: rgba(139, 94, 60, 0.05); border-left-color: #8b5e3c; }
 .theme-gastown .report-crux { background: rgba(245, 230, 211, 0.08); border-color: rgba(196, 168, 130, 0.3); }
 
+/* Key findings */
+.report-subsection-label { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+.report-findings-list { padding-left: 20px; margin-bottom: 12px; }
+.report-findings-list li { margin-bottom: 6px; }
+.report-findings-consensus { margin-bottom: 8px; }
+.report-findings-pipeline { font-size: 12px; color: var(--vis-text-dim, #888); }
+
+/* Verification */
+.report-row-downgraded { opacity: 0.6; }
+.report-verify-details { margin-top: 8px; }
+.report-verify-detail { margin-bottom: 12px; font-size: 13px; }
+.report-verify-detail blockquote { margin: 4px 0 0 0; padding: 6px 12px; border-left: 2px solid var(--vis-panel-border, #ddd); font-style: italic; font-size: 12px; color: var(--vis-text-dim, #888); }
+
+/* Verdicts */
+.report-verdict { margin-top: 12px; font-size: 13px; }
+.report-verdict-pass { color: var(--vis-green, #16a34a); }
+.report-verdict-fail { color: var(--vis-red, #ef4444); }
+
+/* Stability */
+.report-stability { font-size: 13px; margin-top: 8px; }
+
+/* Coverage gaps */
+.report-gap-detail { font-size: 12px; color: var(--vis-text-dim, #888); margin-left: 12px; }
+
+/* Methodology */
+.report-methodology p { font-size: 12px; color: var(--vis-text-dim, #888); margin-bottom: 8px; }
+.report-methodology strong { color: var(--vis-text, #333); }
+
 /* Discarded cruxes */
 .report-crux-discarded { opacity: 0.65; border-style: dashed; }
 .report-badge-dim { color: var(--vis-text-dim, #888); background: color-mix(in srgb, var(--vis-text-dim, #888) 10%, transparent); }

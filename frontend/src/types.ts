@@ -19,6 +19,7 @@ export interface Position {
   content: string;
   model_family?: string;
   conviction?: number;
+  metadata?: Record<string, unknown>;
   round_number: number;
   created_at: string;
 }
@@ -44,6 +45,7 @@ export interface Crux {
   explanation: string;
   crux_type?: string;
   resolvability?: number;
+  degenerate?: boolean;
 }
 
 export interface OpinionCluster {
@@ -76,6 +78,7 @@ export interface Coalition {
 }
 
 export interface TopicSummary {
+  topic_id?: string;
   topic: string;
   summary: string;
 }
@@ -91,6 +94,7 @@ export interface AnalysisResult {
   round_number: number;
   clusters: OpinionCluster[];
   cruxes: Crux[];
+  discarded_cruxes?: Crux[];
   consensus_statements: ConsensusStatement[];
   bridging_statements?: BridgingStatement[];
   topic_summaries: TopicSummary[];
@@ -107,6 +111,64 @@ export interface AnalysisResult {
   audit_log?: AuditEntry[];
   participation_rate?: number;
   perspective_diversity?: number;
+  // Validation results (populated by pipelines that run validation)
+  null_control?: NullControlResult;
+  verification?: VerificationResult;
+  replication?: ReplicationResult;
+  coverage_gaps?: CoverageGap[];
+}
+
+export interface ValidationMetrics {
+  crux_count: number;
+  avg_controversy: number;
+  consensus_count: number;
+  bridging_count: number;
+  cluster_count: number;
+  confidence: string;
+}
+
+export interface NullControlResult {
+  null_delib_id: string;
+  real_metrics: ValidationMetrics;
+  null_metrics: ValidationMetrics;
+  failed_metrics?: string[];
+  pass: boolean;
+}
+
+export interface VerificationResult {
+  total: number;
+  checked: number;
+  downgraded: number;
+  threshold: number;
+  score_dist: number[]; // index 0-5, count per score
+  details?: VerifyDetail[];
+}
+
+export interface VerifyDetail {
+  speaker: string;
+  crux: string;
+  orig_stance: string;
+  score: number;
+  reason: string;
+}
+
+export interface ReplicationResult {
+  num_runs: number;
+  delib_ids: string[];
+  runs: ValidationMetrics[];
+  stability: {
+    tier: number;
+    crux_cv: number;
+    controv_cv: number;
+    consensus_cv: number;
+    all_stable: boolean;
+  };
+}
+
+export interface CoverageGap {
+  position: string;
+  missing_perspective: string;
+  suggested_source: string;
 }
 
 export interface AuditLog {
