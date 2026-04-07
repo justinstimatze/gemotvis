@@ -49,14 +49,15 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [positions.length]);
 
-  // Periodic scroll during typing
+  // Periodic scroll during active typing only (not while idle between messages)
+  const speakingAgent = useGraphStore((s) => s.speakingAgent);
   useEffect(() => {
-    if (!playing) return;
+    if (!speakingAgent) return;
     const interval = setInterval(() => {
       scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 500);
     return () => clearInterval(interval);
-  }, [playing]);
+  }, [speakingAgent]);
 
   // Track position count for "is new" detection + set speaking agent
   const setSpeakingAgent = useGraphStore((s) => s.setSpeakingAgent);
