@@ -42,9 +42,10 @@ export function LandingPage() {
     setTheme(t);
   }, [setTheme]);
 
-  const startDemo = useCallback(() => {
+  const startDemo = useCallback((view?: 'report') => {
     const dataParam = `&data=${selectedDataset}`;
-    window.location.href = `/?demo=1&multi=true&theme=${theme}${dataParam}`;
+    const viewParam = view ? `&view=${view}` : '&multi=true';
+    window.location.href = `/?demo=1${viewParam}&theme=${theme}${dataParam}`;
   }, [theme, selectedDataset]);
 
   const watchLive = useCallback(() => {
@@ -100,9 +101,12 @@ export function LandingPage() {
           </div>
         </div>
 
-        <div className="landing-section">
-          <button className="landing-btn landing-btn-primary" onClick={startDemo} disabled={!selectedDataset}>
-            Start Demo
+        <div className="landing-section landing-row">
+          <button className="landing-btn landing-btn-primary" onClick={() => startDemo()} disabled={!selectedDataset}>
+            Graph View
+          </button>
+          <button className="landing-btn" onClick={() => startDemo('report')} disabled={!selectedDataset}>
+            Report View
           </button>
         </div>
 
