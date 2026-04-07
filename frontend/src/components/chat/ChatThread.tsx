@@ -77,16 +77,19 @@ export function ChatThread({ positions, agents, allAgents, searchQuery, analysis
     prevCountRef.current = positions.length;
   }, [positions.length, playing, animationPhase, positions, setSpeakingAgent]);
 
-  // Scroll to highlighted agent's last message
+  // Scroll to agent's last message only on click (not hover).
+  // activeNode changes on both hover and click, but clicking also toggles it,
+  // so we only scroll when the click handler explicitly set it.
+  const clickedAgent = useGraphStore((s) => s.clickedAgent);
   useEffect(() => {
-    if (!activeNode) return;
+    if (!clickedAgent) return;
     for (let i = positions.length - 1; i >= 0; i--) {
-      if (positions[i]?.agent_id === activeNode) {
+      if (positions[i]?.agent_id === clickedAgent) {
         bubbleRefs.current.get(i)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         break;
       }
     }
-  }, [activeNode, positions]);
+  }, [clickedAgent, positions]);
 
   if (positions.length === 0) return null;
 

@@ -111,7 +111,9 @@ function GraphCanvasInner() {
 
     // Single-delib: toggle agent highlight (scroll chat to their latest message)
     const current = useGraphStore.getState().activeNode;
-    useGraphStore.getState().setActiveNode(current === agentId ? null : agentId);
+    const next = current === agentId ? null : agentId;
+    useGraphStore.getState().setActiveNode(next);
+    useGraphStore.getState().setClickedAgent(next);
   }, [graph.edges, rawDelibs, activeEdge]);
 
   return (
