@@ -4,7 +4,6 @@ import { useGraphStore } from '../../stores/graph';
 import { useFilteredState } from '../../hooks/useFilteredState';
 import { useSessionStore } from '../../stores/session';
 import { ChatThread } from '../chat/ChatThread';
-import { AnalysisSection } from '../chat/AnalysisSection';
 import type { AgentInfo } from '../../types';
 
 /** Center panel overlay — rendered as a portal to escape React Flow's stacking context. */
@@ -80,8 +79,8 @@ export function CenterPanel() {
         agents={agents}
         allAgents={allAgents}
         searchQuery={searchQuery}
+        analysis={ds.analysis}
       />
-      {ds.analysis && <AnalysisSection analysis={ds.analysis} />}
     </div>,
     document.body,
   );

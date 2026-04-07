@@ -1,6 +1,7 @@
 import { useRef, useEffect, useMemo, useCallback } from 'react';
-import type { Position as PositionType, AgentInfo } from '../../types';
+import type { Position as PositionType, AgentInfo, AnalysisResult } from '../../types';
 import { collectAgentNames, classNames, isLiveRoute } from '../../lib/helpers';
+import { AnalysisSection } from './AnalysisSection';
 import { agentColor } from '../../lib/color';
 import { ChatBubble } from './ChatBubble';
 import { useGraphStore } from '../../stores/graph';
@@ -12,6 +13,7 @@ interface ChatThreadProps {
   agents: AgentInfo[];
   allAgents: AgentInfo[];
   searchQuery?: string;
+  analysis?: AnalysisResult;
 }
 
 function searchClasses(query: string, content: string, agentId: string): string {
@@ -21,7 +23,7 @@ function searchClasses(query: string, content: string, agentId: string): string 
   return matches ? 'chat-bubble-search-match' : 'chat-bubble-search-dim';
 }
 
-export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatThreadProps) {
+export function ChatThread({ positions, agents, allAgents, searchQuery, analysis }: ChatThreadProps) {
   const animationPhase = useGraphStore((s) => s.animationPhase);
   const activeNode = useGraphStore((s) => s.activeNode);
   const playing = useScrubberStore((s) => s.playing);
@@ -122,6 +124,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
             </div>
           );
         })}
+        {analysis && <AnalysisSection analysis={analysis} />}
         <div ref={scrollRef} />
       </div>
     </div>

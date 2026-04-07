@@ -405,6 +405,11 @@
   line-height: 1.5;
 }
 
+@keyframes analysisReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .analysis-card-title {
   font-weight: 700;
   font-size: 11px;

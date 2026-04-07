@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { AnalysisResult } from '../../types';
 import { shortAgentID } from '../../lib/helpers';
 
@@ -5,17 +6,26 @@ interface AnalysisSectionProps {
   analysis: AnalysisResult;
 }
 
-/** Renders analysis results as styled system messages in the chat thread. */
+interface AnalysisCard {
+  type: 'consensus' | 'cruxes' | 'bridging' | 'compromise';
+  content: React.ReactNode;
+}
+
+/** Renders analysis results as styled cards in the chat thread, revealed one at a time. */
 export function AnalysisSection({ analysis }: AnalysisSectionProps) {
   const consensus = analysis.consensus_statements ?? [];
   const cruxes = analysis.cruxes ?? [];
   const bridging = analysis.bridging_statements ?? [];
   const compromise = analysis.compromise_proposal;
 
-  return (
-    <div className="analysis-section">
-      {consensus.length > 0 && (
-        <div className="analysis-card analysis-consensus">
+  // Build ordered list of cards to reveal
+  const cards: AnalysisCard[] = [];
+
+  if (consensus.length > 0) {
+    cards.push({
+      type: 'consensus',
+      content: (
+        <>
           <div className="analysis-card-title">Consensus</div>
           {consensus.map((c, i) => (
             <div key={i} className="analysis-card-item">
@@ -25,11 +35,16 @@ export function AnalysisSection({ analysis }: AnalysisSectionProps) {
               </span>
             </div>
           ))}
-        </div>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {cruxes.length > 0 && (
-        <div className="analysis-card analysis-cruxes">
+  if (cruxes.length > 0) {
+    cards.push({
+      type: 'cruxes',
+      content: (
+        <>
           <div className="analysis-card-title">Key Disagreements</div>
           {cruxes.map((crux, i) => (
             <div key={i} className="analysis-card-item">
@@ -51,11 +66,16 @@ export function AnalysisSection({ analysis }: AnalysisSectionProps) {
               </div>
             </div>
           ))}
-        </div>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {bridging.length > 0 && (
-        <div className="analysis-card analysis-bridging">
+  if (bridging.length > 0) {
+    cards.push({
+      type: 'bridging',
+      content: (
+        <>
           <div className="analysis-card-title">Bridging Positions</div>
           {bridging.map((b, i) => (
             <div key={i} className="analysis-card-item">
@@ -65,17 +85,43 @@ export function AnalysisSection({ analysis }: AnalysisSectionProps) {
               </span>
             </div>
           ))}
-        </div>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {compromise && (
-        <div className="analysis-card analysis-compromise">
+  if (compromise) {
+    cards.push({
+      type: 'compromise',
+      content: (
+        <>
           <div className="analysis-card-title">Compromise Proposal</div>
           <div className="analysis-card-item">
             <span className="analysis-card-text">{compromise}</span>
           </div>
+        </>
+      ),
+    });
+  }
+
+  // Staggered reveal: show one card at a time
+  const [visibleCount, setVisibleCount] = useState(0);
+  useEffect(() => {
+    if (visibleCount >= cards.length) return;
+    const timer = setTimeout(() => setVisibleCount(c => c + 1), visibleCount === 0 ? 500 : 1500);
+    return () => clearTimeout(timer);
+  }, [visibleCount, cards.length]);
+
+  if (cards.length === 0) return null;
+
+  return (
+    <div className="analysis-section">
+      {cards.slice(0, visibleCount).map((card, i) => (
+        <div key={card.type} className={`analysis-card analysis-${card.type}`}
+          style={{ animation: i === visibleCount - 1 ? 'analysisReveal 0.4s ease forwards' : undefined }}>
+          {card.content}
         </div>
-      )}
+      ))}
     </div>
   );
 }
