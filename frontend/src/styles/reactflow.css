@@ -811,7 +811,7 @@
 }
 
 .landing-content {
-  width: 360px;
+  width: 440px;
   padding: 40px 32px;
   background: var(--vis-panel, #fff);
   border: 1px solid var(--vis-panel-border, #e0e0e0);
@@ -968,8 +968,8 @@
 
 .landing-dataset-card {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
   padding: 8px 12px;
   border: 1px solid var(--vis-panel-border, #ddd);
   border-radius: 6px;
@@ -986,7 +986,6 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--vis-text, #333);
-  min-width: 80px;
 }
 
 .landing-dataset-desc {
