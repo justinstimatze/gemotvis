@@ -26,13 +26,11 @@ export function ConsensusPanel({ ds }: ConsensusPanelProps) {
   return (
     <PanelWrapper className="consensus-panel" title="Consensus" emptyText="No consensus yet" isEmpty={items.length === 0 && !compromise}>
       {compromise && (
-        <div className="consensus-item consensus-compromise">
-          {compromise.length > 80 ? compromise.slice(0, 78) + '...' : compromise}
-        </div>
+        <div className="consensus-item consensus-compromise">{compromise}</div>
       )}
       {items.map((item, i) => (
         <div key={i} className={`consensus-item consensus-${item.type}`}>
-          <span className="consensus-text">{item.text.length > 80 ? item.text.slice(0, 78) + '...' : item.text}</span>
+          <span className="consensus-text">{item.text}</span>
           <span className="consensus-meta">{item.meta}</span>
         </div>
       ))}
