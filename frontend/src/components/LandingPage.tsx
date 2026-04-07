@@ -63,7 +63,7 @@ export function LandingPage() {
         {/* Dataset selector with descriptions */}
         {datasets.length > 1 && (
           <div className="landing-section">
-            <label className="landing-label">Dataset</label>
+            <label className="landing-label">Demo Datasets</label>
             <div className="landing-dataset-list">
               {datasets.map((d) => (
                 <button

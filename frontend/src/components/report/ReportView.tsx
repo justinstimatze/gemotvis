@@ -3,6 +3,15 @@ import { useSessionStore } from '../../stores/session';
 import { shortAgentID } from '../../lib/helpers';
 import type { DelibState, AnalysisResult, Crux, ConsensusStatement, BridgingStatement } from '../../types';
 
+/** Ordinal label instead of raw percentage — avoids false precision with small agent counts. */
+function controversyLabel(score: number): string {
+  if (score >= 0.9) return 'Near-unanimous split';
+  if (score >= 0.7) return 'Strong disagreement';
+  if (score >= 0.55) return 'Moderate disagreement';
+  if (score >= 0.4) return 'Contested';
+  return 'Mild disagreement';
+}
+
 /** Static report view — renders deliberation analysis as a readable document. */
 export function ReportView() {
   const deliberations = useSessionStore((s) => s.deliberations);
@@ -104,7 +113,8 @@ function ConsensusSection({ statements, delibId }: { statements: ConsensusStatem
   if (statements.length === 0) return null;
   return (
     <section className="report-section" id={`delib-${delibId}-consensus`}>
-      <h3>Consensus</h3>
+      <h3>Convergence Points</h3>
+      <p className="report-section-note">Positions on which no agent registered disagreement. These reflect discourse topology, not established truth.</p>
       <ul className="report-list">
         {statements.map((c, i) => (
           <li key={i}>
@@ -128,8 +138,8 @@ function CruxSection({ cruxes, delibId }: { cruxes: Crux[]; delibId: string }) {
       {sorted.map((crux, i) => (
         <div key={i} className="report-crux">
           <div className="report-crux-header">
-            <span className="report-badge report-badge-red" aria-label={`${Math.round(crux.controversy_score * 100)} percent controversy`}>
-              {Math.round(crux.controversy_score * 100)}%
+            <span className="report-badge report-badge-red" aria-label={controversyLabel(crux.controversy_score)}>
+              {controversyLabel(crux.controversy_score)}
             </span>
             <span className="report-crux-claim">{crux.crux_claim}</span>
           </div>
