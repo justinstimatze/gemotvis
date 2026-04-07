@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { AnalysisResult } from '../../types';
 import { shortAgentID } from '../../lib/helpers';
 import { ChatBubble } from './ChatBubble';
+import { useGraphStore } from '../../stores/graph';
 
 interface AnalysisSectionProps {
   analysis: AnalysisResult;
@@ -16,7 +17,8 @@ function formatConsensus(analysis: AnalysisResult): string | null {
   if (items.length === 0) return null;
   const lines = ['## Consensus'];
   for (const c of items) {
-    lines.push(`- ${c.content} **(${Math.round(c.overall_agree_ratio * 100)}% agreement)**`);
+    lines.push(`- ${c.content}`);
+    lines.push(`  ${Math.round(c.overall_agree_ratio * 100)}% agreement`);
   }
   return lines.join('\n');
 }
@@ -26,11 +28,12 @@ function formatCruxes(analysis: AnalysisResult): string | null {
   if (cruxes.length === 0) return null;
   const lines = ['## Key Disagreements'];
   for (const crux of cruxes) {
-    lines.push(`- ${crux.crux_claim} **(${Math.round(crux.controversy_score * 100)}% controversy)**`);
+    lines.push(`- ${crux.crux_claim}`);
     const parts: string[] = [];
     if (crux.agree_agents.length > 0) parts.push(`Agree: ${crux.agree_agents.map(a => shortAgentID(a)).join(', ')}`);
     if (crux.disagree_agents.length > 0) parts.push(`Disagree: ${crux.disagree_agents.map(a => shortAgentID(a)).join(', ')}`);
-    if (parts.length > 0) lines.push(`  ${parts.join(' | ')}`);
+    parts.unshift(`${Math.round(crux.controversy_score * 100)}% controversy`);
+    lines.push(`  ${parts.join(' | ')}`);
   }
   return lines.join('\n');
 }
@@ -40,7 +43,8 @@ function formatBridging(analysis: AnalysisResult): string | null {
   if (bridging.length === 0) return null;
   const lines = ['## Bridging Positions'];
   for (const b of bridging) {
-    lines.push(`- ${b.content} **(bridging ${Math.round(b.bridging_score * 100)}%)**`);
+    lines.push(`- ${b.content}`);
+    lines.push(`  bridging ${Math.round(b.bridging_score * 100)}%`);
   }
   return lines.join('\n');
 }
@@ -61,20 +65,30 @@ export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType,
 
   const [visibleCount, setVisibleCount] = useState(shouldType ? 0 : messages.length);
 
+  const setSpeakingAgent = useGraphStore((s) => s.setSpeakingAgent);
+
   // Stagger: first bubble after 400ms, then each after previous finishes typing
   useEffect(() => {
     if (!shouldType || visibleCount > 0 || messages.length === 0) return;
-    const timer = setTimeout(() => setVisibleCount(1), 400);
+    const timer = setTimeout(() => {
+      setVisibleCount(1);
+      setSpeakingAgent('analysis');
+    }, 400);
     return () => clearTimeout(timer);
-  }, [shouldType, visibleCount, messages.length]);
+  }, [shouldType, visibleCount, messages.length, setSpeakingAgent]);
 
   const advanceToNext = useCallback(() => {
     setVisibleCount(c => {
       const next = c + 1;
-      if (next >= messages.length) onTypingComplete?.();
+      if (next >= messages.length) {
+        setSpeakingAgent(null);
+        onTypingComplete?.();
+      } else {
+        setSpeakingAgent('analysis');
+      }
       return next;
     });
-  }, [messages.length, onTypingComplete]);
+  }, [messages.length, onTypingComplete, setSpeakingAgent]);
 
   if (messages.length === 0) return null;
 
