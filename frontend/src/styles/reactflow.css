@@ -91,6 +91,61 @@
 .theme-gastown .report-compromise blockquote { background: rgba(139, 94, 60, 0.05); border-left-color: #8b5e3c; }
 .theme-gastown .report-crux { background: rgba(245, 230, 211, 0.08); border-color: rgba(196, 168, 130, 0.3); }
 
+/* Discarded cruxes */
+.report-crux-discarded { opacity: 0.65; border-style: dashed; }
+.report-badge-dim { color: var(--vis-text-dim, #888); background: color-mix(in srgb, var(--vis-text-dim, #888) 10%, transparent); }
+.report-badge-yellow { color: #ca8a04; background: color-mix(in srgb, #ca8a04 12%, transparent); }
+
+/* Integrity warnings */
+.report-integrity-warning { color: var(--vis-red, #ef4444); }
+
+/* Reliability table */
+.report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.report-table th { text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--vis-text-dim, #888); padding: 6px 10px; border-bottom: 2px solid var(--vis-panel-border, #eee); }
+.report-table td { padding: 8px 10px; border-bottom: 1px solid var(--vis-panel-border, #eee); }
+
+/* MAGI theme report table */
+.theme-magi .report-table th { border-bottom-color: #2a2a2a; }
+.theme-magi .report-table td { border-bottom-color: #1a1a1a; }
+.theme-magi .report-crux-discarded { opacity: 0.5; }
+
+/* Gastown theme report table */
+.theme-gastown .report-table th { border-bottom-color: rgba(196, 168, 130, 0.3); }
+.theme-gastown .report-table td { border-bottom-color: rgba(196, 168, 130, 0.15); }
+
+/* ===== Print Stylesheet ===== */
+@media print {
+  /* Hide interactive chrome */
+  .vis-header, .graph-footer, .scrubber-bar, .landing-overlay,
+  .boot-overlay, .react-flow, .side-panel, .center-panel,
+  .report-position-toggle .report-expand-icon { display: none; }
+
+  body { background: white !important; color: black !important; }
+
+  .report-view {
+    max-width: 100%; height: auto; overflow: visible;
+    padding: 0; font-size: 12pt; line-height: 1.6;
+    color: black;
+  }
+
+  .report-delib { break-before: page; margin-bottom: 0; }
+  .report-delib:first-child { break-before: auto; }
+  .report-crux, .report-position { break-inside: avoid; }
+  .report-section { break-inside: avoid; }
+
+  .report-compromise blockquote {
+    background: none !important; border-left: 2px solid #666;
+  }
+
+  .report-crux { background: none !important; border: 1px solid #ccc; box-shadow: none; }
+  .report-position-content { background: none !important; border: 1px solid #ccc; box-shadow: none; }
+
+  .report-badge { border: 1px solid currentColor; background: none !important; }
+
+  .report-toc a { color: black; text-decoration: underline; }
+
+  @page { margin: 1in; }
+}
 
 /* Override React Flow default node styling */
 .react-flow__node {

@@ -3,7 +3,15 @@ import { useSessionStore } from '../../stores/session';
 import { shortAgentID } from '../../lib/helpers';
 import type { DelibState, AnalysisResult, Crux, ConsensusStatement, BridgingStatement } from '../../types';
 
-/** Ordinal label instead of raw percentage — avoids false precision with small agent counts. */
+/** Infer failure mode heuristically — matches gemot report.go */
+function discardReason(c: Crux): string {
+  const claim = c.crux_claim.toLowerCase();
+  if (claim.includes('inevitably') || claim.includes('impossible') || claim.includes('will always') || claim.includes('can never')) {
+    return 'Crux over-specified';
+  }
+  return 'Agent pool gap';
+}
+
 /** Ordinal label factoring in effective sample size — matches gemot report.go */
 function controversyLabel(score: number, nAgree: number, nDisagree: number): string {
   if (nAgree + nDisagree <= 2) return 'Divided (small N)';
@@ -104,6 +112,8 @@ function DelibReport({ id, showTitle }: { id: string; showTitle: boolean }) {
       {analysis && <CruxSection cruxes={analysis.cruxes ?? []} delibId={id} />}
       {analysis && <BridgingSection statements={analysis.bridging_statements ?? []} delibId={id} />}
       {analysis && <TopicSection analysis={analysis} delibId={id} />}
+      {analysis && <IntegritySection warnings={analysis.integrity_warnings ?? []} delibId={id} />}
+      {analysis && <ReliabilitySection analysis={analysis} delibId={id} />}
 
       <LazyPositionSection positions={positions} agents={agents} delibId={id} />
     </article>
@@ -174,6 +184,88 @@ function BridgingSection({ statements, delibId }: { statements: BridgingStatemen
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function IntegritySection({ warnings, delibId }: { warnings: string[]; delibId: string }) {
+  if (warnings.length === 0) return null;
+  const degenerate = warnings.filter(w => w.startsWith('DEGENERATE'));
+  const other = warnings.filter(w => !w.startsWith('DEGENERATE'));
+
+  return (
+    <>
+      {degenerate.length > 0 && (
+        <section className="report-section" id={`delib-${delibId}-discarded`}>
+          <h3>Discarded Cruxes</h3>
+          <p className="report-section-note">Cruxes where one side had zero agents after validation — typically due to an over-specified claim or a gap in the agent pool.</p>
+          {degenerate.map((w, i) => {
+            const claim = w.replace(/^DEGENERATE: crux "/, '').replace(/" has no agents.*$/, '');
+            return (
+              <div key={i} className="report-crux report-crux-discarded">
+                <div className="report-crux-header">
+                  <span className="report-badge report-badge-dim">{discardReason({ crux_claim: claim } as Crux)}</span>
+                  <span className="report-crux-claim">{claim}</span>
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      )}
+      {other.length > 0 && (
+        <section className="report-section" id={`delib-${delibId}-integrity`}>
+          <h3>Integrity Warnings</h3>
+          <ul className="report-list">
+            {other.map((w, i) => (
+              <li key={i} className="report-integrity-warning">{w}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
+  );
+}
+
+function ReliabilitySection({ analysis, delibId }: { analysis: AnalysisResult; delibId: string }) {
+  const keptCruxes = (analysis.cruxes ?? []).length;
+  // Backend filters discarded cruxes from the array — count DEGENERATE integrity warnings instead
+  const discardedCount = (analysis.integrity_warnings ?? []).filter(w => w.startsWith('DEGENERATE')).length;
+  const totalCount = keptCruxes + discardedCount;
+  const degenerateRate = totalCount > 0 ? (discardedCount / totalCount) * 100 : 0;
+
+  let coherenceStatus: string;
+  let coherenceClass: string;
+  if (degenerateRate > 40) { coherenceStatus = 'fail'; coherenceClass = 'report-badge-red'; }
+  else if (degenerateRate > 20) { coherenceStatus = 'partial'; coherenceClass = 'report-badge-yellow'; }
+  else { coherenceStatus = 'pass'; coherenceClass = 'report-badge-green'; }
+
+  const coherenceDetail = `${totalCount - discardedCount}/${totalCount} cruxes survived validation (${Math.round(degenerateRate)}% discard rate)`;
+
+  return (
+    <section className="report-section" id={`delib-${delibId}-reliability`}>
+      <h3>Reliability</h3>
+      <table className="report-table">
+        <thead>
+          <tr><th>Dimension</th><th>Status</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Internal coherence</td>
+            <td><span className={`report-badge ${coherenceClass}`}>{coherenceStatus}</span></td>
+            <td>{coherenceDetail}</td>
+          </tr>
+          <tr>
+            <td>Replication stability</td>
+            <td><span className="report-badge report-badge-dim">untested</span></td>
+            <td>Single run — re-run to test cross-run stability</td>
+          </tr>
+          <tr>
+            <td>Grounding fidelity</td>
+            <td><span className="report-badge report-badge-dim">unchecked</span></td>
+            <td>Agent stances not yet spot-checked against primary sources</td>
+          </tr>
+        </tbody>
+      </table>
     </section>
   );
 }

@@ -12,7 +12,7 @@ const datasetDescriptions: Record<string, string> = {
   'demo-climate-policy': '8 agents — global carbon tax framework with cruxes and bridging',
   'demo-code-review': '3 agents — REST to GraphQL migration code review',
   'demo-ethics-board': '3 agents — facial recognition in public transit ethics review',
-  'demo-diplomacy': '7 nations — 64 bilateral diplomacy negotiations with world map',
+  'demo-diplomacy': '7 nations — 64 bilateral diplomacy negotiations',
 };
 
 export function LandingPage() {

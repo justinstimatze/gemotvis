@@ -28,3 +28,8 @@ frontend/tsconfig.tsbuildinfo
 
 # Theme reference images
 reference/
+
+# defn database + project MCP config (user-specific paths)
+.defn/
+.codex/
+.mcp.json
