@@ -28,7 +28,13 @@ export function LandingPage() {
     fetch('/api/datasets')
       .then((r) => r.json() as Promise<{ datasets: string[]; active: string }>)
       .then((d) => {
-        setDatasets(d.datasets);
+        // Sort active dataset to top, then alphabetically
+        const sorted = [...d.datasets].sort((a, b) => {
+          if (a === d.active) return -1;
+          if (b === d.active) return 1;
+          return a.localeCompare(b);
+        });
+        setDatasets(sorted);
         if (d.active) setSelectedDataset(d.active);
       })
       .catch(() => {});
