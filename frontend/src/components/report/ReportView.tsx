@@ -129,7 +129,7 @@ function DelibReport({ id, showTitle }: { id: string; showTitle: boolean }) {
         <p className="report-no-analysis">Analysis not yet available for this deliberation.</p>
       )}
 
-      {analysis && <KeyFindings analysis={analysis} delibId={id} />}
+      {analysis && <KeyFindings analysis={analysis} positions={positions} kindMap={kindMap} delibId={id} />}
 
       {analysis && <VerificationSection result={analysis.verification} delibId={id} />}
 
@@ -320,12 +320,15 @@ function ParticipantsSection({ positions, kindMap, delibId }: { positions: Posit
   );
 }
 
-function KeyFindings({ analysis, delibId }: { analysis: AnalysisResult; delibId: string }) {
+function KeyFindings({ analysis, positions, kindMap, delibId }: { analysis: AnalysisResult; positions: PositionType[]; kindMap: Map<string, string>; delibId: string }) {
   const cruxes = analysis.cruxes ?? [];
   const consensus = analysis.consensus_statements ?? [];
   if (cruxes.length === 0 && consensus.length === 0) return null;
 
   const topCruxes = [...cruxes].sort((a, b) => b.controversy_score - a.controversy_score).slice(0, 3);
+
+  // Find resolution agents (R3 proposals)
+  const resolutions = positions.filter(p => kindMap.get(p.agent_id) === 'resolution');
 
   return (
     <section className="report-section" id={`delib-${delibId}-findings`}>
@@ -340,6 +343,21 @@ function KeyFindings({ analysis, delibId }: { analysis: AnalysisResult; delibId:
                 {' '}{c.crux_claim.length > 140 ? c.crux_claim.slice(0, 140) + '...' : c.crux_claim}
               </li>
             ))}
+          </ol>
+        </>
+      )}
+      {resolutions.length > 0 && (
+        <>
+          <p className="report-subsection-label">Proposed resolutions:</p>
+          <ol className="report-findings-list">
+            {resolutions.map((r, i) => {
+              // Extract resolution title from content (first line after headers)
+              const title = r.content.split('\n')
+                .map(l => l.trim())
+                .find(l => l && !l.startsWith('#') && !l.startsWith('**'))
+                ?.replace(/^RESOLUTION:\s*/i, '') ?? shortAgentID(r.agent_id);
+              return <li key={i}>{title}</li>;
+            })}
           </ol>
         </>
       )}
@@ -795,14 +813,21 @@ function MethodologyNotes({ analysis, delibId }: { analysis: AnalysisResult; del
   return (
     <section className="report-section report-methodology" id={`delib-${delibId}-methodology`}>
       <h3>Methodology Notes</h3>
+      <p><strong>Agent construction:</strong> Speaker-derived agents are grounded in extracted claims and stance assignments.
+        Steelman clusters group speakers with similar voting patterns. Topic probes investigate deeper disagreements within each topic.
+        Round 2 agents (bridge, dissent, empty chair) are informed by Round 1 analysis results.</p>
       <p><strong>Score interpretation:</strong> Crux scores reflect the proportion of participating agents that agree vs. disagree.
         With {analysis.agent_count} agents, these scores indicate the topology of the discourse, not the strength of evidence or real-world expert consensus.
         Ordinal labels are used instead of raw percentages.</p>
       <p><strong>Multiple comparisons:</strong> This analysis tests multiple cruxes simultaneously without correction for multiple comparisons.
-        With {(analysis.cruxes ?? []).length}+ cruxes across a small agent pool, some apparent disagreements may be artefacts of the generation process.</p>
+        With {(analysis.cruxes ?? []).length}+ cruxes across a small agent pool, some apparent disagreements may be artefacts of the generation process.
+        The LLM both generates crux claims and assigns agent stances — a self-referential loop that inflates apparent disagreement patterns.</p>
+      <p><strong>Circularity:</strong> AI-synthesized agents deliberating about topics is inherently circular.
+        This report maps discourse structure — it does not produce independent evidence.
+        Conclusions should be treated as hypotheses to be tested against primary sources and real expert input.</p>
       <p><strong>Replicability:</strong> {analysis.replication && analysis.replication.runs.length >= 2
-        ? `This analysis was replicated across ${analysis.replication.runs.length} runs. ${analysis.replication.stability.all_stable ? 'Cross-run metrics are stable.' : 'Some metrics showed high variance.'}`
-        : 'This is a single pipeline run. LLM outputs are stochastic — a second run on the same input will produce different crux wordings, scores, and topic labels.'
+        ? `This analysis was replicated across ${analysis.replication.runs.length} runs. ${analysis.replication.stability.all_stable ? 'Cross-run metrics are stable. Findings are reproducible.' : 'Some metrics showed high variance. Findings should be interpreted with caution.'}`
+        : 'This is a single pipeline run. LLM outputs are stochastic — a second run on the same input will produce different crux wordings, scores, and topic labels. Findings that appear across multiple runs are more robust than single-run results.'
       }</p>
     </section>
   );
