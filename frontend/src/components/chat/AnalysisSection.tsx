@@ -16,7 +16,7 @@ function formatConsensus(analysis: AnalysisResult): string | null {
   if (items.length === 0) return null;
   const lines = ['## Consensus'];
   for (const c of items) {
-    lines.push(`- ${c.content} (${Math.round(c.overall_agree_ratio * 100)}% agreement)`);
+    lines.push(`- ${c.content} **(${Math.round(c.overall_agree_ratio * 100)}% agreement)**`);
   }
   return lines.join('\n');
 }
@@ -26,7 +26,7 @@ function formatCruxes(analysis: AnalysisResult): string | null {
   if (cruxes.length === 0) return null;
   const lines = ['## Key Disagreements'];
   for (const crux of cruxes) {
-    lines.push(`- ${crux.crux_claim} (${Math.round(crux.controversy_score * 100)}% controversy)`);
+    lines.push(`- ${crux.crux_claim} **(${Math.round(crux.controversy_score * 100)}% controversy)**`);
     const parts: string[] = [];
     if (crux.agree_agents.length > 0) parts.push(`Agree: ${crux.agree_agents.map(a => shortAgentID(a)).join(', ')}`);
     if (crux.disagree_agents.length > 0) parts.push(`Disagree: ${crux.disagree_agents.map(a => shortAgentID(a)).join(', ')}`);
@@ -40,7 +40,7 @@ function formatBridging(analysis: AnalysisResult): string | null {
   if (bridging.length === 0) return null;
   const lines = ['## Bridging Positions'];
   for (const b of bridging) {
-    lines.push(`- ${b.content} (bridging ${Math.round(b.bridging_score * 100)}%)`);
+    lines.push(`- ${b.content} **(bridging ${Math.round(b.bridging_score * 100)}%)**`);
   }
   return lines.join('\n');
 }

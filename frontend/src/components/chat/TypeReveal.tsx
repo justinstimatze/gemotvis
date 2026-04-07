@@ -110,10 +110,17 @@ export function TypeReveal({ text, agentNames, speed, onComplete }: TypeRevealPr
           return <MarkdownLine key={li} line={line} agentNames={agentNames} />;
         }
 
-        // Current line: show words up to wordEnd
+        // Current line: show words up to wordEnd, never splitting inside **bold**
         const wordsInLine = line.split(/(\s+)/);
         const wordEnd = currentEntry?.wordEnd ?? 0;
-        const partialText = wordsInLine.slice(0, wordEnd).join('');
+        let partialText = wordsInLine.slice(0, wordEnd).join('');
+        // If we're inside an unclosed ** marker, extend to include the closing **
+        const openBold = (partialText.match(/\*\*/g) || []).length;
+        if (openBold % 2 !== 0) {
+          const rest = wordsInLine.slice(wordEnd).join('');
+          const closeIdx = rest.indexOf('**');
+          if (closeIdx >= 0) partialText += rest.slice(0, closeIdx + 2);
+        }
 
         return (
           <span key={li}>
