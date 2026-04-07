@@ -9,7 +9,10 @@ const themeDescriptions: Record<string, { label: string; desc: string; colors: s
 };
 
 const datasetDescriptions: Record<string, string> = {
-  showcase: '4 scenarios — governance, scheduling, MAGI triangle, analysis',
+  'demo-climate-policy': '8 agents — global carbon tax framework',
+  'demo-code-review': '3 agents — REST to GraphQL migration review',
+  'demo-ethics-board': '3 agents — facial recognition ethics review',
+  'gemot-v15a-sqlite': '7 nations — 64 bilateral diplomacy negotiations',
   diplomacy: '7 nations — Spring 1904 bilateral negotiations',
   'code-review': '3 reviewers — async function security review',
 };
@@ -52,6 +55,25 @@ export function LandingPage() {
         <h1 className="landing-title">gemotvis</h1>
         <p className="landing-subtitle">Deliberation visualization</p>
 
+        {/* Dataset selector with descriptions */}
+        {datasets.length > 1 && (
+          <div className="landing-section">
+            <label className="landing-label">Dataset</label>
+            <div className="landing-dataset-list">
+              {datasets.map((d) => (
+                <button
+                  key={d}
+                  className={`landing-dataset-card ${selectedDataset === d ? 'active' : ''}`}
+                  onClick={() => setSelectedDataset(d)}
+                >
+                  <span className="landing-dataset-name">{d}</span>
+                  <span className="landing-dataset-desc">{datasetDescriptions[d] ?? ''}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Theme picker with previews */}
         <div className="landing-section">
           <label className="landing-label">Theme</label>
@@ -73,25 +95,6 @@ export function LandingPage() {
               ))}
           </div>
         </div>
-
-        {/* Dataset selector with descriptions */}
-        {datasets.length > 1 && (
-          <div className="landing-section">
-            <label className="landing-label">Dataset</label>
-            <div className="landing-dataset-list">
-              {datasets.map((d) => (
-                <button
-                  key={d}
-                  className={`landing-dataset-card ${selectedDataset === d ? 'active' : ''}`}
-                  onClick={() => setSelectedDataset(d)}
-                >
-                  <span className="landing-dataset-name">{d}</span>
-                  <span className="landing-dataset-desc">{datasetDescriptions[d] ?? ''}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="landing-section">
           <button className="landing-btn landing-btn-primary" onClick={startDemo} disabled={!selectedDataset}>
