@@ -11,6 +11,7 @@ import { useScrubberPlayback } from './hooks/useScrubberPlayback';
 import { buildGlobalTimeline } from './lib/buildTimeline';
 import { GraphCanvas } from './components/graph/GraphCanvas';
 import { Footer } from './components/panels/Footer';
+import { ReportView } from './components/report/ReportView';
 import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
 import { BootOverlay } from './components/BootOverlay';
@@ -110,9 +111,14 @@ function GraphView() {
   );
 }
 
+function isReportView(): boolean {
+  return new URLSearchParams(window.location.search).get('view') === 'report';
+}
+
 /** Demo mode: connect to default SSE endpoints. */
 function DemoMode() {
   useSSE();
+  if (isReportView()) return <ReportView />;
   return <GraphView />;
 }
 
@@ -130,6 +136,8 @@ function WatchMode() {
   useWatchSSE(codes);
 
   useEffect(() => { useSessionStore.setState({ mode: 'live' }); }, []);
+
+  if (isReportView()) return <ReportView />;
 
   return (
     <>
