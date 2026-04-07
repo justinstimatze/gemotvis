@@ -9,36 +9,39 @@ export interface TimelineEvent {
   index: number;
 }
 
-/** Build timeline events from a single deliberation. Uses audit log if available, falls back to positions/votes. */
+/** Build timeline events from a single deliberation.
+ *  Always synthesizes position/vote events from data timestamps.
+ *  Merges audit log lifecycle events (analysis, round changes) if available. */
 export function buildTimelineEvents(ds: DelibState): TimelineEvent[] {
-  const ops = ds.audit_log?.operations ?? [];
   const delibID = ds.deliberation?.deliberation_id ?? '';
 
-  // If audit log has entries, use it
-  if (ops.length > 0) {
-    return ops.map((op, i) => {
-      const method = (op['method'] ?? '').replace('gemot/', '');
-      let type: TimelineEvent['type'] = 'other';
-      let label = method;
+  // Always build position/vote events from actual data
+  const events = synthesizeEvents(ds);
 
-      if (method.includes('submit_position')) {
-        type = 'position';
-        label = `${shortAgentID(op['agent_id'] ?? '')} submits position`;
-      } else if (method.includes('vote')) {
-        type = 'vote';
-        label = `${shortAgentID(op['agent_id'] ?? '')} votes`;
-      } else if (method.includes('analy')) {
-        type = 'analysis';
-        label = method.includes('complete') || method.includes('result')
-          ? 'Analysis complete' : 'Analysis started';
-      }
+  // Merge audit log lifecycle events (analysis, admin ops) that aren't position/vote
+  const ops = ds.audit_log?.operations ?? [];
+  for (const op of ops) {
+    const method = op['method'] ?? '';
+    // Skip position/vote ops — we already have those from the data
+    if (method.includes('submit_position') || method.includes('participate:submit') ||
+        method.includes('vote') || method.includes('participate:vote')) continue;
 
-      return { time: op['timestamp'] ?? '', label, type, delibID, index: i };
-    }).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+    let type: TimelineEvent['type'] = 'other';
+    let label = method;
+
+    if (method.includes('analy') || method.includes('analyze:')) {
+      type = 'analysis';
+      label = method.includes('complete') || method.includes('result')
+        ? 'Analysis complete' : 'Analysis started';
+    }
+
+    events.push({ time: op['timestamp'] ?? '', label, type, delibID, index: events.length });
   }
 
-  // Fallback: synthesize from positions and votes
-  return synthesizeEvents(ds);
+  return events.sort((a, b) => {
+    if (!a.time || !b.time) return 0;
+    return new Date(a.time).getTime() - new Date(b.time).getTime();
+  });
 }
 
 /** Synthesize timeline events from positions and votes when no audit log exists. */
