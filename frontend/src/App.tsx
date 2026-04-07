@@ -57,7 +57,11 @@ function GraphView() {
     setEvents(events);
   }, [timelineFingerprint, setEvents]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Autoplay: set activeEdge first (mounts panel), then start playing once panel is ready.
+  // This ensures the first position arrives as a "new" message with typing animation.
   const autoplayRef = useRef(false);
+  const animationPhase = useGraphStore((s) => s.animationPhase);
+
   useEffect(() => {
     if (autoplayRef.current) return;
     const interval = setInterval(() => {
@@ -67,13 +71,23 @@ function GraphView() {
       clearInterval(interval);
       const firstEvt = state.events[0];
       if (firstEvt) {
-        state.setEventIndex(0);
+        // Set activeEdge to trigger panel mount, but DON'T set eventIndex yet
         useGraphStore.getState().setActiveEdge(firstEvt.delibID);
-        setTimeout(() => useScrubberStore.getState().setPlaying(true), 50);
       }
     }, 200);
     return () => clearInterval(interval);
   }, []);
+
+  // Once panel is ready (phase='ready'), start playback from event 0
+  const playbackStarted = useRef(false);
+  useEffect(() => {
+    if (!autoplayRef.current || playbackStarted.current) return;
+    if (animationPhase !== 'ready') return;
+    playbackStarted.current = true;
+    const state = useScrubberStore.getState();
+    state.setEventIndex(0);
+    setTimeout(() => useScrubberStore.getState().setPlaying(true), 50);
+  }, [animationPhase]);
 
   const hasData = Object.keys(deliberations).length > 0;
 

@@ -474,6 +474,36 @@ h5.chat-md-heading { font-size: 11px; }
   margin: 8px 0;
 }
 
+.chat-md-bullet {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0;
+  line-height: 1.5;
+}
+
+.chat-md-bullet-dot {
+  flex-shrink: 0;
+  color: var(--vis-text-dim, #888);
+}
+
+/* Typing cursor */
+.type-cursor {
+  display: inline-block;
+  color: var(--vis-amber, #0070f3);
+  animation: cursorBlink 0.8s step-end infinite;
+  font-size: 10px;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.theme-magi .type-cursor { color: #ff8c00; }
+.theme-gastown .type-cursor { color: #b87333; }
+
 .chat-bubble-highlighted .chat-bubble {
   opacity: 1 !important;
   box-shadow: 0 0 0 2px var(--vis-amber, #0070f3);
