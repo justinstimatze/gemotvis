@@ -192,6 +192,7 @@ export interface DelibState {
   positions: Position[];
   votes: Vote[];
   analysis?: AnalysisResult;
+  analyses?: AnalysisResult[];  // all rounds when available
   audit_log?: AuditLog;
   agents: AgentInfo[];
 }

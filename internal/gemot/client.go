@@ -164,6 +164,27 @@ func (c *Client) GetAnalysisResult(ctx context.Context, deliberationID string) (
 	return &result, nil
 }
 
+// GetAllAnalysisResults calls gemot/analyze action:get_result with round:-1 to fetch all rounds.
+func (c *Client) GetAllAnalysisResults(ctx context.Context, deliberationID string) ([]AnalysisResult, error) {
+	raw, err := c.call(ctx, "gemot/analyze", map[string]any{"action": "get_result", "deliberation_id": deliberationID, "round": -1})
+	if err != nil {
+		return nil, err
+	}
+	if string(raw) == "null" {
+		return nil, nil
+	}
+	var results []AnalysisResult
+	if err := json.Unmarshal(raw, &results); err != nil {
+		// Fallback: server may not support round:-1, try single result
+		var single AnalysisResult
+		if err2 := json.Unmarshal(raw, &single); err2 == nil {
+			return []AnalysisResult{single}, nil
+		}
+		return nil, fmt.Errorf("unmarshal analysis results: %w", err)
+	}
+	return results, nil
+}
+
 // ListByGroup calls gemot/deliberation action:list_by_group.
 func (c *Client) ListByGroup(ctx context.Context, groupID string) ([]Deliberation, error) {
 	raw, err := c.call(ctx, "gemot/deliberation", map[string]any{"action": "list_by_group", "group_id": groupID})

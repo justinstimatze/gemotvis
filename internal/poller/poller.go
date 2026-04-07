@@ -20,12 +20,13 @@ import (
 
 // DelibState holds the complete visualization state for one deliberation.
 type DelibState struct {
-	Deliberation *gemot.Deliberation  `json:"deliberation"`
-	Positions    []gemot.Position     `json:"positions"`
-	Votes        []gemot.Vote         `json:"votes"`
-	Analysis     *gemot.AnalysisResult `json:"analysis,omitempty"`
-	AuditLog     *gemot.AuditLog      `json:"audit_log,omitempty"`
-	Agents       []AgentInfo          `json:"agents"`
+	Deliberation *gemot.Deliberation    `json:"deliberation"`
+	Positions    []gemot.Position       `json:"positions"`
+	Votes        []gemot.Vote           `json:"votes"`
+	Analysis     *gemot.AnalysisResult  `json:"analysis,omitempty"`      // latest round (backwards compat)
+	Analyses     []gemot.AnalysisResult `json:"analyses,omitempty"`      // all rounds when available
+	AuditLog     *gemot.AuditLog        `json:"audit_log,omitempty"`
+	Agents       []AgentInfo            `json:"agents"`
 }
 
 // AgentInfo is derived from positions/votes for the frontend.
@@ -279,7 +280,16 @@ func (p *Poller) fetchDelibState(ctx context.Context, id string) (*DelibState, e
 		return nil, fmt.Errorf("get votes: %w", err)
 	}
 
-	analysis, _ := p.client.GetAnalysisResult(ctx, id)
+	// Fetch all analysis rounds; fall back to single round
+	var analysis *gemot.AnalysisResult
+	var analyses []gemot.AnalysisResult
+	if allResults, err := p.client.GetAllAnalysisResults(ctx, id); err == nil && len(allResults) > 0 {
+		analyses = allResults
+		analysis = &allResults[len(allResults)-1] // latest round
+	} else {
+		// Fallback: old server without round:-1 support
+		analysis, _ = p.client.GetAnalysisResult(ctx, id)
+	}
 	auditLog, _ := p.client.GetAuditLog(ctx, id)
 
 	// Derive agent info from positions
@@ -327,6 +337,7 @@ func (p *Poller) fetchDelibState(ctx context.Context, id string) (*DelibState, e
 		Positions:    positions,
 		Votes:        votes,
 		Analysis:     analysis,
+		Analyses:     analyses,
 		AuditLog:     auditLog,
 		Agents:       agents,
 	}, nil

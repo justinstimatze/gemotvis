@@ -1,7 +1,35 @@
 import { memo, useMemo, useState, useCallback } from 'react';
 import { useSessionStore } from '../../stores/session';
 import { shortAgentID } from '../../lib/helpers';
-import type { DelibState, AnalysisResult, Crux, ConsensusStatement, BridgingStatement, NullControlResult, VerificationResult, ReplicationResult, CoverageGap } from '../../types';
+import type { DelibState, AnalysisResult, Crux, ConsensusStatement, BridgingStatement, NullControlResult, VerificationResult, ReplicationResult, CoverageGap, Position as PositionType } from '../../types';
+
+/** Agent kind categories matching gemot report.go */
+const STRUCTURAL_KINDS = new Set(['probe', 'bridge', 'dissent', 'empty-chair', 'resolution']);
+
+function isStructuralKind(kind: string): boolean {
+  return STRUCTURAL_KINDS.has(kind);
+}
+
+/** Build agent→kind map from position metadata */
+function buildAgentKindMap(positions: PositionType[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const p of positions) {
+    const kind = (p.metadata as Record<string, string> | undefined)?.kind;
+    if (kind && !map.has(p.agent_id)) map.set(p.agent_id, kind);
+  }
+  return map;
+}
+
+/** Split agent list into speaker-derived and structural */
+function splitAgentsByKind(agents: string[], kindMap: Map<string, string>): { speakers: string[]; structural: string[] } {
+  const speakers: string[] = [];
+  const structural: string[] = [];
+  for (const a of agents) {
+    if (isStructuralKind(kindMap.get(a) ?? '')) structural.push(a);
+    else speakers.push(a);
+  }
+  return { speakers, structural };
+}
 
 /** Infer failure mode heuristically — matches gemot report.go */
 function discardReason(c: Crux): string {
@@ -84,6 +112,7 @@ function DelibReport({ id, showTitle }: { id: string; showTitle: boolean }) {
   const analysis = ds.analysis;
   const positions = ds.positions ?? [];
   const agents = ds.agents ?? [];
+  const kindMap = useMemo(() => buildAgentKindMap(positions), [positions]);
 
   return (
     <article className="report-delib" id={`delib-${id}`}>
@@ -104,6 +133,8 @@ function DelibReport({ id, showTitle }: { id: string; showTitle: boolean }) {
 
       {analysis && <VerificationSection result={analysis.verification} delibId={id} />}
 
+      {kindMap.size > 0 && <ParticipantsSection positions={positions} kindMap={kindMap} delibId={id} />}
+
       {analysis?.compromise_proposal && !(analysis.integrity_warnings ?? []).some(w => w.startsWith('ANALYSIS_REFUSED')) && (
         <section className="report-section report-compromise" id={`delib-${id}-compromise`}>
           <h3>Compromise Proposal</h3>
@@ -119,9 +150,11 @@ function DelibReport({ id, showTitle }: { id: string; showTitle: boolean }) {
       )}
 
       {analysis && <ConsensusSection statements={analysis.consensus_statements ?? []} delibId={id} />}
-      {analysis && <CruxSection cruxes={analysis.cruxes ?? []} delibId={id} />}
+      {analysis && <CruxSection cruxes={analysis.cruxes ?? []} kindMap={kindMap} delibId={id} />}
       {analysis && <BridgingSection statements={analysis.bridging_statements ?? []} delibId={id} />}
       {analysis && <TopicSection analysis={analysis} delibId={id} />}
+      {(ds.analyses?.length ?? 0) > 1 && <EvolutionSection analyses={ds.analyses!} delibId={id} />}
+      {positions.some(p => p.agent_id.endsWith('-r3')) && <PositionEvolutionSection positions={positions} delibId={id} />}
       {analysis && <IntegritySection warnings={analysis.integrity_warnings ?? []} discardedCruxes={analysis.discarded_cruxes} delibId={id} />}
       {analysis && <NullControlSection result={analysis.null_control} delibId={id} />}
       {analysis && <CoverageSection gaps={analysis.coverage_gaps} delibId={id} />}
@@ -156,31 +189,61 @@ function ConsensusSection({ statements, delibId }: { statements: ConsensusStatem
   );
 }
 
-function CruxSection({ cruxes, delibId }: { cruxes: Crux[]; delibId: string }) {
+function CruxSection({ cruxes, kindMap, delibId }: { cruxes: Crux[]; kindMap: Map<string, string>; delibId: string }) {
   if (cruxes.length === 0) return null;
   const sorted = [...cruxes].sort((a, b) => b.controversy_score - a.controversy_score);
+  const hasTwoTrack = kindMap.size > 0;
+
   return (
     <section className="report-section" id={`delib-${delibId}-cruxes`}>
       <h3>Key Disagreements</h3>
-      {sorted.map((crux, i) => (
-        <div key={i} className="report-crux">
-          <div className="report-crux-header">
-            <span className="report-badge report-badge-red" aria-label={controversyLabel(crux.controversy_score, crux.agree_agents.length, crux.disagree_agents.length)}>
-              {controversyLabel(crux.controversy_score, crux.agree_agents.length, crux.disagree_agents.length)}
-            </span>
-            <span className="report-crux-claim">{crux.crux_claim}</span>
-          </div>
-          {crux.explanation && <p className="report-crux-explanation">{crux.explanation}</p>}
-          <div className="report-crux-agents">
-            {crux.agree_agents.length > 0 && (
-              <span className="report-agents-agree" aria-label="Agents who agree">Agree: {crux.agree_agents.map(a => shortAgentID(a)).join(', ')}</span>
+      {sorted.map((crux, i) => {
+        const agreeByKind = hasTwoTrack ? splitAgentsByKind(crux.agree_agents, kindMap) : null;
+        const disagreeByKind = hasTwoTrack ? splitAgentsByKind(crux.disagree_agents, kindMap) : null;
+        const showTwoTrack = hasTwoTrack && (
+          (agreeByKind!.speakers.length > 0 || disagreeByKind!.speakers.length > 0) &&
+          (agreeByKind!.structural.length > 0 || disagreeByKind!.structural.length > 0)
+        );
+
+        return (
+          <div key={i} className="report-crux">
+            <div className="report-crux-header">
+              <span className="report-badge report-badge-red" aria-label={controversyLabel(crux.controversy_score, crux.agree_agents.length, crux.disagree_agents.length)}>
+                {controversyLabel(crux.controversy_score, crux.agree_agents.length, crux.disagree_agents.length)}
+              </span>
+              <span className="report-crux-claim">{crux.crux_claim}</span>
+            </div>
+            {crux.explanation && <p className="report-crux-explanation">{crux.explanation}</p>}
+            {showTwoTrack ? (
+              <div className="report-crux-agents">
+                {(agreeByKind!.speakers.length > 0 || disagreeByKind!.speakers.length > 0) && (
+                  <div className="report-crux-track">
+                    <span className="report-track-label">Speakers:</span>
+                    {agreeByKind!.speakers.length > 0 && <span className="report-agents-agree">Agree: {agreeByKind!.speakers.map(a => shortAgentID(a)).join(', ')}</span>}
+                    {disagreeByKind!.speakers.length > 0 && <span className="report-agents-disagree">Disagree: {disagreeByKind!.speakers.map(a => shortAgentID(a)).join(', ')}</span>}
+                  </div>
+                )}
+                {(agreeByKind!.structural.length > 0 || disagreeByKind!.structural.length > 0) && (
+                  <div className="report-crux-track">
+                    <span className="report-track-label">Structural:</span>
+                    {agreeByKind!.structural.length > 0 && <span className="report-agents-agree">Agree: {agreeByKind!.structural.map(a => shortAgentID(a)).join(', ')}</span>}
+                    {disagreeByKind!.structural.length > 0 && <span className="report-agents-disagree">Disagree: {disagreeByKind!.structural.map(a => shortAgentID(a)).join(', ')}</span>}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="report-crux-agents">
+                {crux.agree_agents.length > 0 && (
+                  <span className="report-agents-agree" aria-label="Agents who agree">Agree: {crux.agree_agents.map(a => shortAgentID(a)).join(', ')}</span>
+                )}
+                {crux.disagree_agents.length > 0 && (
+                  <span className="report-agents-disagree" aria-label="Agents who disagree">Disagree: {crux.disagree_agents.map(a => shortAgentID(a)).join(', ')}</span>
+                )}
+              </div>
             )}
-            {crux.disagree_agents.length > 0 && (
-              <span className="report-agents-disagree" aria-label="Agents who disagree">Disagree: {crux.disagree_agents.map(a => shortAgentID(a)).join(', ')}</span>
-            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </section>
   );
 }
@@ -198,6 +261,61 @@ function BridgingSection({ statements, delibId }: { statements: BridgingStatemen
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Kind labels for display — maps internal kind to human-readable category */
+const KIND_CATEGORIES: Record<string, { label: string; order: number }> = {
+  steelman: { label: 'Clusters', order: 0 },
+  speaker: { label: 'Speakers', order: 1 },
+  probe: { label: 'Topic Probes', order: 2 },
+  bridge: { label: 'Round 2 — Bridge', order: 3 },
+  dissent: { label: 'Round 2 — Dissent', order: 4 },
+  'empty-chair': { label: 'Round 2 — Empty Chair', order: 5 },
+  resolution: { label: 'Round 3 — Resolution', order: 6 },
+};
+
+function ParticipantsSection({ positions, kindMap, delibId }: { positions: PositionType[]; kindMap: Map<string, string>; delibId: string }) {
+  // Group agents by kind, deduplicate — R3 agents (e.g. agent-r3) map to base agent
+  const groups = new Map<string, string[]>();
+  const seen = new Set<string>();
+  for (const p of positions) {
+    // Strip -r3 suffix for dedup — the same speaker may have R1 and R3 positions
+    const baseId = p.agent_id.replace(/-r3$/, '');
+    if (seen.has(baseId)) continue;
+    seen.add(baseId);
+    const kind = kindMap.get(p.agent_id) ?? 'unknown';
+    if (!groups.has(kind)) groups.set(kind, []);
+    groups.get(kind)!.push(p.agent_id);
+  }
+
+  // Sort groups by category order
+  const sortedGroups = [...groups.entries()].sort((a, b) => {
+    const oa = KIND_CATEGORIES[a[0]]?.order ?? 99;
+    const ob = KIND_CATEGORIES[b[0]]?.order ?? 99;
+    return oa - ob;
+  });
+
+  const nSpeakerDerived = (groups.get('steelman')?.length ?? 0) + (groups.get('speaker')?.length ?? 0);
+  const nStructural = [...groups.entries()]
+    .filter(([k]) => isStructuralKind(k))
+    .reduce((sum, [, agents]) => sum + agents.length, 0);
+
+  return (
+    <section className="report-section" id={`delib-${delibId}-participants`}>
+      <h3>Participants</h3>
+      <p className="report-section-note">Agents fall into two categories: speaker-derived (grounded in source claims) and structural (pipeline-generated to probe the discourse topology).</p>
+      {sortedGroups.map(([kind, agents]) => (
+        <div key={kind} className="report-participant-group">
+          <span className="report-participant-label">
+            {KIND_CATEGORIES[kind]?.label ?? kind}
+            {isStructuralKind(kind) && <span className="report-badge report-badge-dim">structural</span>}
+          </span>
+          <span className="report-participant-agents">{agents.map(a => shortAgentID(a)).join(', ')}</span>
+        </div>
+      ))}
+      <p className="report-findings-pipeline">{nSpeakerDerived} speaker-derived, {nStructural} structural agents</p>
     </section>
   );
 }
@@ -381,6 +499,121 @@ function ReplicationSection({ result, delibId }: { result?: ReplicationResult; d
           ? 'All metrics stable (CV < 0.2). Findings are reproducible.'
           : 'Some metrics show high variance (CV >= 0.2). Findings should be interpreted with caution.'}
       </p>
+    </section>
+  );
+}
+
+function PositionEvolutionSection({ positions, delibId }: { positions: PositionType[]; delibId: string }) {
+  // Find R3 agents and match to R1 originals by stripping -r3 suffix
+  const r3Positions = positions.filter(p => p.agent_id.endsWith('-r3'));
+  if (r3Positions.length === 0) return null;
+
+  const r1Map = new Map<string, PositionType>();
+  for (const p of positions) {
+    if (p.round_number === 1 && !p.agent_id.endsWith('-r3')) {
+      r1Map.set(p.agent_id, p);
+    }
+  }
+
+  const pairs = r3Positions
+    .map(r3 => {
+      const baseId = r3.agent_id.replace(/-r3$/, '');
+      const r1 = r1Map.get(baseId);
+      return r1 ? { name: shortAgentID(baseId), r1: r1.content, r3: r3.content } : null;
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== null);
+
+  if (pairs.length === 0) return null;
+
+  function firstLine(s: string): string {
+    for (const line of s.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('SPEAKER:') || trimmed.startsWith('Stances:') ||
+          trimmed.startsWith('Steelman') || trimmed.startsWith('Revised position') || trimmed.startsWith('REVISED POSITION') ||
+          trimmed.startsWith('Probe') || trimmed.startsWith('Resolution:') || trimmed.startsWith('REQUIRES:') ||
+          /^\*\*[A-Z].*\*\*:?$/.test(trimmed) || trimmed.startsWith('**What held') || trimmed.startsWith('**REVISED')) continue;
+      return trimmed.length > 120 ? trimmed.slice(0, 117) + '...' : trimmed;
+    }
+    return s.length > 120 ? s.slice(0, 117) + '...' : s;
+  }
+
+  return (
+    <section className="report-section" id={`delib-${delibId}-position-evolution`}>
+      <h3>Position Evolution (R1 → R3)</h3>
+      <p className="report-section-note">Speaker-derived agents revised their positions after seeing R2 findings.</p>
+      {pairs.map((p, i) => (
+        <div key={i} className="report-position-evolution">
+          <strong>{p.name}</strong>
+          <div className="report-evolution-comparison">
+            <div className="report-evolution-round"><span className="report-badge report-badge-dim">R1</span> {firstLine(p.r1)}</div>
+            <div className="report-evolution-round"><span className="report-badge report-badge-blue">R3</span> {firstLine(p.r3)}</div>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function EvolutionSection({ analyses, delibId }: { analyses: AnalysisResult[]; delibId: string }) {
+  if (analyses.length < 2) return null;
+  const sorted = [...analyses].sort((a, b) => a.round_number - b.round_number);
+  const r1 = sorted[0]!;
+  const r2 = sorted.length >= 2 ? sorted[1]! : null;
+
+  // New cruxes: claims in R2 not in R1
+  const r1Claims = new Set((r1.cruxes ?? []).map(c => c.crux_claim));
+  const newCruxes = r2 ? (r2.cruxes ?? []).filter(c => !r1Claims.has(c.crux_claim)) : [];
+
+  // Topic taxonomy changes using topic_id
+  const r1TopicsById = new Map((r1.topic_summaries ?? []).filter(t => t.topic_id).map(t => [t.topic_id!, t.topic]));
+  const r1TopicNames = new Set((r1.topic_summaries ?? []).map(t => t.topic));
+  const renamed: string[] = [];
+  const added: string[] = [];
+  const dropped: string[] = [];
+  if (r2) {
+    const r2TopicsById = new Map((r2.topic_summaries ?? []).filter(t => t.topic_id).map(t => [t.topic_id!, t.topic]));
+    const r2TopicNames = new Set((r2.topic_summaries ?? []).map(t => t.topic));
+    for (const [id, name] of r2TopicsById) {
+      const r1Name = r1TopicsById.get(id);
+      if (r1Name && r1Name !== name) renamed.push(`${id}: ${r1Name} → ${name}`);
+      if (!r1TopicNames.has(name) && !r1Name) added.push(id ? `${id}: ${name}` : name);
+    }
+    for (const [id, name] of r1TopicsById) {
+      if (!r2TopicsById.has(id) && !r2TopicNames.has(name)) dropped.push(id ? `${id}: ${name}` : name);
+    }
+  }
+
+  const hasChanges = newCruxes.length > 0 || renamed.length > 0 || added.length > 0 || dropped.length > 0;
+  if (!hasChanges) return null;
+
+  return (
+    <section className="report-section" id={`delib-${delibId}-evolution`}>
+      <h3>Evolution (R1 → R{r2?.round_number ?? 2})</h3>
+      {newCruxes.length > 0 && (
+        <>
+          <p className="report-subsection-label">New or refined cruxes:</p>
+          <ul className="report-list">
+            {newCruxes.map((c, i) => (
+              <li key={i}>
+                <span className="report-badge report-badge-red">{controversyLabel(c.controversy_score, c.agree_agents.length, c.disagree_agents.length)}</span>
+                {' '}{c.crux_claim.length > 140 ? c.crux_claim.slice(0, 140) + '...' : c.crux_claim}
+              </li>
+            ))}
+          </ul>
+          <p className="report-section-note">R2 cruxes may be reworded versions of R1 cruxes. Exact string matching identifies new cruxes — some may be refinements.</p>
+        </>
+      )}
+      {(renamed.length > 0 || added.length > 0 || dropped.length > 0) && (
+        <>
+          <p className="report-subsection-label">Topic taxonomy changes:</p>
+          <ul className="report-list">
+            {renamed.map((r, i) => <li key={`r${i}`}>Renamed: {r}</li>)}
+            {added.map((a, i) => <li key={`a${i}`}>New in R2: {a}</li>)}
+            {dropped.map((d, i) => <li key={`d${i}`}>Dropped from R1: {d}</li>)}
+          </ul>
+          <p className="report-section-note">Topic IDs persist across rounds. Renamed topics share the same ID.</p>
+        </>
+      )}
     </section>
   );
 }
