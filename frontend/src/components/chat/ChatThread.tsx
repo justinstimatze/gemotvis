@@ -129,7 +129,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery, analysis
             analysis={analysis}
             agentNames={agentNames}
             typingSpeed={typingSpeed}
-            shouldType={!isLive && playing && animationPhase === 'ready'}
+            shouldType={!isLive}
             onTypingComplete={clearSpeakingAgent}
           />
         )}

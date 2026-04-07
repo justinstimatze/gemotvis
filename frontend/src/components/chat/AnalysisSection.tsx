@@ -10,7 +10,6 @@ interface AnalysisSectionProps {
   onTypingComplete?: () => void;
 }
 
-/** Format analysis results as markdown text for rendering as chat bubbles. */
 function formatConsensus(analysis: AnalysisResult): string | null {
   const items = analysis.consensus_statements ?? [];
   if (items.length === 0) return null;
@@ -50,32 +49,32 @@ function formatCompromise(analysis: AnalysisResult): string | null {
   return `## Compromise Proposal\n${analysis.compromise_proposal}`;
 }
 
-/** Renders analysis as chat bubbles in the conversation flow. */
+/** Renders analysis as regular chat bubbles in the conversation flow. */
 export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType, onTypingComplete }: AnalysisSectionProps) {
-  // Combine all analysis into a single message
-  const sections = [
+  const messages = [
     formatConsensus(analysis),
     formatCruxes(analysis),
     formatBridging(analysis),
     formatCompromise(analysis),
-  ].filter(Boolean);
+  ].filter((m): m is string => m != null);
 
-  if (sections.length === 0) return null;
-
-  const content = sections.join('\n\n---\n\n');
+  if (messages.length === 0) return null;
 
   return (
-    <div className="analysis-section">
-      <ChatBubble
-        agentId="analysis"
-        content={content}
-        isLeft={false}
-        shouldType={shouldType}
-        agentNames={agentNames}
-        typingSpeed={typingSpeed}
-        agentColor="var(--vis-accent, #4f46e5)"
-        onTypingComplete={onTypingComplete}
-      />
-    </div>
+    <>
+      {messages.map((content, i) => (
+        <ChatBubble
+          key={i}
+          agentId="analysis"
+          content={content}
+          isLeft={false}
+          shouldType={shouldType && i === 0}
+          agentNames={agentNames}
+          typingSpeed={typingSpeed}
+          agentColor="var(--vis-accent, #4f46e5)"
+          onTypingComplete={i === messages.length - 1 ? onTypingComplete : undefined}
+        />
+      ))}
+    </>
   );
 }
