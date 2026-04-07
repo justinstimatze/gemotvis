@@ -47,7 +47,7 @@ function GraphCanvasInner() {
   // Compute and apply layout
   const layoutResult = useMemo(() => getGraphNodePositions(graph, rawDelibs), [graph, rawDelibs]);
 
-  const { positions: nodePositions, isFocusedBilateral } = useMemo(() => {
+  const { positions: nodePositions } = useMemo(() => {
     if (!activeEdge) return { positions: layoutResult.positions, isFocusedBilateral: false };
     if (isSingleDelibGraph(graph)) return { positions: layoutResult.positions, isFocusedBilateral: false };
     const edge = graph.edges.find(e => e.delibID === activeEdge);
@@ -139,8 +139,8 @@ function GraphCanvasInner() {
         minZoom={0.3}
         maxZoom={2}
       >
+        <WorldMap show={layoutResult.showWorldMap} />
       </ReactFlow>
-      <WorldMap show={layoutResult.showWorldMap && !isFocusedBilateral} />
     </>
   );
 }
