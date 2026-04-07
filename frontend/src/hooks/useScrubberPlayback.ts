@@ -18,6 +18,14 @@ export function useScrubberPlayback() {
     const { events: evts, eventIndex: idx } = state;
     if (idx == null || !state.playing) return;
 
+    // Wait for typing animation to finish before advancing
+    const speakingAgent = useGraphStore.getState().speakingAgent;
+    if (speakingAgent) {
+      // Re-check in 200ms
+      timerRef.current = setTimeout(advance, 200);
+      return;
+    }
+
     let next = idx + 1;
 
     // Find next visual event (position or vote)
