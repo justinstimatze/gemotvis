@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { AnalysisResult } from '../../types';
 import { shortAgentID } from '../../lib/helpers';
 import { ChatBubble } from './ChatBubble';
@@ -16,7 +16,7 @@ function formatConsensus(analysis: AnalysisResult): string | null {
   if (items.length === 0) return null;
   const lines = ['## Consensus'];
   for (const c of items) {
-    lines.push(`- ${c.content} **(${Math.round(c.overall_agree_ratio * 100)}% agreement)**`);
+    lines.push(`- ${c.content} (${Math.round(c.overall_agree_ratio * 100)}% agreement)`);
   }
   return lines.join('\n');
 }
@@ -26,7 +26,7 @@ function formatCruxes(analysis: AnalysisResult): string | null {
   if (cruxes.length === 0) return null;
   const lines = ['## Key Disagreements'];
   for (const crux of cruxes) {
-    lines.push(`- ${crux.crux_claim} **(${Math.round(crux.controversy_score * 100)}% controversy)**`);
+    lines.push(`- ${crux.crux_claim} (${Math.round(crux.controversy_score * 100)}% controversy)`);
     const parts: string[] = [];
     if (crux.agree_agents.length > 0) parts.push(`Agree: ${crux.agree_agents.map(a => shortAgentID(a)).join(', ')}`);
     if (crux.disagree_agents.length > 0) parts.push(`Disagree: ${crux.disagree_agents.map(a => shortAgentID(a)).join(', ')}`);
@@ -40,7 +40,7 @@ function formatBridging(analysis: AnalysisResult): string | null {
   if (bridging.length === 0) return null;
   const lines = ['## Bridging Positions'];
   for (const b of bridging) {
-    lines.push(`- ${b.content} **(bridging ${Math.round(b.bridging_score * 100)}%)**`);
+    lines.push(`- ${b.content} (bridging ${Math.round(b.bridging_score * 100)}%)`);
   }
   return lines.join('\n');
 }
@@ -50,8 +50,8 @@ function formatCompromise(analysis: AnalysisResult): string | null {
   return `## Compromise Proposal\n${analysis.compromise_proposal}`;
 }
 
-/** Renders analysis as chat bubbles that fade in sequentially. No word-by-word typing. */
-export function AnalysisSection({ analysis, agentNames, typingSpeed, onTypingComplete }: AnalysisSectionProps) {
+/** Renders analysis as chat bubbles with typing, revealed one at a time. */
+export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType, onTypingComplete }: AnalysisSectionProps) {
   const messages = useMemo(() => [
     formatConsensus(analysis),
     formatCruxes(analysis),
@@ -59,36 +59,43 @@ export function AnalysisSection({ analysis, agentNames, typingSpeed, onTypingCom
     formatCompromise(analysis),
   ].filter((m): m is string => m != null), [analysis]);
 
-  // Stagger: reveal one bubble at a time
-  const [visibleCount, setVisibleCount] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(shouldType ? 0 : messages.length);
 
+  // Stagger: first bubble after 400ms, then each after previous finishes typing
   useEffect(() => {
-    if (visibleCount >= messages.length) {
-      if (visibleCount > 0) onTypingComplete?.();
-      return;
-    }
-    const delay = visibleCount === 0 ? 400 : 2000;
-    const timer = setTimeout(() => setVisibleCount(c => c + 1), delay);
+    if (!shouldType || visibleCount > 0 || messages.length === 0) return;
+    const timer = setTimeout(() => setVisibleCount(1), 400);
     return () => clearTimeout(timer);
-  }, [visibleCount, messages.length, onTypingComplete]);
+  }, [shouldType, visibleCount, messages.length]);
+
+  const advanceToNext = useCallback(() => {
+    setVisibleCount(c => {
+      const next = c + 1;
+      if (next >= messages.length) onTypingComplete?.();
+      return next;
+    });
+  }, [messages.length, onTypingComplete]);
 
   if (messages.length === 0) return null;
 
   return (
     <>
-      {messages.slice(0, visibleCount).map((content, i) => (
-        <div key={i} style={{ animation: 'analysisReveal 0.5s ease forwards' }}>
+      {messages.slice(0, visibleCount).map((content, i) => {
+        const isLatest = shouldType && i === visibleCount - 1;
+        return (
           <ChatBubble
+            key={i}
             agentId="analysis"
             content={content}
             isLeft={true}
-            shouldType={false}
+            shouldType={isLatest}
             agentNames={agentNames}
             typingSpeed={typingSpeed}
             agentColor="var(--vis-accent, #4f46e5)"
+            onTypingComplete={isLatest ? advanceToNext : undefined}
           />
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }
