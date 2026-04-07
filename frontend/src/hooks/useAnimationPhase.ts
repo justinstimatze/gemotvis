@@ -3,6 +3,7 @@ import { useGraphStore } from '../stores/graph';
 import type { AnimationPhase } from '../types';
 
 const MOVE_DURATION = 800; // ms pause after layout change before showing panel
+const FIRST_EDGE_DURATION = 100; // ms for initial edge set (no layout movement)
 
 /**
  * Manages graph animation phase transitions.
@@ -26,6 +27,7 @@ export function useAnimationPhase(): AnimationPhase {
 
   useEffect(() => {
     if (activeEdge === prevEdge.current) return;
+    const isFirst = prevEdge.current == null;
     prevEdge.current = activeEdge;
 
     if (!activeEdge) {
@@ -34,7 +36,10 @@ export function useAnimationPhase(): AnimationPhase {
     }
 
     setAnimationPhase('moving');
-    const timer = setTimeout(() => setAnimationPhase('ready'), MOVE_DURATION);
+    // First edge activation (from idle): no layout movement, show panel quickly.
+    // Subsequent changes: nodes need time to animate to new positions.
+    const duration = isFirst ? FIRST_EDGE_DURATION : MOVE_DURATION;
+    const timer = setTimeout(() => setAnimationPhase('ready'), duration);
     return () => clearTimeout(timer);
   }, [activeEdge, setAnimationPhase]);
 
