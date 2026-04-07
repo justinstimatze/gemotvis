@@ -34,6 +34,21 @@ type Server struct {
 	gemotURL      string             // gemot instance URL (exposed to frontend for direct SSE)
 	datasets      map[string]*poller.Snapshot // named datasets for multi-replay
 	defaultData   string                      // default dataset name
+	csp           string                      // Content-Security-Policy header value
+}
+
+// buildCSP returns a Content-Security-Policy header value.
+// connect-src includes the configured gemot URL so the browser can reach it.
+func buildCSP(gemotURL string) string {
+	connectSrc := "'self'"
+	if gemotURL != "" {
+		// Extract origin (scheme + host) from the gemot URL
+		connectSrc += " " + strings.TrimRight(gemotURL, "/")
+	}
+	return fmt.Sprintf(
+		"default-src 'self'; style-src 'self' https://fonts.googleapis.com; script-src 'self'; connect-src %s; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com",
+		connectSrc,
+	)
 }
 
 // New creates a server for live monitoring.
@@ -42,6 +57,7 @@ func New(p *poller.Poller, h *hub.Hub) *Server {
 		poller: p,
 		hub:    h,
 		mux:    http.NewServeMux(),
+		csp:    buildCSP(""),
 	}
 	s.routes()
 	return s
@@ -79,6 +95,7 @@ func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string, datasets 
 		datasets:      datasets,
 		defaultData:   defaultName,
 		cycleInterval: cycleInterval,
+		csp:           buildCSP(gemotURL),
 	}
 	if gemotURL != "" && serviceKey != "" {
 		s.gemotURL = gemotURL
@@ -95,6 +112,7 @@ func NewReplay(snapshot *poller.Snapshot) *Server {
 	s := &Server{
 		mux:      http.NewServeMux(),
 		snapshot: snapshot,
+		csp:      buildCSP(""),
 	}
 	s.routes()
 	return s
@@ -108,6 +126,7 @@ func NewReplayMulti(datasets map[string]*poller.Snapshot, defaultName string) *S
 		snapshot:     datasets[defaultName],
 		datasets:     datasets,
 		defaultData:  defaultName,
+		csp:          buildCSP(""),
 	}
 	s.routes()
 	return s
@@ -133,7 +152,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Set("Referrer-Policy", "no-referrer")
 	h.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	h.Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-	h.Set("Content-Security-Policy", "default-src 'self'; style-src 'self' https://fonts.googleapis.com; script-src 'self'; connect-src 'self' https://gemot.dev; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com")
+	h.Set("Content-Security-Policy", s.csp)
 	s.mux.ServeHTTP(w, r)
 }
 

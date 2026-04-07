@@ -248,6 +248,15 @@ func (s *Server) handleSessionCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// CSRF defense: reject requests with a cross-origin Origin header
+	if origin := r.Header.Get("Origin"); origin != "" {
+		host := r.Host
+		if !strings.HasSuffix(origin, "://"+host) {
+			http.Error(w, "cross-origin request blocked", http.StatusForbidden)
+			return
+		}
+	}
+
 	// Rate limit login attempts per IP
 	ip := r.RemoteAddr
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
