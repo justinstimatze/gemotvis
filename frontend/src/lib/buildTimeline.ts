@@ -95,6 +95,9 @@ export function buildGlobalTimeline(delibs: Record<string, DelibState>): Timelin
   const events: TimelineEvent[] = [];
 
   for (const [delibID, ds] of Object.entries(delibs)) {
+    // Skip delibs with no positions — they only have audit log lifecycle events
+    if (!(ds.positions?.length)) continue;
+
     const topic = ds.deliberation?.topic ?? delibID;
     const shortTopic = topic.length > 30 ? topic.slice(0, 28) + '..' : topic;
 
