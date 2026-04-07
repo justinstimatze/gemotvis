@@ -1557,23 +1557,23 @@
 .theme-magi .metrics-stat-value { color: #ff8c00; text-shadow: 0 0 3px rgba(255, 140, 0, 0.4); }
 .theme-magi .metrics-stat-label { color: #884600; }
 
-/* Vote badges — overlaid on diamond center (reference: IMG_0811.jpg) */
+/* Vote badges — overlaid on diamond, below the letter (reference: IMG_0811.jpg) */
 .theme-magi .agent-node-vote {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  margin-top: -9px; /* offset for label below */
+  margin-top: 10px;
   font-family: 'Courier New', 'MS Gothic', monospace;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 900;
   border-radius: 0;
   border: none;
   background: rgba(0, 0, 0, 0.6);
-  text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+  text-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
   letter-spacing: 2px;
-  padding: 2px 6px;
-  line-height: 24px;
+  padding: 1px 5px;
+  line-height: 18px;
   z-index: 5;
   pointer-events: none;
 }
