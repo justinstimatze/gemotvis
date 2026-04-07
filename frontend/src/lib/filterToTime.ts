@@ -50,10 +50,10 @@ export function filterToTime(
   if (ops.length > 0) {
     // Audit log available: count ops by method
     for (const op of filteredOps) {
-      const m = (op['method'] ?? '').replace('gemot/', '');
-      if (m.includes('submit_position')) posOpsCount++;
-      else if (m.includes('vote')) voteOpsCount++;
-      else if (m.includes('analy') || m.includes('get_analysis_result')) hasAnalysisOp = true;
+      const m = op['method'] ?? '';
+      if (m.includes('submit_position') || m.includes('participate:submit')) posOpsCount++;
+      else if (m.includes('vote') || m.includes('participate:vote')) voteOpsCount++;
+      else if (m.includes('analy') || m.includes('analyze:')) hasAnalysisOp = true;
     }
   } else if (ctx.scrubberEnabled && ctx.scrubberEventIndex != null && isFocused) {
     // No audit log: count scrubber events by type (synthesized from positions/votes)

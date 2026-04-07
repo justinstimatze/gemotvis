@@ -195,10 +195,19 @@ func (c *Client) ExportDeliberation(ctx context.Context, deliberationID string) 
 	return c.call(ctx, "gemot/deliberation", map[string]any{"action": "export", "deliberation_id": deliberationID})
 }
 
-// GetAuditLog calls gemot/deliberation action:export and extracts audit data.
-// Gemot doesn't have a separate audit log endpoint — the export contains the full history.
+// GetAuditLog extracts audit_log from the deliberation export.
 func (c *Client) GetAuditLog(ctx context.Context, deliberationID string) (*AuditLog, error) {
-	// The export contains positions/votes/analysis which serve as the audit trail.
-	// Return an empty audit log — the poller builds the audit from state changes.
-	return &AuditLog{}, nil
+	raw, err := c.ExportDeliberation(ctx, deliberationID)
+	if err != nil {
+		return &AuditLog{}, nil // best-effort: return empty on failure
+	}
+
+	var export struct {
+		AuditLog []map[string]string `json:"audit_log"`
+	}
+	if err := json.Unmarshal(raw, &export); err != nil || len(export.AuditLog) == 0 {
+		return &AuditLog{}, nil
+	}
+
+	return &AuditLog{Operations: export.AuditLog}, nil
 }
