@@ -108,8 +108,6 @@ func loadTestdata(dirs ...string) map[string]*poller.Snapshot {
 				continue
 			}
 			name := strings.TrimSuffix(e.Name(), ".json")
-			name = strings.TrimPrefix(name, "v9-")
-			name = strings.TrimPrefix(name, "hermes-")
 			datasets[name] = &snap
 			log.Printf("  loaded dataset %q from %s (%d deliberations)", name, path, len(snap.Deliberations))
 		}
