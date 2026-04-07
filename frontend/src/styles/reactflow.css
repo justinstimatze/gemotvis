@@ -385,75 +385,12 @@
   padding-bottom: 48px;
 }
 
-/* Analysis cards in chat */
+/* Analysis section separator in chat */
 .analysis-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 8px;
   border-top: 1px solid var(--vis-panel-border, #e0e0e0);
   margin-top: 8px;
-  animation: footerFadeIn 0.4s ease forwards;
+  padding-top: 8px;
 }
-
-.analysis-card {
-  background: var(--vis-panel, #fff);
-  border: 1px solid var(--vis-panel-border, #e0e0e0);
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-@keyframes analysisReveal {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.analysis-card-title {
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--vis-text-dim, #888);
-  margin-bottom: 8px;
-}
-
-.analysis-consensus .analysis-card-title { color: var(--vis-green, #16a34a); }
-.analysis-cruxes .analysis-card-title { color: var(--vis-red, #f44336); }
-.analysis-bridging .analysis-card-title { color: var(--vis-amber, #0070f3); }
-.analysis-compromise .analysis-card-title { color: var(--vis-green, #16a34a); }
-
-.analysis-card-item {
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--vis-panel-border, #eee);
-}
-.analysis-card-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-
-.analysis-card-text {
-  display: block;
-  color: var(--vis-text, #333);
-}
-
-.analysis-card-agents {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-  font-size: 11px;
-}
-
-.analysis-card-meta {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--vis-text-dim, #888);
-  margin-top: 2px;
-  display: inline-block;
-}
-
-.analysis-agree { color: var(--vis-green, #16a34a); font-size: 11px; }
-.analysis-disagree { color: var(--vis-red, #f44336); font-size: 11px; }
 
 .chat-bubble {
   max-width: 85%;
@@ -1586,17 +1523,7 @@ h5.chat-md-heading { font-size: 11px; }
   border-color: #2a2a2a;
 }
 
-/* Analysis cards in MAGI theme */
-.theme-magi .analysis-card {
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
-  border-radius: 0;
-  font-family: 'Courier New', monospace;
-  color: #c8c8c8;
-}
-.theme-magi .analysis-card-title { text-shadow: 0 0 4px currentColor; }
 .theme-magi .analysis-section { border-top-color: rgba(255, 140, 0, 0.3); }
-.theme-magi .analysis-card-item { border-bottom-color: #2a2a2a; }
 
 .theme-magi .chat-name {
   color: #ff8c00;

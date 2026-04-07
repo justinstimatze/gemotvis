@@ -124,7 +124,15 @@ export function ChatThread({ positions, agents, allAgents, searchQuery, analysis
             </div>
           );
         })}
-        {analysis && <AnalysisSection analysis={analysis} />}
+        {analysis && (
+          <AnalysisSection
+            analysis={analysis}
+            agentNames={agentNames}
+            typingSpeed={typingSpeed}
+            shouldType={!isLive && playing && animationPhase === 'ready'}
+            onTypingComplete={clearSpeakingAgent}
+          />
+        )}
         <div ref={scrollRef} />
       </div>
     </div>
