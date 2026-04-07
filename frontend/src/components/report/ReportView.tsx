@@ -4,8 +4,10 @@ import { shortAgentID } from '../../lib/helpers';
 import type { DelibState, AnalysisResult, Crux, ConsensusStatement, BridgingStatement } from '../../types';
 
 /** Ordinal label instead of raw percentage — avoids false precision with small agent counts. */
-function controversyLabel(score: number): string {
-  if (score >= 0.9) return 'Near-unanimous split';
+/** Ordinal label factoring in effective sample size — matches gemot report.go */
+function controversyLabel(score: number, nAgree: number, nDisagree: number): string {
+  if (nAgree + nDisagree <= 2) return 'Divided (small N)';
+  if (score >= 0.9) return 'Sharp division';
   if (score >= 0.7) return 'Strong disagreement';
   if (score >= 0.55) return 'Moderate disagreement';
   if (score >= 0.4) return 'Contested';
@@ -93,6 +95,7 @@ function DelibReport({ id, showTitle }: { id: string; showTitle: boolean }) {
       {analysis?.compromise_proposal && (
         <section className="report-section report-compromise" id={`delib-${id}-compromise`}>
           <h3>Compromise Proposal</h3>
+          <p className="report-section-note">LLM-generated synthesis — treat as a starting point, not a conclusion.</p>
           <blockquote>{analysis.compromise_proposal}</blockquote>
         </section>
       )}
@@ -113,8 +116,8 @@ function ConsensusSection({ statements, delibId }: { statements: ConsensusStatem
   if (statements.length === 0) return null;
   return (
     <section className="report-section" id={`delib-${delibId}-consensus`}>
-      <h3>Convergence Points</h3>
-      <p className="report-section-note">Positions on which no agent registered disagreement. These reflect discourse topology, not established truth.</p>
+      <h3>Unchallenged Within This Agent Pool</h3>
+      <p className="report-section-note">Positions on which no agent registered disagreement. These reflect the topology of this specific agent pool — not established truths or real-world expert consensus.</p>
       <ul className="report-list">
         {statements.map((c, i) => (
           <li key={i}>
@@ -138,8 +141,8 @@ function CruxSection({ cruxes, delibId }: { cruxes: Crux[]; delibId: string }) {
       {sorted.map((crux, i) => (
         <div key={i} className="report-crux">
           <div className="report-crux-header">
-            <span className="report-badge report-badge-red" aria-label={controversyLabel(crux.controversy_score)}>
-              {controversyLabel(crux.controversy_score)}
+            <span className="report-badge report-badge-red" aria-label={controversyLabel(crux.controversy_score, crux.agree_agents.length, crux.disagree_agents.length)}>
+              {controversyLabel(crux.controversy_score, crux.agree_agents.length, crux.disagree_agents.length)}
             </span>
             <span className="report-crux-claim">{crux.crux_claim}</span>
           </div>
