@@ -46,11 +46,29 @@ export function filterToTime(
 
   // Count revealed events by type
   let posOpsCount = 0, voteOpsCount = 0, hasAnalysisOp = false;
-  for (const op of filteredOps) {
-    const m = (op['method'] ?? '').replace('gemot/', '');
-    if (m.includes('submit_position')) posOpsCount++;
-    else if (m.includes('vote')) voteOpsCount++;
-    else if (m.includes('analy') || m.includes('get_analysis_result')) hasAnalysisOp = true;
+
+  if (ops.length > 0) {
+    // Audit log available: count ops by method
+    for (const op of filteredOps) {
+      const m = (op['method'] ?? '').replace('gemot/', '');
+      if (m.includes('submit_position')) posOpsCount++;
+      else if (m.includes('vote')) voteOpsCount++;
+      else if (m.includes('analy') || m.includes('get_analysis_result')) hasAnalysisOp = true;
+    }
+  } else if (ctx.scrubberEnabled && ctx.scrubberEventIndex != null && isFocused) {
+    // No audit log: count scrubber events by type (synthesized from positions/votes)
+    for (let i = 0; i <= ctx.scrubberEventIndex; i++) {
+      const evt = ctx.scrubberEvents[i] as { delibID?: string; type?: string };
+      if (evt?.delibID !== delibID) continue;
+      if (evt.type === 'position') posOpsCount++;
+      else if (evt.type === 'vote') voteOpsCount++;
+      else if (evt.type === 'analysis') hasAnalysisOp = true;
+    }
+  } else {
+    // No scrubber or not focused: show all
+    posOpsCount = (ds.positions ?? []).length;
+    voteOpsCount = (ds.votes ?? []).length;
+    hasAnalysisOp = !!ds.analysis;
   }
 
   const positions = (ds.positions ?? []).slice(0, posOpsCount);
