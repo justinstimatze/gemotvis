@@ -49,16 +49,20 @@ export function filterToTime(
   // Use audit log only for lifecycle events (analysis).
   let posOpsCount = 0, voteOpsCount = 0, hasAnalysisOp = false;
 
-  if (ctx.scrubberEnabled && ctx.scrubberEventIndex != null && isFocused) {
-    for (let i = 0; i <= ctx.scrubberEventIndex; i++) {
-      const evt = ctx.scrubberEvents[i] as { delibID?: string; type?: string };
-      if (evt?.delibID !== delibID) continue;
-      if (evt.type === 'position') posOpsCount++;
-      else if (evt.type === 'vote') voteOpsCount++;
-      else if (evt.type === 'analysis') hasAnalysisOp = true;
+  if (ctx.scrubberEnabled && isFocused) {
+    // Scrubber active: count events up to current index (null = not started = show nothing)
+    if (ctx.scrubberEventIndex != null) {
+      for (let i = 0; i <= ctx.scrubberEventIndex; i++) {
+        const evt = ctx.scrubberEvents[i] as { delibID?: string; type?: string };
+        if (evt?.delibID !== delibID) continue;
+        if (evt.type === 'position') posOpsCount++;
+        else if (evt.type === 'vote') voteOpsCount++;
+        else if (evt.type === 'analysis') hasAnalysisOp = true;
+      }
     }
-  } else {
-    // No scrubber or not focused: show all
+    // else: scrubber enabled but not started → posOpsCount stays 0
+  } else if (!ctx.scrubberEnabled) {
+    // No scrubber: show all
     posOpsCount = (ds.positions ?? []).length;
     voteOpsCount = (ds.votes ?? []).length;
     hasAnalysisOp = !!ds.analysis;

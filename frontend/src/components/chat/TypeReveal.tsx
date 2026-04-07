@@ -4,7 +4,7 @@ import { splitMentions } from '../../lib/helpers';
 interface TypeRevealProps {
   text: string;
   agentNames: string[];
-  speed: number; // ms per line
+  speed: number; // ms per word
   onComplete?: () => void;
 }
 
@@ -31,60 +31,97 @@ function InlineReveal({ text, agentNames }: { text: string; agentNames: string[]
   );
 }
 
-/** Line-by-line typing reveal with markdown rendering. */
+/** Render a single line as a markdown element */
+function MarkdownLine({ line, agentNames, partial }: { line: string; agentNames: string[]; partial?: string }) {
+  const trimmed = line.trim();
+  const displayText = partial ?? trimmed;
+
+  // Header
+  const headerMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+  if (headerMatch) {
+    const Tag = `h${headerMatch[1]!.length + 2}` as 'h3' | 'h4' | 'h5';
+    const headerText = partial != null ? partial.replace(/^#{1,3}\s+/, '') : headerMatch[2]!;
+    return <Tag className="chat-md-heading"><InlineReveal text={headerText} agentNames={agentNames} /></Tag>;
+  }
+
+  // HR
+  if (/^[-=]{3,}\s*$/.test(trimmed)) return <hr className="chat-md-hr" />;
+
+  // Bullet
+  if (/^[-*]\s+/.test(trimmed)) {
+    const bulletText = partial != null ? displayText.replace(/^[-*]\s+/, '') : trimmed.replace(/^[-*]\s+/, '');
+    return (
+      <div className="chat-md-bullet">
+        <span className="chat-md-bullet-dot">•</span>
+        <InlineReveal text={bulletText} agentNames={agentNames} />
+      </div>
+    );
+  }
+
+  // Paragraph
+  return (
+    <p className="chat-para">
+      <InlineReveal text={displayText} agentNames={agentNames} />
+    </p>
+  );
+}
+
+/**
+ * Progressive typing reveal with markdown rendering.
+ * Previous lines render fully; the current line types word-by-word.
+ */
 export function TypeReveal({ text, agentNames, speed, onComplete }: TypeRevealProps) {
   const lines = useMemo(() => text.split('\n').filter(l => l.trim()), [text]);
-  const [shown, setShown] = useState(0);
+
+  // Flatten all words across all lines, tracking which line each belongs to
+  const wordMap = useMemo(() => {
+    const map: { lineIdx: number; wordEnd: number }[] = [];
+    for (let li = 0; li < lines.length; li++) {
+      const words = lines[li]!.split(/(\s+)/);
+      for (let wi = 0; wi < words.length; wi++) {
+        map.push({ lineIdx: li, wordEnd: wi + 1 });
+      }
+    }
+    return map;
+  }, [lines]);
+
+  const [wordIdx, setWordIdx] = useState(0);
 
   useEffect(() => {
-    if (shown >= lines.length) {
+    if (wordIdx >= wordMap.length) {
       onComplete?.();
       return;
     }
-    // Speed scales: shorter lines appear faster
-    const lineLen = lines[shown]?.length ?? 40;
-    const delay = Math.max(speed * 0.5, speed * Math.min(lineLen / 60, 2));
-    const timer = setTimeout(() => setShown((s) => s + 1), delay);
+    const timer = setTimeout(() => setWordIdx((s) => s + 1), speed);
     return () => clearTimeout(timer);
-  }, [shown, lines.length, lines, speed, onComplete]);
+  }, [wordIdx, wordMap.length, speed, onComplete]);
 
-  const visibleLines = lines.slice(0, shown);
+  // Determine which lines are fully revealed and which is partial
+  const currentEntry = wordIdx < wordMap.length ? wordMap[wordIdx] : wordMap[wordMap.length - 1];
+  const currentLineIdx = currentEntry?.lineIdx ?? lines.length;
 
   return (
     <div className="type-reveal">
-      {visibleLines.map((line, i) => {
-        const trimmed = line.trim();
+      {lines.map((line, li) => {
+        if (li > currentLineIdx) return null; // not yet revealed
 
-        // Header
-        const headerMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
-        if (headerMatch) {
-          const Tag = `h${headerMatch[1]!.length + 2}` as 'h3' | 'h4' | 'h5';
-          return <Tag key={i} className="chat-md-heading"><InlineReveal text={headerMatch[2]!} agentNames={agentNames} /></Tag>;
+        if (li < currentLineIdx) {
+          // Fully revealed line
+          return <MarkdownLine key={li} line={line} agentNames={agentNames} />;
         }
 
-        // HR
-        if (/^[-=]{3,}\s*$/.test(trimmed)) {
-          return <hr key={i} className="chat-md-hr" />;
-        }
+        // Current line: show words up to wordEnd
+        const wordsInLine = line.split(/(\s+)/);
+        const wordEnd = currentEntry?.wordEnd ?? 0;
+        const partialText = wordsInLine.slice(0, wordEnd).join('');
 
-        // Bullet
-        if (/^[-*]\s+/.test(trimmed)) {
-          return (
-            <div key={i} className="chat-md-bullet">
-              <span className="chat-md-bullet-dot">•</span>
-              <InlineReveal text={trimmed.replace(/^[-*]\s+/, '')} agentNames={agentNames} />
-            </div>
-          );
-        }
-
-        // Paragraph
         return (
-          <p key={i} className="chat-para">
-            <InlineReveal text={trimmed} agentNames={agentNames} />
-          </p>
+          <span key={li}>
+            <MarkdownLine line={line} agentNames={agentNames} partial={partialText} />
+          </span>
         );
       })}
-      {shown < lines.length && <span className="type-cursor">▊</span>}
+      {wordIdx < wordMap.length && <span className="type-cursor">▊</span>}
     </div>
   );
 }
