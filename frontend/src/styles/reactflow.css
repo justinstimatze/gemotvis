@@ -1216,23 +1216,6 @@ h5.chat-md-heading { font-size: 11px; }
   border-radius: 0 0 6px 6px;
 }
 
-/* World map background — rendered inside React Flow viewport */
-.world-map-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  opacity: 0.06;
-  color: var(--vis-text-dim, #888);
-  z-index: -1;
-}
-
-/* MAGI: tactical wireframe map on dark background */
-.theme-magi .world-map-bg {
-  opacity: 0.35;
-  color: #ff8c00;
-  z-index: 1;
-}
 
 /* ===== Login Form ===== */
 .login-overlay {

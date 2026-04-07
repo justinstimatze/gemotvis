@@ -16,7 +16,6 @@ import { getGraphNodePositions, computeFocusedLayout } from '../../lib/layout';
 import { AgentNode, type AgentNodeData } from './AgentNode';
 import { DelibEdge } from './DelibEdge';
 import { CenterPanel } from './CenterPanel';
-import { WorldMap } from './WorldMap';
 import { updateURLParams } from '../../hooks/useURLSync';
 
 const nodeTypes = { agent: AgentNode };
@@ -139,7 +138,6 @@ function GraphCanvasInner() {
         minZoom={0.3}
         maxZoom={2}
       >
-        <WorldMap show={layoutResult.showWorldMap} />
       </ReactFlow>
     </>
   );
