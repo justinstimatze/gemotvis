@@ -434,11 +434,44 @@
 }
 
 .chat-para {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .chat-para:last-child {
   margin-bottom: 0;
+}
+
+/* Markdown elements in chat bubbles */
+.chat-md-heading {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 8px 0 4px;
+  color: var(--vis-text, #333);
+  letter-spacing: 0.3px;
+}
+
+.chat-md-heading:first-child { margin-top: 0; }
+
+h3.chat-md-heading { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+h4.chat-md-heading { font-size: 12px; }
+h5.chat-md-heading { font-size: 11px; }
+
+.chat-md-ul {
+  margin: 4px 0 6px;
+  padding-left: 16px;
+  list-style: disc;
+}
+
+.chat-md-li {
+  margin: 2px 0;
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+.chat-md-hr {
+  border: none;
+  border-top: 1px solid var(--vis-panel-border, #e0e0e0);
+  margin: 8px 0;
 }
 
 .chat-bubble-highlighted .chat-bubble {
