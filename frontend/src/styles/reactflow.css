@@ -804,14 +804,6 @@ h5.chat-md-heading { font-size: 11px; }
 .audit-method { color: var(--vis-text, #333); }
 .audit-agent { color: var(--vis-amber, #0070f3); }
 
-/* Analysis section in center panel */
-.analysis-section {
-  padding: 12px;
-  border-top: 1px solid var(--vis-panel-border, #eee);
-  max-height: 150px;
-  overflow-y: auto;
-  flex-shrink: 0;
-}
 
 /* Consensus footer panel */
 .consensus-item { font-size: 10px; line-height: 1.4; margin-bottom: 4px; }

@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { AnalysisResult } from '../../types';
 import { shortAgentID } from '../../lib/helpers';
 import { ChatBubble } from './ChatBubble';
@@ -49,32 +50,72 @@ function formatCompromise(analysis: AnalysisResult): string | null {
   return `## Compromise Proposal\n${analysis.compromise_proposal}`;
 }
 
-/** Renders analysis as regular chat bubbles in the conversation flow. */
+/** Renders analysis as sequential chat bubbles — one at a time, each types then reveals the next. */
 export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType, onTypingComplete }: AnalysisSectionProps) {
-  const messages = [
+  const messages = useMemo(() => [
     formatConsensus(analysis),
     formatCruxes(analysis),
     formatBridging(analysis),
     formatCompromise(analysis),
-  ].filter((m): m is string => m != null);
+  ].filter((m): m is string => m != null), [analysis]);
+
+  const [visibleCount, setVisibleCount] = useState(shouldType ? 0 : messages.length);
+
+  // Start revealing first bubble after a short delay
+  useEffect(() => {
+    if (!shouldType || visibleCount > 0 || messages.length === 0) return;
+    const timer = setTimeout(() => setVisibleCount(1), 400);
+    return () => clearTimeout(timer);
+  }, [shouldType, visibleCount, messages.length]);
+
+  const advanceToNext = useCallback(() => {
+    setVisibleCount(c => {
+      const next = c + 1;
+      if (next >= messages.length) onTypingComplete?.();
+      return next;
+    });
+  }, [messages.length, onTypingComplete]);
 
   if (messages.length === 0) return null;
 
+  // If not typing, show all immediately
+  if (!shouldType) {
+    return (
+      <>
+        {messages.map((content, i) => (
+          <ChatBubble
+            key={i}
+            agentId="analysis"
+            content={content}
+            isLeft={true}
+            shouldType={false}
+            agentNames={agentNames}
+            typingSpeed={typingSpeed}
+            agentColor="var(--vis-accent, #4f46e5)"
+          />
+        ))}
+      </>
+    );
+  }
+
   return (
     <>
-      {messages.map((content, i) => (
-        <ChatBubble
-          key={i}
-          agentId="analysis"
-          content={content}
-          isLeft={false}
-          shouldType={shouldType && i === 0}
-          agentNames={agentNames}
-          typingSpeed={typingSpeed}
-          agentColor="var(--vis-accent, #4f46e5)"
-          onTypingComplete={i === messages.length - 1 ? onTypingComplete : undefined}
-        />
-      ))}
+      {messages.slice(0, visibleCount).map((content, i) => {
+        const isLatest = i === visibleCount - 1;
+        return (
+          <ChatBubble
+            key={i}
+            agentId="analysis"
+            content={content}
+            isLeft={true}
+            shouldType={isLatest}
+            agentNames={agentNames}
+            typingSpeed={typingSpeed}
+            agentColor="var(--vis-accent, #4f46e5)"
+            onTypingComplete={isLatest ? advanceToNext : undefined}
+          />
+        );
+      })}
     </>
   );
 }
