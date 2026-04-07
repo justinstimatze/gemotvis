@@ -11,6 +11,7 @@ gemotvis demo --cycle 0                    # Manual tab switching
 gemotvis watch --api-key KEY               # Live monitor (localhost:8080)
 gemotvis replay delib.json                 # Display saved snapshot
 gemotvis export --api-key K --deliberation ID > out.json
+gemotvis export --api-key K --group GROUP_ID > out.json
 ```
 
 Add `?multi=true` to see all deliberations simultaneously with activity-driven zoom.
@@ -56,10 +57,25 @@ frontend/                        React + TypeScript frontend (Vite build)
 
 | Mode | Data Source | Use Case |
 |------|-----------|----------|
-| `demo` | Built-in samples | Try it, ambient display, conference demo |
+| `demo` | JSON replay files from `testdata/` | Try it, ambient display, conference demo |
 | `watch` | Live gemot A2A | Real-time monitoring on second monitor |
 | `replay` | JSON file or URL | Review past deliberations, share with others |
-| `export` | Live gemot A2A | Save a deliberation for later replay/sharing |
+| `export` | Live gemot A2A | Save a deliberation or group for later replay |
+
+### Demo Data
+
+Demo mode loads JSON replay files from `testdata/` (and `/data/` in Docker). No hardcoded data — all demos are exported from real gemot runs.
+
+**Adding new demos:**
+```bash
+# Export a single deliberation
+gemotvis export --api-key $KEY --deliberation <id> > testdata/my-demo.json
+
+# Export all deliberations in a group
+gemotvis export --api-key $KEY --group <group-id> > testdata/my-group.json
+```
+
+Files are auto-loaded on startup. Dataset name = filename minus `.json`. Select via `?data=<name>` URL param. The delib picker nav in the scrubber shows all deliberations within the active dataset.
 
 ### Hosted Modes (vis.gemot.dev)
 
