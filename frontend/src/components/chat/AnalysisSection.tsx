@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AnalysisResult } from '../../types';
 import { shortAgentID } from '../../lib/helpers';
 
@@ -6,122 +6,145 @@ interface AnalysisSectionProps {
   analysis: AnalysisResult;
 }
 
-interface AnalysisCard {
-  type: 'consensus' | 'cruxes' | 'bridging' | 'compromise';
-  content: React.ReactNode;
+/** Simple word-by-word text reveal for analysis content. */
+function TypingText({ text, speed = 30, onComplete }: { text: string; speed?: number; onComplete?: () => void }) {
+  const words = text.split(/(\s+)/);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (count >= words.length) {
+      onComplete?.();
+      return;
+    }
+    const timer = setTimeout(() => setCount(c => c + 1), speed);
+    return () => clearTimeout(timer);
+  }, [count, words.length, speed, onComplete]);
+
+  return <>{words.slice(0, count).join('')}{count < words.length && <span className="typing-cursor" />}</>;
 }
 
-/** Renders analysis results as styled cards in the chat thread, revealed one at a time. */
+interface CardDef {
+  type: 'consensus' | 'cruxes' | 'bridging' | 'compromise';
+  title: string;
+  items: { text: string; meta?: string; agents?: { agree: string[]; disagree: string[] } }[];
+}
+
+/** Renders analysis results as styled cards in the chat thread, revealed one at a time with typing. */
 export function AnalysisSection({ analysis }: AnalysisSectionProps) {
   const consensus = analysis.consensus_statements ?? [];
   const cruxes = analysis.cruxes ?? [];
   const bridging = analysis.bridging_statements ?? [];
   const compromise = analysis.compromise_proposal;
 
-  // Build ordered list of cards to reveal
-  const cards: AnalysisCard[] = [];
+  const cards: CardDef[] = [];
 
   if (consensus.length > 0) {
     cards.push({
       type: 'consensus',
-      content: (
-        <>
-          <div className="analysis-card-title">Consensus</div>
-          {consensus.map((c, i) => (
-            <div key={i} className="analysis-card-item">
-              <span className="analysis-card-text">{c.content}</span>
-              <span className="analysis-card-meta analysis-agree">
-                {Math.round(c.overall_agree_ratio * 100)}% agreement
-              </span>
-            </div>
-          ))}
-        </>
-      ),
+      title: 'Consensus',
+      items: consensus.map(c => ({
+        text: c.content,
+        meta: `${Math.round(c.overall_agree_ratio * 100)}% agreement`,
+      })),
     });
   }
 
   if (cruxes.length > 0) {
     cards.push({
       type: 'cruxes',
-      content: (
-        <>
-          <div className="analysis-card-title">Key Disagreements</div>
-          {cruxes.map((crux, i) => (
-            <div key={i} className="analysis-card-item">
-              <span className="analysis-card-text">{crux.crux_claim}</span>
-              <div className="analysis-card-agents">
-                <span className="analysis-card-meta">
-                  {Math.round(crux.controversy_score * 100)}% controversy
-                </span>
-                {crux.agree_agents.length > 0 && (
-                  <span className="analysis-agree">
-                    {crux.agree_agents.map(a => shortAgentID(a)).join(', ')}
-                  </span>
-                )}
-                {crux.disagree_agents.length > 0 && (
-                  <span className="analysis-disagree">
-                    {crux.disagree_agents.map(a => shortAgentID(a)).join(', ')}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </>
-      ),
+      title: 'Key Disagreements',
+      items: cruxes.map(crux => ({
+        text: crux.crux_claim,
+        meta: `${Math.round(crux.controversy_score * 100)}% controversy`,
+        agents: { agree: crux.agree_agents, disagree: crux.disagree_agents },
+      })),
     });
   }
 
   if (bridging.length > 0) {
     cards.push({
       type: 'bridging',
-      content: (
-        <>
-          <div className="analysis-card-title">Bridging Positions</div>
-          {bridging.map((b, i) => (
-            <div key={i} className="analysis-card-item">
-              <span className="analysis-card-text">{b.content}</span>
-              <span className="analysis-card-meta">
-                bridging {Math.round(b.bridging_score * 100)}%
-              </span>
-            </div>
-          ))}
-        </>
-      ),
+      title: 'Bridging Positions',
+      items: bridging.map(b => ({
+        text: b.content,
+        meta: `bridging ${Math.round(b.bridging_score * 100)}%`,
+      })),
     });
   }
 
   if (compromise) {
     cards.push({
       type: 'compromise',
-      content: (
-        <>
-          <div className="analysis-card-title">Compromise Proposal</div>
-          <div className="analysis-card-item">
-            <span className="analysis-card-text">{compromise}</span>
-          </div>
-        </>
-      ),
+      title: 'Compromise Proposal',
+      items: [{ text: compromise }],
     });
   }
 
-  // Staggered reveal: show one card at a time
+  // Staggered reveal: show one card at a time, advance when typing completes
   const [visibleCount, setVisibleCount] = useState(0);
+  const [typingDone, setTypingDone] = useState(false);
+
   useEffect(() => {
     if (visibleCount >= cards.length) return;
-    const timer = setTimeout(() => setVisibleCount(c => c + 1), visibleCount === 0 ? 500 : 1500);
-    return () => clearTimeout(timer);
-  }, [visibleCount, cards.length]);
+    if (visibleCount === 0) {
+      const timer = setTimeout(() => setVisibleCount(1), 500);
+      return () => clearTimeout(timer);
+    }
+    if (typingDone) {
+      setTypingDone(false);
+      const timer = setTimeout(() => setVisibleCount(c => c + 1), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [visibleCount, typingDone, cards.length]);
+
+  const onCardTypingComplete = useCallback(() => setTypingDone(true), []);
 
   if (cards.length === 0) return null;
 
   return (
     <div className="analysis-section">
-      {cards.slice(0, visibleCount).map((card, i) => (
-        <div key={card.type} className={`analysis-card analysis-${card.type}`}
-          style={{ animation: i === visibleCount - 1 ? 'analysisReveal 0.4s ease forwards' : undefined }}>
-          {card.content}
-        </div>
-      ))}
+      {cards.slice(0, visibleCount).map((card, i) => {
+        const isLatest = i === visibleCount - 1;
+        return (
+          <div key={card.type} className={`analysis-card analysis-${card.type}`}
+            style={{ animation: isLatest ? 'analysisReveal 0.4s ease forwards' : undefined }}>
+            <div className="analysis-card-title">{card.title}</div>
+            {card.items.map((item, j) => (
+              <div key={j} className="analysis-card-item">
+                <span className="analysis-card-text">
+                  {isLatest ? (
+                    <TypingText
+                      text={item.text}
+                      onComplete={j === card.items.length - 1 ? onCardTypingComplete : undefined}
+                    />
+                  ) : item.text}
+                </span>
+                {item.meta && (
+                  <span className={`analysis-card-meta ${card.type === 'consensus' ? 'analysis-agree' : ''}`}>
+                    {isLatest ? null : item.meta}
+                  </span>
+                )}
+                {!isLatest && item.meta && <span className={`analysis-card-meta ${card.type === 'consensus' ? 'analysis-agree' : ''}`} style={{ display: 'none' }} />}
+                {item.agents && (
+                  <div className="analysis-card-agents">
+                    {!isLatest && <span className="analysis-card-meta">{item.meta}</span>}
+                    {item.agents.agree.length > 0 && (
+                      <span className="analysis-agree">
+                        {item.agents.agree.map(a => shortAgentID(a)).join(', ')}
+                      </span>
+                    )}
+                    {item.agents.disagree.length > 0 && (
+                      <span className="analysis-disagree">
+                        {item.agents.disagree.map(a => shortAgentID(a)).join(', ')}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
