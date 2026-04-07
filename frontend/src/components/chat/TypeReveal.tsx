@@ -87,6 +87,9 @@ export function TypeReveal({ text, agentNames, speed, onComplete }: TypeRevealPr
 
   const [wordIdx, setWordIdx] = useState(0);
 
+  // Reset when text changes (component reused with new content)
+  useEffect(() => { setWordIdx(0); }, [text]);
+
   useEffect(() => {
     if (wordIdx >= wordMap.length) {
       onComplete?.();

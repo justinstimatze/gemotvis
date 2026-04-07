@@ -75,7 +75,7 @@ export function ChatThread({ positions, agents, allAgents, searchQuery, analysis
       if (newest) setSpeakingAgent(newest.agent_id);
     }
     prevCountRef.current = positions.length;
-  }, [positions.length, playing, animationPhase, positions, setSpeakingAgent]);
+  }, [positions.length, playing, animationPhase, setSpeakingAgent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to agent's last message only on click (not hover).
   // activeNode changes on both hover and click, but clicking also toggles it,

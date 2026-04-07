@@ -78,17 +78,19 @@ export function AnalysisSection({ analysis, agentNames, typingSpeed, shouldType,
   }, [shouldType, visibleCount, messages.length, setSpeakingAgent]);
 
   const advanceToNext = useCallback(() => {
-    setVisibleCount(c => {
-      const next = c + 1;
-      if (next >= messages.length) {
-        setSpeakingAgent(null);
-        onTypingComplete?.();
-      } else {
-        setSpeakingAgent('analysis');
-      }
-      return next;
-    });
-  }, [messages.length, onTypingComplete, setSpeakingAgent]);
+    setVisibleCount(c => c + 1);
+  }, []);
+
+  // Fire side effects when visibleCount changes (outside of setState updater)
+  useEffect(() => {
+    if (visibleCount === 0) return;
+    if (visibleCount >= messages.length) {
+      setSpeakingAgent(null);
+      onTypingComplete?.();
+    } else {
+      setSpeakingAgent('analysis');
+    }
+  }, [visibleCount, messages.length, setSpeakingAgent, onTypingComplete]);
 
   if (messages.length === 0) return null;
 

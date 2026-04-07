@@ -5,6 +5,7 @@ interface SessionState {
   deliberations: Record<string, DelibState>;
   connected: boolean;
   mode: 'demo' | 'replay' | 'live';
+  viewMode: 'graph' | 'report';
   cycleInterval: number;
   gemotURL: string;
 
@@ -12,12 +13,14 @@ interface SessionState {
   upsertDelib: (id: string, ds: DelibState) => void;
   setConnected: (connected: boolean) => void;
   setConfig: (config: ServerConfig) => void;
+  setViewMode: (view: 'graph' | 'report') => void;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
   deliberations: {},
   connected: false,
   mode: 'demo',
+  viewMode: new URLSearchParams(window.location.search).get('view') === 'report' ? 'report' : 'graph',
   cycleInterval: 0,
   gemotURL: '',
 
@@ -33,4 +36,11 @@ export const useSessionStore = create<SessionState>((set) => ({
       cycleInterval: config.cycle_interval,
       gemotURL: config.gemot_url,
     }),
+  setViewMode: (view) => {
+    set({ viewMode: view });
+    const url = new URL(window.location.href);
+    if (view === 'report') url.searchParams.set('view', 'report');
+    else url.searchParams.delete('view');
+    window.history.replaceState({}, '', url.toString());
+  },
 }));

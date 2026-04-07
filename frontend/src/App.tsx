@@ -111,14 +111,11 @@ function GraphView() {
   );
 }
 
-function isReportView(): boolean {
-  return new URLSearchParams(window.location.search).get('view') === 'report';
-}
-
 /** Demo mode: connect to default SSE endpoints. */
 function DemoMode() {
   useSSE();
-  if (isReportView()) return <ReportView />;
+  const viewMode = useSessionStore((s) => s.viewMode);
+  if (viewMode === 'report') return <ReportView />;
   return <GraphView />;
 }
 
@@ -137,7 +134,8 @@ function WatchMode() {
 
   useEffect(() => { useSessionStore.setState({ mode: 'live' }); }, []);
 
-  if (isReportView()) return <ReportView />;
+  const viewMode = useSessionStore((s) => s.viewMode);
+  if (viewMode === 'report') return <ReportView />;
 
   return (
     <>

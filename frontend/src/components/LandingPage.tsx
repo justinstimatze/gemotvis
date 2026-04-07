@@ -24,7 +24,7 @@ export function LandingPage() {
 
   useEffect(() => {
     fetch('/api/datasets')
-      .then((r) => r.json() as Promise<{ datasets: string[]; active: string }>)
+      .then((r) => { if (!r.ok) throw new Error('not ok'); return r.json() as Promise<{ datasets: string[]; active: string }>; })
       .then((d) => {
         // Sort active dataset to top, then alphabetically
         const sorted = [...d.datasets].sort((a, b) => {

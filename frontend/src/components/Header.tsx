@@ -4,6 +4,16 @@ import { useFocusedDelib } from '../hooks/useFocusedDelib';
 import { isLiveRoute } from '../lib/helpers';
 import type { Theme } from '../types';
 
+function ViewToggle() {
+  const viewMode = useSessionStore((s) => s.viewMode);
+  const setViewMode = useSessionStore((s) => s.setViewMode);
+  return (
+    <button className="header-view-toggle" onClick={() => setViewMode(viewMode === 'report' ? 'graph' : 'report')} aria-label="Toggle report view">
+      {viewMode === 'report' ? 'Graph' : 'Report'}
+    </button>
+  );
+}
+
 function getRouteMode(): 'demo' | 'live' | 'replay' {
   if (isLiveRoute()) return 'live';
   return 'demo';
@@ -49,15 +59,7 @@ export function Header() {
       </div>
 
       <div className="header-right">
-        <button className="header-view-toggle" onClick={() => {
-          const url = new URL(window.location.href);
-          const isReport = url.searchParams.get('view') === 'report';
-          if (isReport) url.searchParams.delete('view');
-          else url.searchParams.set('view', 'report');
-          window.location.href = url.toString();
-        }} aria-label="Toggle report view">
-          {new URLSearchParams(window.location.search).get('view') === 'report' ? 'Graph' : 'Report'}
-        </button>
+        <ViewToggle />
         <span className="header-mode">{mode}</span>
         <select
           className="theme-switcher"
