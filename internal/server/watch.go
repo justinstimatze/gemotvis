@@ -102,7 +102,7 @@ func (wm *watchManager) getOrCreate(code string) (*watchSession, error) {
 
 	// Validate code format (lowercase alphanumeric + hyphens only)
 	for _, c := range code {
-		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-') {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-') { //nolint:staticcheck // clearer than De Morgan's
 			return nil, fmt.Errorf("invalid code format")
 		}
 	}
@@ -170,7 +170,7 @@ func (wm *watchManager) lookupCode(code string) (*joinCodeInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("lookup: %w", err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("join code not found")
@@ -273,7 +273,7 @@ func (s *Server) handleWatchEvents(w http.ResponseWriter, r *http.Request) {
 		"type": "snapshot",
 		"data": sess.poller.GetSnapshot(),
 	})
-	fmt.Fprintf(w, "data: %s\n\n", snapshot)
+	fmt.Fprintf(w, "data: %s\n\n", snapshot) //nolint:errcheck // SSE write
 	flusher.Flush()
 
 	ping := time.NewTicker(15 * time.Second)
@@ -282,11 +282,11 @@ func (s *Server) handleWatchEvents(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-ch:
-			fmt.Fprintf(w, "data: %s\n\n", msg)
+			fmt.Fprintf(w, "data: %s\n\n", msg) //nolint:errcheck // SSE write
 			flusher.Flush()
 			sess.touch()
 		case <-ping.C:
-			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n") //nolint:errcheck // SSE write
 			flusher.Flush()
 		case <-r.Context().Done():
 			return

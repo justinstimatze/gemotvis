@@ -362,7 +362,7 @@ func (s *Server) handleDashboardEvents(w http.ResponseWriter, r *http.Request) {
 		"type": "snapshot",
 		"data": sess.poller.GetSnapshot(),
 	})
-	fmt.Fprintf(w, "data: %s\n\n", snapshot)
+	fmt.Fprintf(w, "data: %s\n\n", snapshot) //nolint:errcheck // SSE write
 	flusher.Flush()
 
 	ping := time.NewTicker(15 * time.Second)
@@ -371,11 +371,11 @@ func (s *Server) handleDashboardEvents(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-ch:
-			fmt.Fprintf(w, "data: %s\n\n", msg)
+			fmt.Fprintf(w, "data: %s\n\n", msg) //nolint:errcheck // SSE write
 			flusher.Flush()
 			sess.touch()
 		case <-ping.C:
-			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n") //nolint:errcheck // SSE write
 			flusher.Flush()
 		case <-r.Context().Done():
 			return

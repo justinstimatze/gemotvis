@@ -72,7 +72,7 @@ func cmdDemo() {
 	cycle := fs.Duration("cycle", 20*time.Second, "auto-cycle interval (0 to disable)")
 	gemotURL := fs.String("gemot-url", envOr("GEMOTVIS_GEMOT_URL", ""), "gemot URL for live watching via join codes")
 	serviceKey := fs.String("service-key", envOr("GEMOTVIS_SERVICE_KEY", ""), "gemot API key for live watching")
-	fs.Parse(os.Args[1:])
+	fs.Parse(os.Args[1:]) //nolint:errcheck // ExitOnError flag set
 
 	// Load any testdata files as additional named datasets
 	extra := loadTestdata("testdata", "/data")
@@ -122,7 +122,7 @@ func cmdWatch() {
 	addr := fs.String("addr", envOr("GEMOTVIS_ADDR", ":9090"), "listen address")
 	pollInterval := fs.Duration("poll-interval", envDuration("GEMOTVIS_POLL_INTERVAL", 10*time.Second), "polling interval")
 	delibID := fs.String("deliberation", envOr("GEMOTVIS_DELIBERATION_ID", ""), "watch specific deliberation ID")
-	fs.Parse(os.Args[1:])
+	fs.Parse(os.Args[1:]) //nolint:errcheck // ExitOnError flag set
 
 	if *apiKey == "" {
 		log.Fatal("--api-key required (or set GEMOTVIS_API_KEY)")
@@ -151,7 +151,7 @@ func cmdWatch() {
 func cmdReplay() {
 	fs := flag.NewFlagSet("replay", flag.ExitOnError)
 	addr := fs.String("addr", envOr("GEMOTVIS_ADDR", ":9090"), "listen address")
-	fs.Parse(os.Args[1:])
+	fs.Parse(os.Args[1:]) //nolint:errcheck // ExitOnError flag set
 
 	if fs.NArg() < 1 {
 		log.Fatal("usage: gemotvis replay <file.json ...>")
@@ -212,7 +212,7 @@ func cmdExport() {
 	apiKey := fs.String("api-key", envOr("GEMOTVIS_API_KEY", ""), "gemot API key")
 	delibID := fs.String("deliberation", "", "deliberation ID to export")
 	groupID := fs.String("group", "", "group ID to export (all deliberations in group)")
-	fs.Parse(os.Args[1:])
+	fs.Parse(os.Args[1:]) //nolint:errcheck // ExitOnError flag set
 
 	if *apiKey == "" {
 		log.Fatal("--api-key required")
@@ -386,7 +386,7 @@ func fetchURL(u string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}

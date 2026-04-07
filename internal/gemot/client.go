@@ -75,7 +75,7 @@ func (c *Client) call(ctx context.Context, method string, params map[string]any)
 	if err != nil {
 		return nil, fmt.Errorf("http: %w", err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("gemot returned HTTP %d", resp.StatusCode)
@@ -199,14 +199,14 @@ func (c *Client) ExportDeliberation(ctx context.Context, deliberationID string) 
 func (c *Client) GetAuditLog(ctx context.Context, deliberationID string) (*AuditLog, error) {
 	raw, err := c.ExportDeliberation(ctx, deliberationID)
 	if err != nil {
-		return &AuditLog{}, nil // best-effort: return empty on failure
+		return &AuditLog{}, nil //nolint:nilerr // best-effort: return empty on failure
 	}
 
 	var export struct {
 		AuditLog []map[string]string `json:"audit_log"`
 	}
 	if err := json.Unmarshal(raw, &export); err != nil || len(export.AuditLog) == 0 {
-		return &AuditLog{}, nil
+		return &AuditLog{}, nil //nolint:nilerr // best-effort: return empty on parse failure
 	}
 
 	return &AuditLog{Operations: export.AuditLog}, nil

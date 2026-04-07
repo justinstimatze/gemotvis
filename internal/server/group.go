@@ -107,7 +107,7 @@ func (gm *groupManager) getOrCreate(groupID string) (*groupSession, error) {
 
 	// Validate group ID format (alphanumeric + hyphens + underscores)
 	for _, c := range groupID {
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_') {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_') { //nolint:staticcheck // clearer than De Morgan's
 			return nil, fmt.Errorf("invalid group ID format")
 		}
 	}
@@ -190,7 +190,7 @@ func (s *Server) handleGroupState(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(sess.poller.GetSnapshot())
+	json.NewEncoder(w).Encode(sess.poller.GetSnapshot()) //nolint:errcheck
 }
 
 // handleGroupEvents streams SSE events for a group.
@@ -232,7 +232,7 @@ func (s *Server) handleGroupEvents(w http.ResponseWriter, r *http.Request) {
 	// Send initial snapshot
 	snap := sess.poller.GetSnapshot()
 	snapJSON, _ := json.Marshal(map[string]any{"type": "snapshot", "data": snap})
-	fmt.Fprintf(w, "data: %s\n\n", snapJSON)
+	fmt.Fprintf(w, "data: %s\n\n", snapJSON) //nolint:errcheck // SSE write
 	flusher.Flush()
 
 	ch, unsub := sess.hub.Subscribe()
@@ -244,11 +244,11 @@ func (s *Server) handleGroupEvents(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-ch:
-			fmt.Fprintf(w, "data: %s\n\n", msg)
+			fmt.Fprintf(w, "data: %s\n\n", msg) //nolint:errcheck // SSE write
 			flusher.Flush()
 			sess.touch()
 		case <-ping.C:
-			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n") //nolint:errcheck // SSE write
 			flusher.Flush()
 		case <-r.Context().Done():
 			return

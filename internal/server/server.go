@@ -171,22 +171,24 @@ func (s *Server) routes() {
 
 	// Group routes (shared link viewing — "anyone with the link")
 	s.mux.HandleFunc("GET /api/g/", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/state") {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/state"):
 			s.handleGroupState(w, r)
-		} else if strings.HasSuffix(r.URL.Path, "/events") {
+		case strings.HasSuffix(r.URL.Path, "/events"):
 			s.handleGroupEvents(w, r)
-		} else {
+		default:
 			http.Error(w, "not found", http.StatusNotFound)
 		}
 	})
 
 	// Watch routes (join code live viewing)
 	s.mux.HandleFunc("GET /api/watch/", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/state") {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/state"):
 			s.handleWatchState(w, r)
-		} else if strings.HasSuffix(r.URL.Path, "/events") {
+		case strings.HasSuffix(r.URL.Path, "/events"):
 			s.handleWatchEvents(w, r)
-		} else {
+		default:
 			http.Error(w, "not found", http.StatusNotFound)
 		}
 	})
@@ -202,7 +204,7 @@ func (s *Server) routes() {
 			if err != nil {
 				r.URL.Path = "/"
 			} else {
-				f.Close()
+				f.Close() //nolint:errcheck
 			}
 		}
 		fileServer.ServeHTTP(w, r)
@@ -317,7 +319,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		"type": "snapshot",
 		"data": snapshotData,
 	})
-	fmt.Fprintf(w, "data: %s\n\n", snapshot)
+	fmt.Fprintf(w, "data: %s\n\n", snapshot) //nolint:errcheck // SSE write
 	flusher.Flush()
 
 	// Keepalive + optional cycle timer
@@ -334,13 +336,13 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-ch:
-			fmt.Fprintf(w, "data: %s\n\n", msg)
+			fmt.Fprintf(w, "data: %s\n\n", msg) //nolint:errcheck // SSE write
 			flusher.Flush()
 		case <-ping.C:
-			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n") //nolint:errcheck // SSE write
 			flusher.Flush()
 		case <-cycleCh:
-			fmt.Fprintf(w, "data: {\"type\":\"cycle\"}\n\n")
+			fmt.Fprintf(w, "data: {\"type\":\"cycle\"}\n\n") //nolint:errcheck // SSE write
 			flusher.Flush()
 		case <-r.Context().Done():
 			return

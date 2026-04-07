@@ -248,7 +248,7 @@ func TestReplayServer(t *testing.T) {
 	srv.ServeHTTP(w, req)
 
 	var config map[string]any
-	json.NewDecoder(w.Body).Decode(&config)
+	json.NewDecoder(w.Body).Decode(&config) //nolint:errcheck // test helper
 
 	if mode := config["mode"].(string); mode != "replay" {
 		t.Errorf("mode = %q, want %q", mode, "replay")
@@ -370,7 +370,7 @@ func TestEncryptProducesDifferentCiphertexts(t *testing.T) {
 	}
 
 	// Due to random nonces, encrypting the same plaintext should produce different ciphertexts.
-	if string(ct1) == string(ct2) {
+	if string(ct1) == string(ct2) { //nolint:gocritic // comparing encrypted bytes as strings is fine here
 		t.Error("encrypting same plaintext twice should produce different ciphertexts (random nonce)")
 	}
 }

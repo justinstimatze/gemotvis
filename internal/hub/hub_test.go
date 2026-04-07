@@ -49,7 +49,7 @@ func TestBroadcastDeliversToMultipleSubscribers(t *testing.T) {
 	unsubs := make([]func(), n)
 	for i := 0; i < n; i++ {
 		channels[i], unsubs[i] = h.Subscribe()
-		defer unsubs[i]()
+		defer unsubs[i]() //nolint:gocritic // defer in loop is fine for test cleanup
 	}
 
 	h.Broadcast("multi", "hello")

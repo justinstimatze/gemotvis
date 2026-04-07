@@ -155,7 +155,7 @@ func (p *Poller) readSSEStream(ctx context.Context, url string, notify chan<- st
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 256))
@@ -205,11 +205,12 @@ func NewMulti(client *gemot.Client, h *hub.Hub, interval time.Duration, delibIDs
 func (p *Poller) poll(ctx context.Context) {
 	var ids []string
 
-	if p.delibID != "" {
+	switch {
+	case p.delibID != "":
 		ids = []string{p.delibID}
-	} else if len(p.delibIDs) > 0 {
+	case len(p.delibIDs) > 0:
 		ids = p.delibIDs
-	} else {
+	default:
 		delibs, err := p.client.ListDeliberations(ctx)
 		if err != nil {
 			log.Printf("poller: list deliberations: %v", err)
