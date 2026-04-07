@@ -44,19 +44,12 @@ export function filterToTime(
     filteredOps = ops;
   }
 
-  // Count revealed events by type
+  // Count revealed events by type.
+  // Always use scrubber events for position/vote counts (audit log may not contain them).
+  // Use audit log only for lifecycle events (analysis).
   let posOpsCount = 0, voteOpsCount = 0, hasAnalysisOp = false;
 
-  if (ops.length > 0) {
-    // Audit log available: count ops by method
-    for (const op of filteredOps) {
-      const m = op['method'] ?? '';
-      if (m.includes('submit_position') || m.includes('participate:submit')) posOpsCount++;
-      else if (m.includes('vote') || m.includes('participate:vote')) voteOpsCount++;
-      else if (m.includes('analy') || m.includes('analyze:')) hasAnalysisOp = true;
-    }
-  } else if (ctx.scrubberEnabled && ctx.scrubberEventIndex != null && isFocused) {
-    // No audit log: count scrubber events by type (synthesized from positions/votes)
+  if (ctx.scrubberEnabled && ctx.scrubberEventIndex != null && isFocused) {
     for (let i = 0; i <= ctx.scrubberEventIndex; i++) {
       const evt = ctx.scrubberEvents[i] as { delibID?: string; type?: string };
       if (evt?.delibID !== delibID) continue;
