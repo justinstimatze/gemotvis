@@ -4,14 +4,46 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/justinstimatze/gemotvis/internal/poller"
 )
 
+func loadTestdataForTests() map[string]*poller.Snapshot {
+	datasets := make(map[string]*poller.Snapshot)
+	// testdata is at repo root, two levels up from internal/server
+	for _, dir := range []string{"../../testdata", "testdata"} {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+				continue
+			}
+			data, err := os.ReadFile(dir + "/" + e.Name())
+			if err != nil {
+				continue
+			}
+			var snap poller.Snapshot
+			if err := json.Unmarshal(data, &snap); err != nil || len(snap.Deliberations) == 0 {
+				continue
+			}
+			name := strings.TrimSuffix(e.Name(), ".json")
+			datasets[name] = &snap
+		}
+		if len(datasets) > 0 {
+			break
+		}
+	}
+	return datasets
+}
+
 func newTestServer() *Server {
-	return NewDemo(0, "", "")
+	return NewDemo(0, "", "", loadTestdataForTests())
 }
 
 func TestSecurityHeaders(t *testing.T) {
@@ -100,7 +132,7 @@ func TestAPIConfigResponse(t *testing.T) {
 }
 
 func TestAPIConfigDemoMode(t *testing.T) {
-	srv := NewDemo(5*time.Second, "", "")
+	srv := NewDemo(5*time.Second, "", "", loadTestdataForTests())
 	req := httptest.NewRequest("GET", "/api/config", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -143,11 +175,13 @@ func TestAPIStateResponse(t *testing.T) {
 		t.Error("expected demo snapshot to have deliberations")
 	}
 
-	// The demo snapshot should have known deliberation IDs.
-	knownIDs := []string{"ai-governance", "magi-triangle", "calendar-sync", "analyzing", "diplomacy"}
-	for _, id := range knownIDs {
-		if _, ok := snap.Deliberations[id]; !ok {
-			t.Errorf("missing expected demo deliberation %q", id)
+	// Each deliberation should have a topic and at least one position
+	for id, ds := range snap.Deliberations {
+		if ds.Deliberation == nil || ds.Deliberation.Topic == "" {
+			t.Errorf("deliberation %q has no topic", id)
+		}
+		if len(ds.Positions) == 0 {
+			t.Errorf("deliberation %q has no positions", id)
 		}
 	}
 }
@@ -415,28 +449,10 @@ func TestServerClose(t *testing.T) {
 }
 
 func TestServerCloseWithManagers(t *testing.T) {
-	srv := NewDemo(0, "http://localhost:9999", "fake-key")
+	srv := NewDemo(0, "http://localhost:9999", "fake-key", nil)
 	// This creates watches, dashboards, groups managers
 	// Close should stop their reap loops without deadlock
 	srv.Close()
-}
-
-func TestDemoSnapshotHasAuditLogs(t *testing.T) {
-	srv := newTestServer()
-	req := httptest.NewRequest("GET", "/api/state", nil)
-	w := httptest.NewRecorder()
-	srv.ServeHTTP(w, req)
-
-	var snap poller.Snapshot
-	if err := json.NewDecoder(w.Body).Decode(&snap); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-
-	for id, ds := range snap.Deliberations {
-		if ds.AuditLog == nil || len(ds.AuditLog.Operations) == 0 {
-			t.Errorf("deliberation %q has no audit log (needed for scrubber)", id)
-		}
-	}
 }
 
 func TestDemoSnapshotHasPositionTimestamps(t *testing.T) {

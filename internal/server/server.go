@@ -47,21 +47,37 @@ func New(p *poller.Poller, h *hub.Hub) *Server {
 	return s
 }
 
-// NewDemo creates a server with built-in sample data and optional auto-cycling.
+// NewDemo creates a server with demo data loaded from JSON replay files.
 // If gemotURL and serviceKey are provided, live watching via join codes is also enabled.
-func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string, extraDatasets map[string]*poller.Snapshot) *Server {
-	datasets := map[string]*poller.Snapshot{
-		"showcase": demoSnapshot(),
+func NewDemo(cycleInterval time.Duration, gemotURL, serviceKey string, datasets map[string]*poller.Snapshot) *Server {
+	if datasets == nil {
+		datasets = make(map[string]*poller.Snapshot)
 	}
-	for name, snap := range extraDatasets {
-		datasets[name] = snap
+
+	// Pick a default dataset: prefer demo-climate-policy (8 agents, rich analysis)
+	defaultName := ""
+	var defaultSnap *poller.Snapshot
+	for _, pref := range []string{"demo-climate-policy", "demo-code-review", "demo-ethics-board"} {
+		if snap, ok := datasets[pref]; ok {
+			defaultName = pref
+			defaultSnap = snap
+			break
+		}
+	}
+	// Fallback to first available
+	if defaultSnap == nil {
+		for name, snap := range datasets {
+			defaultName = name
+			defaultSnap = snap
+			break
+		}
 	}
 
 	s := &Server{
 		mux:           http.NewServeMux(),
-		snapshot:      datasets["showcase"],
+		snapshot:      defaultSnap,
 		datasets:      datasets,
-		defaultData:   "showcase",
+		defaultData:   defaultName,
 		cycleInterval: cycleInterval,
 	}
 	if gemotURL != "" && serviceKey != "" {
