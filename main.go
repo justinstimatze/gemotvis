@@ -280,11 +280,19 @@ func exportDelib(client *gemot.Client, id string) *poller.DelibState {
 	agentMap := make(map[string]*poller.AgentInfo)
 	for _, pos := range positions {
 		if _, exists := agentMap[pos.AgentID]; !exists {
-			agentMap[pos.AgentID] = &poller.AgentInfo{
+			info := &poller.AgentInfo{
 				ID:          pos.AgentID,
 				ModelFamily: pos.ModelFamily,
 				Conviction:  pos.Conviction,
 			}
+			// Extract lat/lon from position metadata if available
+			if lat, ok := pos.Metadata["lat"].(float64); ok {
+				info.Lat = &lat
+			}
+			if lon, ok := pos.Metadata["lon"].(float64); ok {
+				info.Lon = &lon
+			}
+			agentMap[pos.AgentID] = info
 		}
 	}
 	if analysis != nil {
