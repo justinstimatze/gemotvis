@@ -63,13 +63,14 @@ export function ChatThread({ positions, agents, allAgents, searchQuery }: ChatTh
   const setSpeakingAgent = useGraphStore((s) => s.setSpeakingAgent);
   const clearSpeakingAgent = useCallback(() => setSpeakingAgent(null), [setSpeakingAgent]);
   useEffect(() => {
+    if (!playing) {
+      setSpeakingAgent(null);
+      return;
+    }
     const isNewPosition = positions.length > prevCountRef.current;
-    // Only pulse when actively typing a new message (not when scrubbing reveals old ones)
-    if (isNewPosition && playing && animationPhase === 'ready') {
+    if (isNewPosition && animationPhase === 'ready') {
       const newest = positions[positions.length - 1];
       if (newest) setSpeakingAgent(newest.agent_id);
-    } else if (!playing) {
-      setSpeakingAgent(null);
     }
     prevCountRef.current = positions.length;
   }, [positions.length, playing, animationPhase, positions, setSpeakingAgent]);

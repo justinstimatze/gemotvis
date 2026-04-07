@@ -38,7 +38,12 @@ export function buildTimelineEvents(ds: DelibState): TimelineEvent[] {
     events.push({ time: op['timestamp'] ?? '', label, type, delibID, index: events.length });
   }
 
+  // Sort: positions first, then votes, then analysis/lifecycle — within each group by timestamp
+  const typePriority: Record<string, number> = { position: 0, vote: 1, analysis: 2, other: 3 };
   return events.sort((a, b) => {
+    const pa = typePriority[a.type] ?? 3;
+    const pb = typePriority[b.type] ?? 3;
+    if (pa !== pb) return pa - pb;
     if (!a.time || !b.time) return 0;
     return new Date(a.time).getTime() - new Date(b.time).getTime();
   });
