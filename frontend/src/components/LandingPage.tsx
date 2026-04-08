@@ -11,8 +11,7 @@ const themeDescriptions: Record<string, { label: string; desc: string; colors: s
 const datasetDescriptions: Record<string, string> = {
   'demo-climate-policy': '8 agents — global carbon tax framework with cruxes and bridging',
   'demo-code-review': '3 agents — REST to GraphQL migration code review',
-  'demo-ethics-board': '3 agents — facial recognition in public transit ethics review',
-  'demo-ai-manifestos': '16 agents — AI manifestos with stance verification and 3 rounds',
+  'demo-ai-manifestos': '27 agents — AI manifestos, 3 rounds with resolution proposals',
   'demo-diplomacy': '7 nations — 64 bilateral diplomacy negotiations',
 };
 

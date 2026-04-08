@@ -204,7 +204,7 @@ function DashboardView() {
 
 function isDemo(): boolean {
   const params = new URLSearchParams(window.location.search);
-  return params.has('demo') || params.has('multi');
+  return params.has('demo') || params.has('multi') || params.has('data') || params.has('view');
 }
 
 function isWatchPath(): boolean {
