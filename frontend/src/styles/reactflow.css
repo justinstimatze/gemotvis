@@ -115,20 +115,70 @@
 /* Coverage gaps */
 .report-gap-detail { font-size: 12px; color: var(--vis-text-dim, #888); margin-left: 12px; }
 
-/* Methodology */
-.report-methodology p { font-size: 12px; color: var(--vis-text-dim, #888); margin-bottom: 8px; }
-.report-methodology strong { color: var(--vis-text, #333); }
+/* Provenance */
+.report-provenance { font-size: 12px; color: var(--vis-text-dim, #888); border-left: 3px solid var(--vis-panel-border, #ddd); padding: 8px 12px; margin: 12px 0 16px; background: color-mix(in srgb, var(--vis-text-dim, #888) 4%, transparent); }
 
-/* Participants */
-.report-participant-group { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; font-size: 13px; }
-.report-participant-label { font-weight: 600; min-width: 140px; flex-shrink: 0; }
-.report-participant-agents { color: var(--vis-text-dim, #888); }
+/* Inline table of contents */
+.report-toc-inline { font-size: 13px; margin: 0 0 20px; color: var(--vis-text-dim, #888); }
+.report-toc-inline a { color: var(--vis-accent, #6366f1); text-decoration: none; }
+.report-toc-inline a:hover { text-decoration: underline; }
+
+/* TL;DR */
+.report-tldr { margin: 0 0 20px; }
+.report-tldr > p:first-child { font-size: 15px; line-height: 1.5; }
+.report-meta-line { font-size: 12px; color: var(--vis-text-dim, #888); margin-top: 4px; }
+.report-meta-line code { font-size: 11px; background: color-mix(in srgb, var(--vis-text-dim, #888) 8%, transparent); padding: 1px 4px; border-radius: 3px; }
+
+/* Proposed Actions */
+.report-resolution { margin-bottom: 24px; padding-left: 16px; border-left: 3px solid var(--vis-accent, #6366f1); }
+.report-resolution h3 { margin: 0 0 8px; color: var(--vis-accent, #6366f1); }
+.report-requires { font-size: 12px; color: var(--vis-text-dim, #888); }
+.report-stances { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+
+/* Common ground (muted per guide) */
+.report-common-ground { opacity: 0.85; }
+
+/* Appendix */
+.report-appendix-rule { border: none; border-top: 1px solid var(--vis-panel-border, #ddd); margin: 32px 0; }
+.report-appendix { margin-top: 8px; }
+.report-appendix-detail { margin-bottom: 12px; }
+.report-appendix-detail > summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 6px 0; }
+.report-appendix-detail > summary:hover { color: var(--vis-accent, #6366f1); }
+.report-appendix-detail h4 { margin: 12px 0 8px; font-size: 13px; }
+
+/* Round coherence label */
+.report-round-coherence { font-size: 12px; color: var(--vis-text-dim, #888); margin-top: 12px; }
+
+/* Warning */
+.report-warning { color: var(--vis-red, #ef4444); font-size: 13px; }
+
+/* Qualified stances (5-point scale) */
+.report-stance-list { margin-top: 6px; }
+.report-stance { display: flex; gap: 6px; align-items: baseline; font-size: 13px; padding: 2px 0; }
+.report-stance-value { font-family: monospace; font-weight: 700; min-width: 24px; text-align: right; }
+.report-stance-name { font-weight: 500; }
+.report-stance-qualifier { font-size: 12px; color: var(--vis-text-dim, #888); }
+.report-stance-structural { opacity: 0.6; }
+.report-stance-strong-agree .report-stance-value { color: #16a34a; }
+.report-stance-agree .report-stance-value { color: #65a30d; }
+.report-stance-torn .report-stance-value { color: #9ca3af; }
+.report-stance-disagree .report-stance-value { color: #ea580c; }
+.report-stance-strong-disagree .report-stance-value { color: #dc2626; }
+
+/* Crux explanation blockquote */
+blockquote.report-crux-explanation { font-size: 12px; color: var(--vis-text-dim, #888); border-left: 2px solid var(--vis-panel-border, #ddd); margin: 6px 0 0 0; padding: 4px 10px; }
 
 /* Position evolution */
 .report-position-evolution { margin-bottom: 16px; }
 .report-position-evolution strong { display: block; margin-bottom: 6px; }
 .report-evolution-comparison { display: flex; flex-direction: column; gap: 4px; }
 .report-evolution-round { font-size: 13px; padding-left: 12px; border-left: 2px solid var(--vis-panel-border, #eee); }
+
+/* Evolution tags [HELD], [UPDATED], [NEW] */
+.report-evolution-tag { font-weight: 700; font-size: 11px; padding: 1px 4px; border-radius: 3px; }
+.report-tag-held { color: #6b7280; background: color-mix(in srgb, #6b7280 12%, transparent); }
+.report-tag-updated { color: #2563eb; background: color-mix(in srgb, #2563eb 12%, transparent); }
+.report-tag-new { color: #16a34a; background: color-mix(in srgb, #16a34a 12%, transparent); }
 
 /* Two-track crux agents */
 .report-crux-track { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin-top: 4px; }

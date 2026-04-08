@@ -34,6 +34,12 @@ export interface Vote {
   created_at: string;
 }
 
+export interface CruxStance {
+  agent_id: string;
+  value: number;    // -2 to +2: strongly disagree to strongly agree
+  qualifier: string;
+}
+
 export interface Crux {
   crux_claim: string;
   topic: string;
@@ -46,6 +52,7 @@ export interface Crux {
   crux_type?: string;
   resolvability?: number;
   degenerate?: boolean;
+  stances?: CruxStance[];
 }
 
 export interface OpinionCluster {
