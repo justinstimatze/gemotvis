@@ -2241,6 +2241,11 @@ h5.chat-md-heading { font-size: 11px; }
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* Side panel is now a bottom sheet — graph gets full width */
+  .has-side-panel .graph-view {
+    width: 100% !important;
+  }
+
   .center-panel-overlay {
     width: 90%;
     max-width: none;
