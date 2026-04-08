@@ -43,9 +43,8 @@ export function LandingPage() {
   }, [setTheme]);
 
   const startDemo = useCallback((view?: 'report') => {
-    const dataParam = `&data=${selectedDataset}`;
-    const viewParam = view ? `&view=${view}` : '&multi=true';
-    window.location.href = `/?demo=1${viewParam}&theme=${theme}${dataParam}`;
+    const viewParam = view ? `&view=${view}` : '';
+    window.location.href = `/?data=${selectedDataset}${viewParam}&theme=${theme}`;
   }, [theme, selectedDataset]);
 
   const watchLive = useCallback(() => {
