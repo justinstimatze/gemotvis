@@ -69,12 +69,19 @@ export function ChatThread({ positions, agents, allAgents, searchQuery, analysis
       setSpeakingAgent(null);
       return;
     }
-    const isNewPosition = positions.length > prevCountRef.current;
-    if (isNewPosition && animationPhase === 'ready') {
+    const prev = prevCountRef.current;
+    const cur = positions.length;
+    // Bilateral switch: position count decreased — clear stale speaking agent and reset
+    if (cur <= prev) {
+      setSpeakingAgent(null);
+      prevCountRef.current = cur;
+      return;
+    }
+    if (animationPhase === 'ready') {
       const newest = positions[positions.length - 1];
       if (newest) setSpeakingAgent(newest.agent_id);
     }
-    prevCountRef.current = positions.length;
+    prevCountRef.current = cur;
   }, [positions.length, playing, animationPhase, setSpeakingAgent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to agent's last message only on click (not hover).

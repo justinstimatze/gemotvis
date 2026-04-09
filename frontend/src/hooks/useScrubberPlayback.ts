@@ -12,19 +12,28 @@ export function useScrubberPlayback() {
   const setPlaying = useScrubberStore((s) => s.setPlaying);
   const setActiveEdge = useGraphStore((s) => s.setActiveEdge);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const waitCountRef = useRef(0);
 
   const advance = useCallback(() => {
     const state = useScrubberStore.getState();
     const { events: evts, eventIndex: idx } = state;
     if (idx == null || !state.playing) return;
 
-    // Wait for typing animation to finish before advancing
+    // Wait for typing animation to finish before advancing.
+    // Safety valve: if we've waited 50 iterations (10s), force-clear and continue.
+    // This prevents permanent stalls from Firefox timing races where onComplete
+    // never fires (e.g. TypeReveal unmounts before finishing).
     const speakingAgent = useGraphStore.getState().speakingAgent;
     if (speakingAgent) {
-      // Re-check in 200ms
-      timerRef.current = setTimeout(advance, 200);
-      return;
+      waitCountRef.current++;
+      if (waitCountRef.current < 50) {
+        timerRef.current = setTimeout(advance, 200);
+        return;
+      }
+      // Force-clear stuck speaking agent
+      useGraphStore.getState().setSpeakingAgent(null);
     }
+    waitCountRef.current = 0;
 
     let next = idx + 1;
 
