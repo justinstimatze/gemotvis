@@ -1,5 +1,7 @@
 # Feature Request: Regenerate Demo Scenarios
 
+**Status** (2026-04-19): partially addressed. Four gemot-generated pre-rendered demos exist at `vis.gemot.dev/?data=demo-*` (OSS governance, Diplomacy, Climate policy, AI Manifestos) and are linked from the gemot.dev landing page. The remaining rigor described below — geographic agents with lat/lon, force-directed layouts with 8+ agents, progressive scrubber reveal — is unaddressed.
+
 ## Summary
 
 Gemot's built-in demo scenarios should be redesigned to exercise both gemot's deliberation features and gemotvis's visualization capabilities. Two birds, one stone.
