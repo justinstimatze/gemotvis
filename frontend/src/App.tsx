@@ -144,7 +144,7 @@ function WatchMode() {
   // common /try/<code> flow); multi-code ?also= watches keep the
   // existing behavior.
   const hasAnyPosition = useSessionStore((s) =>
-    Object.values(s.deliberations).some((d) => d.positions.length > 0)
+    Object.values(s.deliberations).some((d) => (d?.positions?.length ?? 0) > 0)
   );
   const showWaiting = codes.length === 1 && !hasAnyPosition;
 
