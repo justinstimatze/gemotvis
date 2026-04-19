@@ -1478,6 +1478,75 @@ h5.chat-md-heading { font-size: 11px; }
   font-size: 13px;
 }
 
+/* Waiting-for-agents overlay: /watch/<code> on an empty deliberation */
+.waiting-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.35) 100%);
+}
+.waiting-card {
+  pointer-events: auto;
+  max-width: 480px;
+  padding: 24px 32px;
+  background: var(--vis-panel, rgba(20,20,20,0.92));
+  color: var(--vis-fg, #e8e8e8);
+  border: 1px solid var(--vis-panel-border, rgba(255,255,255,0.18));
+  border-radius: 10px;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+}
+.waiting-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--vis-amber, #f5a623);
+  margin-bottom: 16px;
+}
+.waiting-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0 16px;
+}
+.waiting-code-prefix {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.6;
+}
+.waiting-code code {
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--vis-fg, #fff);
+  background: rgba(255,255,255,0.06);
+  padding: 6px 14px;
+  border-radius: 6px;
+}
+.waiting-hint {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--vis-fg-dim, #a8a8a8);
+  margin-bottom: 14px;
+}
+.waiting-links {
+  font-size: 12px;
+}
+.waiting-links a {
+  color: var(--vis-amber, #f5a623);
+  text-decoration: none;
+}
+.waiting-links a:hover { text-decoration: underline; }
+
+
 /* Watch badge */
 .watch-badge {
   position: fixed;

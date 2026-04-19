@@ -3,6 +3,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { useThemeStore } from './stores/theme';
 import { useSSE } from './hooks/useSSE';
 import { useWatchSSE } from './hooks/useWatchSSE';
+import { WaitingForAgents } from './components/WaitingForAgents';
 import { useGroupSSE } from './hooks/useGroupSSE';
 import { useSessionStore } from './stores/session';
 import { useScrubberStore } from './stores/scrubber';
@@ -135,6 +136,18 @@ function WatchMode() {
   useEffect(() => { useSessionStore.setState({ mode: 'live' }); }, []);
 
   const viewMode = useSessionStore((s) => s.viewMode);
+  // Empty-state detection: when zero positions exist across every
+  // deliberation being watched, the canvas is blank — a visitor who
+  // just clicked "Watch it happen live" from the sandbox sees
+  // nothing. Show a WaitingForAgents overlay until the first
+  // position arrives. Only triggers on single-code watches (the
+  // common /try/<code> flow); multi-code ?also= watches keep the
+  // existing behavior.
+  const hasAnyPosition = useSessionStore((s) =>
+    Object.values(s.deliberations).some((d) => d.positions.length > 0)
+  );
+  const showWaiting = codes.length === 1 && !hasAnyPosition;
+
   if (viewMode === 'report') return <ReportView />;
 
   return (
@@ -145,6 +158,7 @@ function WatchMode() {
         </div>
       )}
       <GraphView />
+      {showWaiting && code && <WaitingForAgents code={code} />}
     </>
   );
 }
