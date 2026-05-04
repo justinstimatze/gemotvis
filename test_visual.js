@@ -83,7 +83,8 @@ async function testFocusedNodes(page, theme) {
 
 async function testTransitionTiming(page, theme) {
     const label = `${theme}/transitions`;
-    await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}`);
+    // Use a multi-deliberation dataset so 'S' (skip) actually advances to a different delib
+    await page.goto(`${BASE}?demo=1&multi=true&theme=${theme}&data=demo-diplomacy`);
     // Wait for autoplay to be fully active (panel visible)
     await page.waitForSelector('.center-panel-overlay, .chat-panel-side', { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(2000);
