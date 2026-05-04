@@ -48,7 +48,8 @@ jobs:
           go-version-file: go.mod
       - run: go build -o gemotvis .
 
-      # Install Playwright
+      # Install Playwright (npm package + browser)
+      - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
 
       # Start server and run visual tests
